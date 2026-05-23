@@ -102,6 +102,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.changedToUp
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalDensity
 import com.butterfeetlabs.badlibs.data.CompletedStory
 import com.butterfeetlabs.badlibs.data.RenderedToken
 import com.butterfeetlabs.badlibs.data.Story
@@ -166,6 +173,54 @@ private val PackAccents = listOf(
 )
 
 private val ComingSoonAccent = com.butterfeetlabs.badlibs.ui.theme.ComingSoonPalette.primary
+
+/**
+ * Wraps a screen so an in-content swipe from left to right pops the back stack.
+ * Gesture only fires when horizontal travel clearly dominates vertical motion,
+ * so it leaves vertical scrolling untouched.
+ */
+@Composable
+private fun SwipeBack(
+    onBack: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    val density = LocalDensity.current
+    val triggerPx = with(density) { 96.dp.toPx() }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(onBack) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    var totalX = 0f
+                    var totalY = 0f
+                    var triggered = false
+                    while (true) {
+                        val event = awaitPointerEvent(pass = PointerEventPass.Main)
+                        val change = event.changes.firstOrNull() ?: break
+                        if (!change.pressed) break
+                        val delta = change.positionChange()
+                        totalX += delta.x
+                        totalY += delta.y
+                        if (
+                            !triggered &&
+                            totalX > triggerPx &&
+                            totalX > kotlin.math.abs(totalY) * 2f
+                        ) {
+                            triggered = true
+                            change.consume()
+                            onBack()
+                            break
+                        }
+                        if (change.changedToUp()) break
+                    }
+                }
+            }
+    ) {
+        content()
+    }
+}
+
 
 private fun accentForSeed(seed: String): Color {
     if (seed.isEmpty()) return ChaosOrange
@@ -408,19 +463,21 @@ fun BadLibsApp() {
                     )
                 }
                 composable(Screen.Packs.route) {
-                    PackListScreen(
-                        isLoading = viewModel.isLoading,
-                        error = viewModel.loadError,
-                        packs = viewModel.packs,
-                        onBack = { navController.popBackStack() },
-                        onRetry = { viewModel.loadContent() },
-                        onOpenPack = { packId -> navController.navigate("stories/$packId") },
-                        onPackLocked = {
-                            appScope.launch {
-                                snackbarHostState.showSnackbar("This pack is still being cooked.")
+                    SwipeBack(onBack = { navController.popBackStack() }) {
+                        PackListScreen(
+                            isLoading = viewModel.isLoading,
+                            error = viewModel.loadError,
+                            packs = viewModel.packs,
+                            onBack = { navController.popBackStack() },
+                            onRetry = { viewModel.loadContent() },
+                            onOpenPack = { packId -> navController.navigate("stories/$packId") },
+                            onPackLocked = {
+                                appScope.launch {
+                                    snackbarHostState.showSnackbar("This pack is still being cooked.")
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
                 composable(
                     route = Screen.Stories.route,
@@ -428,11 +485,13 @@ fun BadLibsApp() {
                 ) { backStackEntry ->
                     val packId = backStackEntry.arguments?.getString("packId").orEmpty()
                     val pack = viewModel.findPack(packId)
-                    StoryListScreen(
-                        pack = pack,
-                        onBack = { navController.popBackStack() },
-                        onOpenStory = { storyId -> navController.navigate("prompts/$packId/$storyId") }
-                    )
+                    SwipeBack(onBack = { navController.popBackStack() }) {
+                        StoryListScreen(
+                            pack = pack,
+                            onBack = { navController.popBackStack() },
+                            onOpenStory = { storyId -> navController.navigate("prompts/$packId/$storyId") }
+                        )
+                    }
                 }
                 composable(
                     route = Screen.QuickChaos.route
@@ -490,21 +549,23 @@ fun BadLibsApp() {
                     )
                 }
                 composable(Screen.Result.route) {
-                    ResultScreen(
-                        completedStory = viewModel.completedStory,
-                        onRemix = {
-                            navController.popBackStack()
-                        },
-                        onPlayAgain = {
-                            val moved = navController.popBackStack(Screen.Packs.route, inclusive = false)
-                            if (!moved) {
-                                navController.navigate(Screen.Packs.route)
+                    SwipeBack(onBack = { navController.popBackStack() }) {
+                        ResultScreen(
+                            completedStory = viewModel.completedStory,
+                            onRemix = {
+                                navController.popBackStack()
+                            },
+                            onPlayAgain = {
+                                val moved = navController.popBackStack(Screen.Packs.route, inclusive = false)
+                                if (!moved) {
+                                    navController.navigate(Screen.Packs.route)
+                                }
+                            },
+                            onBackHome = {
+                                navController.popBackStack(Screen.Home.route, inclusive = false)
                             }
-                        },
-                        onBackHome = {
-                            navController.popBackStack(Screen.Home.route, inclusive = false)
-                        }
-                    )
+                        )
+                    }
                 }
             }
 
