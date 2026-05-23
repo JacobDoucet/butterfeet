@@ -302,19 +302,19 @@
       "prompts": [
         {
           "key": "place",
-          "label": "a weird place to lose a tooth"
+          "label": "a place"
         },
         {
           "key": "snack",
-          "label": "a snack you were eating"
+          "label": "a food"
         },
         {
           "key": "amount",
-          "label": "how much the tooth fairy paid"
+          "label": "a number"
         },
         {
           "key": "note",
-          "label": "what the tooth fairy wrote on the note"
+          "label": "a sentence"
         }
       ],
       "template": "I lost my tooth {{place}} while eating {{snack}}. Mom said the tooth fairy probably wouldn't come if it was missing, but she came anyway. She left {{amount}} under my pillow and a tiny note that said: {{note}}."
@@ -330,23 +330,23 @@
       "prompts": [
         {
           "key": "flavor",
-          "label": "a weird ice cream flavor"
+          "label": "a food"
         },
         {
           "key": "song",
-          "label": "a song the truck plays"
+          "label": "a song title"
         },
         {
           "key": "coins",
-          "label": "a number of coins"
+          "label": "a number"
         },
         {
           "key": "topping",
-          "label": "a topping that should not exist"
+          "label": "a food"
         },
         {
           "key": "noise",
-          "label": "a happy animal noise"
+          "label": "a noise"
         }
       ],
       "template": "The ice cream truck came down the street playing {{song}} and I sprinted out of the house with {{coins}} coins. I ordered the {{flavor}} cone with extra {{topping}}. When the man handed it to me I made the {{noise}} so loud my neighbor came outside to see what was wrong."
@@ -362,19 +362,19 @@
       "prompts": [
         {
           "key": "item",
-          "label": "something weird you brought to school"
+          "label": "an object"
         },
         {
           "key": "story",
-          "label": "a made-up reason it's special"
+          "label": "a sentence"
         },
         {
           "key": "teacher",
-          "label": "a teacher's reaction"
+          "label": "an emotion"
         },
         {
           "key": "ending",
-          "label": "what happened to it after"
+          "label": "a verb"
         }
       ],
       "template": "For show and tell I brought {{item}}. I told the class it was special because {{story}}. The teacher said {{teacher}} and then very quietly took it away. At the end of the day my mom got an email about it. Now {{ending}}."
@@ -390,31 +390,31 @@
       "prompts": [
         {
           "key": "talent",
-          "label": "a talent you definitely don't have"
+          "label": "a verb ending in -ing"
         },
         {
           "key": "costume",
-          "label": "an outfit"
+          "label": "a piece of clothing"
         },
         {
           "key": "song",
-          "label": "a song"
+          "label": "a song title"
         },
         {
           "key": "prop",
-          "label": "a prop you brought on stage"
+          "label": "an object"
         },
         {
           "key": "accident",
-          "label": "something that went wrong"
+          "label": "a verb"
         },
         {
           "key": "audienceNoise",
-          "label": "a sound the audience made"
+          "label": "a noise"
         },
         {
           "key": "verdict",
-          "label": "what the judges wrote on their cards"
+          "label": "a sentence"
         }
       ],
       "template": "For the talent show I signed up to do {{talent}}. I wore {{costume}} and walked out to {{song}}. Halfway through, my {{prop}} fell off the stage and {{accident}}. The entire audience made the sound: {{audienceNoise}}. The judges held up their cards and they all said the same thing: {{verdict}}."
@@ -430,31 +430,31 @@
       "prompts": [
         {
           "key": "clubName",
-          "label": "a serious-sounding club name"
+          "label": "a noun"
         },
         {
           "key": "rule1",
-          "label": "a club rule"
+          "label": "a rule"
         },
         {
           "key": "rule2",
-          "label": "another club rule"
+          "label": "a rule"
         },
         {
           "key": "password",
-          "label": "a secret password"
+          "label": "a word"
         },
         {
           "key": "snack",
-          "label": "an official club snack"
+          "label": "a food"
         },
         {
           "key": "enemy",
-          "label": "the club's mortal enemy"
+          "label": "an animal"
         },
         {
           "key": "mission",
-          "label": "the club's first mission"
+          "label": "a verb"
         }
       ],
       "template": "We started a club called the {{clubName}}. The official rules were: 1) {{rule1}}. 2) {{rule2}}. The password to get in the treehouse is {{password}}. The official club snack is {{snack}}. Our mortal enemy is {{enemy}}, and our first mission is to {{mission}}. We will be famous one day."
@@ -470,35 +470,35 @@
       "prompts": [
         {
           "key": "outfit",
-          "label": "what you wore"
+          "label": "a piece of clothing"
         },
         {
           "key": "snowman",
-          "label": "what you used for the snowman's face"
+          "label": "an object"
         },
         {
           "key": "weapon",
-          "label": "what you used to throw snowballs"
+          "label": "an object"
         },
         {
           "key": "fort",
-          "label": "what the fort was named"
+          "label": "a noun"
         },
         {
           "key": "enemy",
-          "label": "your enemy in the snowball war"
+          "label": "a first name"
         },
         {
           "key": "rescue",
-          "label": "the reason your mom called you in"
+          "label": "a sentence"
         },
         {
           "key": "drink",
-          "label": "the warm drink you got after"
+          "label": "a drink"
         },
         {
           "key": "verdict",
-          "label": "what you decided about winter"
+          "label": "a sentence"
         }
       ],
       "template": "School was cancelled. I wore {{outfit}} and ran outside before breakfast. We built a snowman with {{snowman}} for the face. Then me and {{enemy}} declared a snowball war with {{weapon}} as our official weapons. Our fort was called {{fort}}. The war ended when my mom yelled out the door because {{rescue}}. Inside, she made me {{drink}} and I decided that {{verdict}}."
@@ -514,47 +514,47 @@
       "prompts": [
         {
           "key": "campName",
-          "label": "a goofy camp name"
+          "label": "a noun"
         },
         {
           "key": "counselor",
-          "label": "a counselor's first name"
+          "label": "a first name"
         },
         {
           "key": "cabin",
-          "label": "the name of your cabin"
+          "label": "a noun"
         },
         {
           "key": "bunkmate",
-          "label": "a description of your bunkmate"
+          "label": "an adjective"
         },
         {
           "key": "lakeThing",
-          "label": "something weird you saw in the lake"
+          "label": "an animal"
         },
         {
           "key": "activity",
-          "label": "a camp activity"
+          "label": "a verb ending in -ing"
         },
         {
           "key": "injury",
-          "label": "a minor injury someone got"
+          "label": "a body part"
         },
         {
           "key": "campfireStory",
-          "label": "what the scary story was about"
+          "label": "a noun"
         },
         {
           "key": "snack",
-          "label": "a snack you smuggled in"
+          "label": "a food"
         },
         {
           "key": "prank",
-          "label": "a prank you played"
+          "label": "a verb"
         },
         {
           "key": "ending",
-          "label": "what was waiting for you on the bus home"
+          "label": "a noun"
         }
       ],
       "template": "I went to {{campName}} for two weeks. My counselor was {{counselor}} and my cabin was called {{cabin}}. My bunkmate was {{bunkmate}}, which made every night interesting. On day three, I swear I saw {{lakeThing}} in the lake during {{activity}}. During the same week, {{counselor}} got {{injury}} but said it was fine. The scariest campfire story was about {{campfireStory}}, and afterward I could not sleep, so I ate the {{snack}} I had smuggled in. The best memory was when we pulled off the {{prank}} — we still laugh about it. On the last morning, the bus picked us up and {{ending}}. I am already begging to go back next year."

@@ -266,11 +266,13 @@ private class MainViewModel(private val repository: StoryRepository) : ViewModel
     }
 
     fun completeStory(packId: String, story: Story, values: Map<String, String>) {
-        val rendered = values.entries.fold(story.template) { acc, entry ->
+        // Normalize {{key}} -> {key} so both placeholder styles render correctly.
+        val normalized = story.template.replace(Regex("\\{\\{(\\w+)\\}\\}"), "{$1}")
+        val rendered = values.entries.fold(normalized) { acc, entry ->
             acc.replace("{${entry.key}}", entry.value)
         }
         val labels = story.prompts.associate { it.key to it.label }
-        val tokens = tokenizeTemplate(story.template, values, labels)
+        val tokens = tokenizeTemplate(normalized, values, labels)
         completedStory = CompletedStory(
             packId = packId,
             storyId = story.id,
@@ -1813,8 +1815,10 @@ private fun ResultScreen(
     val isDarkBackground = onBackgroundColor == tokens.paper
     val actionBackground = if (isDarkBackground) tokens.highlight else tokens.ink
     val onActionBackground = onColorFor(actionBackground)
-    // Revealed words wear the pack's saturated color as a typographic accent.
-    val wordAccent = palette.primary
+    // Revealed words wear the pack's saturated color as a typographic accent,
+    // pulled toward Ink so light/saturated pack primaries (kids yellow, gen-alpha
+    // pink) stay readable on the soft pack-tinted background.
+    val wordAccent = androidx.compose.ui.graphics.lerp(palette.primary, tokens.ink, 0.45f)
 
     var revealPhase by remember(completedStory?.storyId) { mutableStateOf(RevealPhase.Anticipation) }
     var revealedFilled by remember(completedStory?.storyId) { mutableStateOf(0) }

@@ -154,23 +154,23 @@
       "prompts": [
         {
           "key": "intent",
-          "label": "what you went in for"
+          "label": "a noun"
         },
         {
           "key": "extra",
-          "label": "something you absolutely did not need"
+          "label": "a noun"
         },
         {
           "key": "argument",
-          "label": "the thing you argued about in the showroom"
+          "label": "a noun"
         },
         {
           "key": "snack",
-          "label": "the cafeteria item that ended the fight"
+          "label": "a food"
         },
         {
           "key": "exit",
-          "label": "how you left"
+          "label": "a verb ending in -ing"
         }
       ],
       "template": "We went in for {{intent}}. We left with that, plus {{extra}}, plus an unresolved argument about {{argument}} that started somewhere near the bedroom displays. The fight only ended in the cafeteria when one of us silently bought the other {{snack}}. We made it to the car, looked at each other, and {{exit}}."
@@ -186,19 +186,19 @@
       "prompts": [
         {
           "key": "temp1",
-          "label": "your preferred temperature"
+          "label": "a number"
         },
         {
           "key": "temp2",
-          "label": "their preferred temperature"
+          "label": "a number"
         },
         {
           "key": "tactic",
-          "label": "a sneaky thing they do to win"
+          "label": "a verb"
         },
         {
           "key": "verdict",
-          "label": "the deal you eventually make"
+          "label": "a sentence"
         }
       ],
       "template": "I keep the thermostat at {{temp1}}. They insist on {{temp2}}, which is criminal. Every time I leave the room, they {{tactic}}. After three weeks of cold war diplomacy, we finally agreed: {{verdict}}. Neither of us is honoring it."
@@ -214,19 +214,19 @@
       "prompts": [
         {
           "key": "minutes",
-          "label": "how long the debate has lasted"
+          "label": "a number"
         },
         {
           "key": "option1",
-          "label": "the restaurant they want"
+          "label": "a food"
         },
         {
           "key": "option2",
-          "label": "the restaurant you want"
+          "label": "a food"
         },
         {
           "key": "compromise",
-          "label": "the compromise restaurant"
+          "label": "a food"
         }
       ],
       "template": "{{minutes}} into the DoorDash debate, neither of us is closer to ordering. They want {{option1}}. I want {{option2}}. We are both hungry enough to be passive-aggressive about it. The compromise — {{compromise}} — is somehow worse than both of our original picks, and we order it anyway."
@@ -242,23 +242,23 @@
       "prompts": [
         {
           "key": "dish",
-          "label": "the dish that has been there for days"
+          "label": "a food"
         },
         {
           "key": "tone",
-          "label": "the tone of voice they use"
+          "label": "an adjective"
         },
         {
           "key": "yourExcuse",
-          "label": "your excuse"
+          "label": "a sentence"
         },
         {
           "key": "theirCounter",
-          "label": "their counter"
+          "label": "a sentence"
         },
         {
           "key": "resolution",
-          "label": "how it resolves"
+          "label": "a verb"
         }
       ],
       "template": "We are once again standing in the kitchen having The Dishes Conversation. Specifically about {{dish}}, which has been in the sink since Tuesday. They open with {{tone}}. I respond with my usual defense: {{yourExcuse}}. They counter with {{theirCounter}}, which is, annoyingly, accurate. The conversation resolves the way it always does: {{resolution}}."
@@ -274,19 +274,19 @@
       "prompts": [
         {
           "key": "show",
-          "label": "a show you were watching together"
+          "label": "a noun"
         },
         {
           "key": "episodes",
-          "label": "how many episodes ahead they got"
+          "label": "a number"
         },
         {
           "key": "evidence",
-          "label": "the evidence in the Continue Watching row"
+          "label": "a noun"
         },
         {
           "key": "apology",
-          "label": "their unconvincing apology"
+          "label": "a sentence"
         }
       ],
       "template": "We were watching {{show}} together. We agreed: no episodes alone. I opened the app tonight and the algorithm casually informed me they were {{episodes}} episodes ahead. The evidence was right there: {{evidence}}. When confronted, they offered: {{apology}}. I have already started watching it twice as fast just to catch up out of spite."
@@ -302,31 +302,31 @@
       "prompts": [
         {
           "key": "fromPlace",
-          "label": "the old apartment"
+          "label": "a place"
         },
         {
           "key": "toPlace",
-          "label": "the new apartment"
+          "label": "a place"
         },
         {
           "key": "boxLabel",
-          "label": "a uselessly vague box label"
+          "label": "a noun"
         },
         {
           "key": "broken",
-          "label": "something that broke in transit"
+          "label": "an object"
         },
         {
           "key": "missingItem",
-          "label": "something nobody can find"
+          "label": "an object"
         },
         {
           "key": "delivery",
-          "label": "the food you ordered while sitting on boxes"
+          "label": "a food"
         },
         {
           "key": "argument",
-          "label": "the argument you had at 11 PM"
+          "label": "a noun"
         }
       ],
       "template": "We packed up {{fromPlace}} into 47 boxes, most of them labeled simply {{boxLabel}}. We moved into {{toPlace}} and immediately discovered that {{broken}} did not survive the trip. {{missingItem}} has vanished entirely; it is in one of the boxes, but which one is a problem for future us. We sat on the kitchen floor with {{delivery}}, and at 11 PM we had a low-energy argument about {{argument}} that we both knew wasn't really about that."
@@ -342,35 +342,35 @@
       "prompts": [
         {
           "key": "outfit",
-          "label": "what you wore"
+          "label": "a piece of clothing"
         },
         {
           "key": "gift",
-          "label": "the gift you brought"
+          "label": "an object"
         },
         {
           "key": "parentName",
-          "label": "their parent's first name"
+          "label": "a first name"
         },
         {
           "key": "dish",
-          "label": "a dish you pretended to love"
+          "label": "a food"
         },
         {
           "key": "question",
-          "label": "an invasive question they asked"
+          "label": "a sentence"
         },
         {
           "key": "answer",
-          "label": "your panicked answer"
+          "label": "a sentence"
         },
         {
           "key": "story",
-          "label": "an embarrassing story the parent told"
+          "label": "a sentence"
         },
         {
           "key": "verdict",
-          "label": "the parent's verdict on the car ride home"
+          "label": "an adjective"
         }
       ],
       "template": "I wore {{outfit}}, which was either perfect or a disaster. I brought {{gift}}. {{parentName}} hugged me. Dinner was {{dish}}, which I claimed to love. Somewhere between the main and dessert, {{parentName}} asked {{question}}. I panicked and answered {{answer}}. Then, with no warning, they told the story about {{story}}. On the car ride home, the verdict came in: {{verdict}}. Honestly? I'll take it."
@@ -386,31 +386,31 @@
       "prompts": [
         {
           "key": "studio",
-          "label": "the name of the studio"
+          "label": "a noun"
         },
         {
           "key": "instructor",
-          "label": "the instructor's vibe"
+          "label": "an adjective"
         },
         {
           "key": "pose",
-          "label": "a pose that broke you"
+          "label": "a body part"
         },
         {
           "key": "noise",
-          "label": "a noise your partner made"
+          "label": "a noise"
         },
         {
           "key": "whisper",
-          "label": "what you whispered to them mid-pose"
+          "label": "a sentence"
         },
         {
           "key": "neighbor",
-          "label": "what the couple next to you was doing"
+          "label": "a verb ending in -ing"
         },
         {
           "key": "aftermath",
-          "label": "what you said in the car"
+          "label": "a sentence"
         }
       ],
       "template": "We signed up for couples yoga at {{studio}}. The instructor was {{instructor}}. We got through warm-up. Then she announced {{pose}}, and within thirty seconds my partner made {{noise}} loud enough for the whole room. I leaned over and whispered {{whisper}}. The couple next to us was {{neighbor}} the entire time, somehow perfectly. In the car afterward, one of us finally said {{aftermath}}. We are not going back."
@@ -426,35 +426,35 @@
       "prompts": [
         {
           "key": "restaurant",
-          "label": "the kind of restaurant"
+          "label": "an adjective"
         },
         {
           "key": "dressCode",
-          "label": "the dress code"
+          "label": "a piece of clothing"
         },
         {
           "key": "drink",
-          "label": "a drink one of you ordered"
+          "label": "a drink"
         },
         {
           "key": "appetizer",
-          "label": "an appetizer you didn't recognize"
+          "label": "a food"
         },
         {
           "key": "interruption",
-          "label": "what interrupted the romantic moment"
+          "label": "a noun"
         },
         {
           "key": "gift",
-          "label": "a gift one of you gave"
+          "label": "an object"
         },
         {
           "key": "reaction",
-          "label": "the reaction to the gift"
+          "label": "an emotion"
         },
         {
           "key": "ending",
-          "label": "how the night actually ended"
+          "label": "a verb"
         }
       ],
       "template": "For our anniversary we booked the kind of restaurant {{restaurant}} requires {{dressCode}}. We ordered {{drink}} and {{appetizer}}, which arrived looking like art. Right as the candle flickered between us, {{interruption}} ruined the moment completely. They handed me a small box. Inside was {{gift}}. My reaction was {{reaction}}, which was not the reaction they were hoping for. The night ended the only way it could: {{ending}}."
@@ -470,35 +470,35 @@
       "prompts": [
         {
           "key": "therapist",
-          "label": "the therapist's name"
+          "label": "a first name"
         },
         {
           "key": "question",
-          "label": "her opening question"
+          "label": "a sentence"
         },
         {
           "key": "yourAnswer",
-          "label": "the answer you rehearsed"
+          "label": "a sentence"
         },
         {
           "key": "theirAnswer",
-          "label": "the answer your partner gave that blindsided you"
+          "label": "a sentence"
         },
         {
           "key": "tissue",
-          "label": "who reached for the tissues first"
+          "label": "a first name"
         },
         {
           "key": "homework",
-          "label": "the homework she assigned"
+          "label": "a verb"
         },
         {
           "key": "carRide",
-          "label": "what happened on the car ride home"
+          "label": "a sentence"
         },
         {
           "key": "verdict",
-          "label": "the text you sent your group chat afterward"
+          "label": "a sentence"
         }
       ],
       "template": "Our therapist's name is {{therapist}}. She started with: {{question}}. I gave the answer I had clearly rehearsed: {{yourAnswer}}. Then my partner answered: {{theirAnswer}}. I was not ready for that. {{tissue}} reached for the tissues first. Before we left, she gave us homework: {{homework}}. On the car ride home, {{carRide}}. As soon as I got inside I texted the group chat: {{verdict}}. We have booked next week."
@@ -514,31 +514,31 @@
       "prompts": [
         {
           "key": "destination",
-          "label": "where you were going"
+          "label": "a city"
         },
         {
           "key": "hour",
-          "label": "what hour of the drive it was"
+          "label": "a number"
         },
         {
           "key": "trigger",
-          "label": "the small thing that started it"
+          "label": "a noun"
         },
         {
           "key": "snack",
-          "label": "the snack that became evidence"
+          "label": "a food"
         },
         {
           "key": "playlist",
-          "label": "what was playing"
+          "label": "a song title"
         },
         {
           "key": "silence",
-          "label": "how long the silence lasted"
+          "label": "a number"
         },
         {
           "key": "peace",
-          "label": "the gas station purchase that ended the war"
+          "label": "an object"
         }
       ],
       "template": "We were six hours into a drive to {{destination}}. Specifically, hour {{hour}}. The fight started over {{trigger}}, which was the smallest possible thing. Within minutes, the {{snack}} between us had become weaponized evidence of an unrelated betrayal. {{playlist}} played, very quietly, for {{silence}} minutes of dead silence. Peace was eventually negotiated at a gas station, brokered entirely by a single purchase: {{peace}}. We did not speak about it again."
@@ -554,51 +554,51 @@
       "prompts": [
         {
           "key": "venue",
-          "label": "your dream venue"
+          "label": "a place"
         },
         {
           "key": "budget",
-          "label": "your original budget"
+          "label": "a number"
         },
         {
           "key": "newBudget",
-          "label": "your actual budget"
+          "label": "a number"
         },
         {
           "key": "guestThey",
-          "label": "a guest they insist on inviting"
+          "label": "a first name"
         },
         {
           "key": "guestYou",
-          "label": "a guest you are quietly trying to uninvite"
+          "label": "a first name"
         },
         {
           "key": "color1",
-          "label": "your wedding color"
+          "label": "a color"
         },
         {
           "key": "color2",
-          "label": "their wedding color"
+          "label": "a color"
         },
         {
           "key": "vendor",
-          "label": "a vendor who ghosted you"
+          "label": "a noun"
         },
         {
           "key": "menuFight",
-          "label": "what you argued about over the menu"
+          "label": "a food"
         },
         {
           "key": "registry",
-          "label": "the weirdest thing on the registry"
+          "label": "an object"
         },
         {
           "key": "compromise",
-          "label": "the compromise that saved the wedding"
+          "label": "a sentence"
         },
         {
           "key": "verdict",
-          "label": "what one of you said at 2 AM"
+          "label": "a sentence"
         }
       ],
       "template": "We were going to get married at {{venue}}. Budget: {{budget}}. Real budget: {{newBudget}}. They insisted on inviting {{guestThey}}. I am still quietly trying to uninvite {{guestYou}}. The wedding colors were {{color1}}, then somehow also {{color2}}, then officially neither. {{vendor}} ghosted us in week three. The dinner menu fight was, of all things, about {{menuFight}}. The registry includes {{registry}}, which someone is going to buy us, and we will have to thank them for it. The wedding was saved entirely by {{compromise}}. At 2 AM the night before the final headcount was due, one of us said: {{verdict}}. We are still getting married. Probably."
@@ -614,47 +614,47 @@
       "prompts": [
         {
           "key": "location",
-          "label": "the destination"
+          "label": "a city"
         },
         {
           "key": "couple",
-          "label": "whose wedding it is"
+          "label": "a first name"
         },
         {
           "key": "flightProblem",
-          "label": "what went wrong with the flight"
+          "label": "a noun"
         },
         {
           "key": "rental",
-          "label": "what was wrong with the rental"
+          "label": "a noun"
         },
         {
           "key": "outfit",
-          "label": "an outfit choice you regretted"
+          "label": "a piece of clothing"
         },
         {
           "key": "rehearsalDinner",
-          "label": "what happened at the rehearsal dinner"
+          "label": "a sentence"
         },
         {
           "key": "speech",
-          "label": "the speech that went too long"
+          "label": "a number"
         },
         {
           "key": "drink",
-          "label": "the signature cocktail"
+          "label": "a drink"
         },
         {
           "key": "danceFloor",
-          "label": "what happened on the dance floor"
+          "label": "a verb"
         },
         {
           "key": "secret",
-          "label": "a secret you and your partner kept from the group"
+          "label": "a noun"
         },
         {
           "key": "verdict",
-          "label": "what you whispered to each other at the airport"
+          "label": "a sentence"
         }
       ],
       "template": "We flew to {{location}} for {{couple}}'s wedding. {{flightProblem}} happened immediately. The rental was supposed to be perfect, except {{rental}}. By day two, I deeply regretted packing {{outfit}}. At the rehearsal dinner, {{rehearsalDinner}}. The best man's speech was about {{speech}} and lasted nineteen minutes. The signature cocktail was {{drink}}, which we ordered eight of. On the dance floor, {{danceFloor}}. Throughout the entire trip, we were quietly keeping a secret from the rest of the group: {{secret}}. At the airport, waiting at the gate, exhausted and sunburned, one of us whispered: {{verdict}}. Worth it."

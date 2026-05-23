@@ -16,7 +16,10 @@
 - Medium stories: **6–9 prompts** — escalating situation, satisfying close.
 - Long stories: **10–15 prompts** — full narrative arc, multiple characters/beats.
 - Prompt `key` must be unique within a story (e.g. `noun1`, `noun2` not `noun`, `noun`).
-- Prompt `label` should be funny or evocative, not clinical. Prefer "a suspicious liquid" over "noun".
+- Prompt `label` should be a **vague category**, not a narrative slot. The fun comes from the surprise of seeing a random word land in a specific role — that surprise dies the moment the label leaks the context.
+  - ✅ Good: `Adjective`, `Noun`, `Celebrity`, `City`, `Food`, `a name`, `a profession`, `a noise`, `an emotion`, `a body part`, `a piece of clothing`, `a song title`, `a drink`, `a number`, `a verb ending in -ing`
+  - ❌ Bad: `the therapist's name`, `the post that broke the camel's back`, `a hyper-specific rule the mod enforced`, `the answer your partner gave that blindsided you`
+  - Rule of thumb: a player reading the prompt out of context should have no idea what story it belongs to.
 - Template `{{key}}` placeholders must match the prompt keys exactly.
 - Don't pad stories with throwaway prompts just to hit a word count.
 

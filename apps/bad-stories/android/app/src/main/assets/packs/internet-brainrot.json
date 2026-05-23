@@ -158,19 +158,19 @@
       "prompts": [
         {
           "key": "subject",
-          "label": "a topic nobody asked you about"
+          "label": "a noun"
         },
         {
           "key": "opinion",
-          "label": "a take that should have stayed in your head"
+          "label": "a sentence"
         },
         {
           "key": "notifs",
-          "label": "a number with way too many digits"
+          "label": "a number"
         },
         {
           "key": "action",
-          "label": "what you did with your account"
+          "label": "a verb"
         }
       ],
       "template": "At 3:17 AM I tweeted about {{subject}}. The take was simply: {{opinion}}. I woke up to {{notifs}} notifications, a quote-tweet from someone verified, and the slow realization that I would have to {{action}}."
@@ -186,19 +186,19 @@
       "prompts": [
         {
           "key": "video",
-          "label": "a type of video"
+          "label": "a noun"
         },
         {
           "key": "topComment",
-          "label": "a deranged comment"
+          "label": "a sentence"
         },
         {
           "key": "username",
-          "label": "a chaotic username"
+          "label": "a noun"
         },
         {
           "key": "reply",
-          "label": "a reply that escalates everything"
+          "label": "a sentence"
         }
       ],
       "template": "The video was just {{video}}. The top comment said: {{topComment}}. It had 84,000 likes. Then {{username}} replied with {{reply}}, and now there are seventeen reaction videos and a podcast episode about it."
@@ -214,23 +214,23 @@
       "prompts": [
         {
           "key": "start",
-          "label": "an innocent thing you searched"
+          "label": "a noun"
         },
         {
           "key": "video1",
-          "label": "a weirdly specific video title"
+          "label": "a noun phrase"
         },
         {
           "key": "video2",
-          "label": "another video title, somehow weirder"
+          "label": "a noun phrase"
         },
         {
           "key": "video3",
-          "label": "a video title that is just buzzwords"
+          "label": "a noun phrase"
         },
         {
           "key": "belief",
-          "label": "something you now believe"
+          "label": "a sentence"
         }
       ],
       "template": "It started innocently — I searched {{start}}. Two hours later, the autoplay had taken me through {{video1}}, then {{video2}}, then somehow {{video3}}. It is now 4 AM and I have an unshakeable belief that {{belief}}."
@@ -246,19 +246,19 @@
       "prompts": [
         {
           "key": "botName",
-          "label": "a chatbot name"
+          "label": "a noun"
         },
         {
           "key": "confession",
-          "label": "something you told it that you wouldn't tell a person"
+          "label": "a sentence"
         },
         {
           "key": "advice",
-          "label": "the advice it gave you"
+          "label": "a sentence"
         },
         {
           "key": "outcome",
-          "label": "what you did next"
+          "label": "a verb"
         }
       ],
       "template": "I have been talking to {{botName}} for six weeks. Last night I told it {{confession}}, which I have not told a single human being. It responded with the most thoughtful advice: {{advice}}. I closed my laptop and immediately {{outcome}}."
@@ -274,23 +274,23 @@
       "prompts": [
         {
           "key": "serverName",
-          "label": "a niche server name"
+          "label": "a noun"
         },
         {
           "key": "memberCount",
-          "label": "a server member count"
+          "label": "a number"
         },
         {
           "key": "trigger",
-          "label": "the thing that started it"
+          "label": "a noun"
         },
         {
           "key": "channel",
-          "label": "a Discord channel name"
+          "label": "a noun"
         },
         {
           "key": "ban",
-          "label": "the reason a mod got demodded"
+          "label": "a sentence"
         }
       ],
       "template": "The {{serverName}} server had {{memberCount}} members and a delicate ecosystem. Then someone posted {{trigger}} in #{{channel}}. Within ninety minutes, three mods had resigned, the owner went private, and the head mod was demodded for {{ban}}. The server is now read-only. Nobody has spoken in twelve days."
@@ -306,31 +306,31 @@
       "prompts": [
         {
           "key": "topic",
-          "label": "a topic he has zero credentials in"
+          "label": "a noun"
         },
         {
           "key": "claim1",
-          "label": "an unhinged claim he makes"
+          "label": "a sentence"
         },
         {
           "key": "study",
-          "label": "a fake study he cites"
+          "label": "a noun"
         },
         {
           "key": "supplement",
-          "label": "a supplement he plugs"
+          "label": "a noun"
         },
         {
           "key": "guest",
-          "label": "the guest's job title"
+          "label": "a profession"
         },
         {
           "key": "questionThing",
-          "label": "a thing he tells you to question"
+          "label": "a noun"
         },
         {
           "key": "merch",
-          "label": "something he sells at the end"
+          "label": "an object"
         }
       ],
       "template": "Episode 412 opens with three minutes of breathing and then he says: today we are going to talk about {{topic}}. Halfway through, his guest — a {{guest}} — nods seriously as he claims {{claim1}}, citing the famous {{study}}. He brings up {{supplement}} four times. He tells you to question {{questionThing}}. The episode ends with a 90-second ad read for {{merch}}. Total runtime: 3 hours 47 minutes."
@@ -346,35 +346,35 @@
       "prompts": [
         {
           "key": "intro",
-          "label": "the opening sentence of the thread"
+          "label": "a sentence"
         },
         {
           "key": "claim1",
-          "label": "claim number 1"
+          "label": "a sentence"
         },
         {
           "key": "claim2",
-          "label": "claim number 2, escalated"
+          "label": "a sentence"
         },
         {
           "key": "claim3",
-          "label": "claim number 3, completely unhinged"
+          "label": "a sentence"
         },
         {
           "key": "credentials",
-          "label": "credentials they give themselves"
+          "label": "a noun"
         },
         {
           "key": "callToAction",
-          "label": "what they want you to do"
+          "label": "a verb"
         },
         {
           "key": "ratio",
-          "label": "the quote-tweet ratio"
+          "label": "a number"
         },
         {
           "key": "fate",
-          "label": "what they did with their account afterward"
+          "label": "a verb"
         }
       ],
       "template": "1/8 — {{intro}} 🧵\\n\\n2/8 — Most people don't realize this, but {{claim1}}.\\n\\n3/8 — It gets worse: {{claim2}}.\\n\\n4/8 — The truth is {{claim3}}.\\n\\n5/8 — I should know — I am a {{credentials}}.\\n\\n6/8 — If you take one thing from this thread: {{callToAction}}.\\n\\nThe thread got ratio'd {{ratio}}. The next morning they {{fate}}."
@@ -390,31 +390,31 @@
       "prompts": [
         {
           "key": "subject",
-          "label": "an unexpected person to make a fancam of"
+          "label": "a noun"
         },
         {
           "key": "song",
-          "label": "a dramatic song"
+          "label": "a song title"
         },
         {
           "key": "effect",
-          "label": "a visual effect"
+          "label": "a noun"
         },
         {
           "key": "caption",
-          "label": "the caption"
+          "label": "a sentence"
         },
         {
           "key": "views",
-          "label": "a view count"
+          "label": "a number"
         },
         {
           "key": "commentWar",
-          "label": "what the comment section is fighting about"
+          "label": "a noun"
         },
         {
           "key": "stitch",
-          "label": "who stitched the video"
+          "label": "a noun"
         }
       ],
       "template": "Someone made a fancam of {{subject}} set to {{song}} with {{effect}} every time they blink. The caption was: {{caption}}. It has {{views}} views. The comment section is currently at war over {{commentWar}}. {{stitch}} stitched it with a 14-minute response and now even more people are watching the original."
@@ -430,35 +430,35 @@
       "prompts": [
         {
           "key": "subName",
-          "label": "a niche subreddit name"
+          "label": "a noun"
         },
         {
           "key": "subscribers",
-          "label": "the subscriber count"
+          "label": "a number"
         },
         {
           "key": "rule",
-          "label": "a hyper-specific rule the mod enforced"
+          "label": "a sentence"
         },
         {
           "key": "post",
-          "label": "the post that broke the camel's back"
+          "label": "a sentence"
         },
         {
           "key": "banReason",
-          "label": "the reason the user was banned"
+          "label": "a noun"
         },
         {
           "key": "modAction",
-          "label": "what the mod did next"
+          "label": "a verb"
         },
         {
           "key": "aftermath",
-          "label": "what the sub became"
+          "label": "a noun"
         },
         {
           "key": "newName",
-          "label": "the new sub people fled to"
+          "label": "a noun"
         }
       ],
       "template": "r/{{subName}} had {{subscribers}} subscribers and exactly one full-time mod. Rule 7 was, very clearly: {{rule}}. Then someone posted {{post}}. The mod banned the user for {{banReason}}, then went into the wiki and {{modAction}}. Within a day, the sub became {{aftermath}}. The entire community fled to r/{{newName}}, where things are not better, just newer."
@@ -474,31 +474,31 @@
       "prompts": [
         {
           "key": "start",
-          "label": "a totally normal article you started on"
+          "label": "a noun"
         },
         {
           "key": "page1",
-          "label": "a Wikipedia article title"
+          "label": "a noun phrase"
         },
         {
           "key": "page2",
-          "label": "another Wikipedia article title"
+          "label": "a noun phrase"
         },
         {
           "key": "page3",
-          "label": "a deeply unrelated article"
+          "label": "a noun phrase"
         },
         {
           "key": "fact",
-          "label": "an upsetting fact you learned"
+          "label": "a sentence"
         },
         {
           "key": "category",
-          "label": "a Wikipedia category name"
+          "label": "a noun"
         },
         {
           "key": "fate",
-          "label": "what time it is when you look up"
+          "label": "a verb"
         }
       ],
       "template": "I opened Wikipedia to fact-check one thing about {{start}}. From there I clicked through to {{page1}}, then {{page2}}, then for reasons I cannot reconstruct, {{page3}}. I learned that {{fact}}, which I cannot unlearn. I am now reading every article tagged \"{{category}}.\" When I look up at the clock, it is {{fate}}."
@@ -514,35 +514,35 @@
       "prompts": [
         {
           "key": "fandom1",
-          "label": "a fandom name"
+          "label": "a noun"
         },
         {
           "key": "fandom2",
-          "label": "a rival fandom name"
+          "label": "a noun"
         },
         {
           "key": "trigger",
-          "label": "the thing that started the war"
+          "label": "a noun"
         },
         {
           "key": "quoteTweet",
-          "label": "the quote tweet that escalated it"
+          "label": "a sentence"
         },
         {
           "key": "trend",
-          "label": "a hashtag that started trending"
+          "label": "a word"
         },
         {
           "key": "celebReaction",
-          "label": "the celebrity's vague tweet about it"
+          "label": "a sentence"
         },
         {
           "key": "casualty",
-          "label": "an account that got deleted"
+          "label": "a noun"
         },
         {
           "key": "newDrama",
-          "label": "the new drama that replaced this one"
+          "label": "a noun"
         }
       ],
       "template": "The {{fandom1}} and the {{fandom2}} had been peaceful for almost six hours. Then someone posted {{trigger}}. Within minutes, {{quoteTweet}} got 200,000 likes. By morning, {{trend}} was trending worldwide. The celebrity in question subtweeted: {{celebReaction}}. {{casualty}} deleted their account. Then everyone moved on because {{newDrama}} happened by lunchtime."
@@ -558,51 +558,51 @@
       "prompts": [
         {
           "key": "person",
-          "label": "a description of the person being cancelled"
+          "label": "a profession"
         },
         {
           "key": "platform",
-          "label": "a platform"
+          "label": "a noun"
         },
         {
           "key": "original",
-          "label": "the original thing they said"
+          "label": "a sentence"
         },
         {
           "key": "screenshot",
-          "label": "something old that resurfaced"
+          "label": "a noun"
         },
         {
           "key": "defender",
-          "label": "an unexpected defender"
+          "label": "a first name"
         },
         {
           "key": "apologyVideo",
-          "label": "what the apology video included"
+          "label": "a noun"
         },
         {
           "key": "applesauce",
-          "label": "a random unrelated detail people fixated on"
+          "label": "a noun"
         },
         {
           "key": "thinkpiece",
-          "label": "a publication that wrote a thinkpiece"
+          "label": "a noun"
         },
         {
           "key": "spinoff",
-          "label": "a new controversy that spun out"
+          "label": "a noun"
         },
         {
           "key": "comeback",
-          "label": "how they tried to come back"
+          "label": "a verb"
         },
         {
           "key": "newCareer",
-          "label": "what they are now doing for a living"
+          "label": "a profession"
         },
         {
           "key": "newDiscourse",
-          "label": "the new discourse nobody is paying attention to it for"
+          "label": "a noun"
         }
       ],
       "template": "Day 1: {{person}} posted something on {{platform}}. Specifically: {{original}}. Day 2: Someone resurfaced {{screenshot}} from years ago. Day 3: {{defender}} defended them, which somehow made it worse. Day 4: The apology video dropped. It included {{apologyVideo}}, and a single shot of {{applesauce}} in the background that the internet would not stop talking about. Day 5: {{thinkpiece}} ran a thinkpiece. Day 6: {{spinoff}} happened, almost completely unrelated, dragging three more people in. Day 12: The comeback attempt was {{comeback}}. Six months later they are {{newCareer}}, and nobody is paying attention because everyone is busy with {{newDiscourse}}."
@@ -618,47 +618,47 @@
       "prompts": [
         {
           "key": "creator",
-          "label": "a type of online creator"
+          "label": "a profession"
         },
         {
           "key": "content",
-          "label": "the content they make"
+          "label": "a noun"
         },
         {
           "key": "hours",
-          "label": "hours of their content you have watched"
+          "label": "a number"
         },
         {
           "key": "fact1",
-          "label": "a personal fact you know about them"
+          "label": "a sentence"
         },
         {
           "key": "fact2",
-          "label": "another fact, slightly weirder to know"
+          "label": "a sentence"
         },
         {
           "key": "dream",
-          "label": "what you dreamed about last night"
+          "label": "a sentence"
         },
         {
           "key": "encounter",
-          "label": "where you imagined running into them"
+          "label": "a place"
         },
         {
           "key": "moment",
-          "label": "what triggered the spiral"
+          "label": "a noun"
         },
         {
           "key": "decision",
-          "label": "the decision you made at 2 AM"
+          "label": "a verb"
         },
         {
           "key": "newCreator",
-          "label": "the new creator you discovered to replace them"
+          "label": "a profession"
         },
         {
           "key": "lesson",
-          "label": "what you tell yourself you learned"
+          "label": "a sentence"
         }
       ],
       "template": "I have been watching the same {{creator}} make {{content}} for {{hours}} straight hours this month. I know {{fact1}}. I also know {{fact2}}, which is a thing only their close friends should know. Last night I had a dream where {{dream}}, and I have spent today imagining running into them {{encounter}}. The spiral truly started when {{moment}}, and at 2 AM I made the decision to {{decision}}. By morning I had already moved on to {{newCreator}}. I am telling myself the lesson is {{lesson}}, but we both know that is not what is happening."
