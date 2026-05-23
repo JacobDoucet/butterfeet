@@ -9,6 +9,7 @@
 #   - a coming_soon pack has any playable stories
 #   - a story has more than 15 prompts
 #   - a story contains a rating field
+#   - a story template uses single-brace placeholders or its keys don't match the prompts
 #   - duplicate story IDs exist within a pack
 #   - duplicate prompt keys exist within a story
 #
@@ -94,6 +95,28 @@ for FILE in "$PACKS_DIR"/*.json; do
     DUP_KEYS="$(jq -r --argjson i "$i" '[.stories[$i].prompts[].key] | group_by(.) | map(select(length > 1)) | .[] | .[0]' "$FILE")"
     if [[ -n "$DUP_KEYS" ]]; then
       echo "FAIL [$PACK] Story '$STORY_ID' has duplicate prompt keys: $DUP_KEYS" >&2
+      ERRORS=$((ERRORS + 1))
+    fi
+
+    # 4e. Template syntax: only {{key}} placeholders allowed; keys must match prompts exactly
+    BAD_BRACES="$(jq -r --argjson i "$i" '
+      .stories[$i].template
+      | [scan("(?<!\\{)\\{(?!\\{)[^{}]*\\}(?!\\})")]
+      | join(", ")
+    ' "$FILE")"
+    if [[ -n "$BAD_BRACES" ]]; then
+      echo "FAIL [$PACK] Story '$STORY_ID' template uses single-brace placeholders (use {{key}}): $BAD_BRACES" >&2
+      ERRORS=$((ERRORS + 1))
+    fi
+
+    KEY_DIFF="$(jq -r --argjson i "$i" '
+      (.stories[$i].template | [scan("\\{\\{(\\w+)\\}\\}")] | flatten | unique) as $tpl
+      | (.stories[$i].prompts | map(.key) | unique) as $prm
+      | (($tpl - $prm) | map("template-only:" + .)) + (($prm - $tpl) | map("prompt-only:" + .))
+      | join(", ")
+    ' "$FILE")"
+    if [[ -n "$KEY_DIFF" ]]; then
+      echo "FAIL [$PACK] Story '$STORY_ID' template/prompt key mismatch: $KEY_DIFF" >&2
       ERRORS=$((ERRORS + 1))
     fi
   done

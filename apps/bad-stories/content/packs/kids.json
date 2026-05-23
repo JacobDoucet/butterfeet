@@ -28,7 +28,7 @@
           "label": "Noun"
         }
       ],
-      "template": "During our trip to the zoo, a {color1} {animal1} escaped its enclosure and started {verbIng1} directly beside the {noun1} while eating enormous amounts of {food1}.",
+      "template": "During our trip to the zoo, a {{color1}} {{animal1}} escaped its enclosure and started {{verbIng1}} directly beside the {{noun1}} while eating enormous amounts of {{food1}}.",
       "tags": [
         "animals",
         "field-trip"
@@ -55,7 +55,7 @@
           "label": "Animal"
         }
       ],
-      "template": "On school picture day, I showed up with a very {adjective1} {hairStyle1} and immediately felt {emotion1} after someone said I looked like a surprised {animal1}.",
+      "template": "On school picture day, I showed up with a very {{adjective1}} {{hairStyle1}} and immediately felt {{emotion1}} after someone said I looked like a surprised {{animal1}}.",
       "tags": [
         "school",
         "photos"
@@ -86,7 +86,7 @@
           "label": "Noun"
         }
       ],
-      "template": "For my {number1}th birthday, we ordered a giant {food1} cake shaped like a {animal1}, but before anyone could eat it, my cousin accidentally {verbPast1} directly into the {noun1}.",
+      "template": "For my {{number1}}th birthday, we ordered a giant {{food1}} cake shaped like a {{animal1}}, but before anyone could eat it, my cousin accidentally {{verbPast1}} directly into the {{noun1}}.",
       "tags": [
         "birthday",
         "cake"
@@ -121,7 +121,7 @@
           "label": "Verb ending in -ing"
         }
       ],
-      "template": "{friend1} came over for a sleepover, but nobody slept because we kept hearing {sound1} noises coming from the kitchen. Eventually we discovered a mysterious {object1} surrounded by {pluralNoun1} that appeared to be slowly {verbIng1}. We were deeply {emotion1} but also kind of impressed.",
+      "template": "{{friend1}} came over for a sleepover, but nobody slept because we kept hearing {{sound1}} noises coming from the kitchen. Eventually we discovered a mysterious {{object1}} surrounded by {{pluralNoun1}} that appeared to be slowly {{verbIng1}}. We were deeply {{emotion1}} but also kind of impressed.",
       "tags": [
         "sleepover",
         "mystery"
@@ -152,7 +152,7 @@
           "label": "Plural noun"
         }
       ],
-      "template": "By day I am a normal kid, but by night I become The {adjective1} {food1}. Using the power of my mighty {bodyPart1}, I protect innocent {pluralNoun1} from villains who want to {verb1} everything.",
+      "template": "By day I am a normal kid, but by night I become The {{adjective1}} {{food1}}. Using the power of my mighty {{bodyPart1}}, I protect innocent {{pluralNoun1}} from villains who want to {{verb1}} everything.",
       "tags": [
         "superhero",
         "kids"
@@ -187,7 +187,7 @@
           "label": "Emotion"
         }
       ],
-      "template": "Everything was normal in {teacher1}'s {schoolSubject1} class until somebody accidentally brought a live {animal1} to school. The animal immediately {verbPast1} across the classroom, knocked over somebody's {food1}, and caused the entire class to become extremely {emotion1}.",
+      "template": "Everything was normal in {{teacher1}}'s {{schoolSubject1}} class until somebody accidentally brought a live {{animal1}} to school. The animal immediately {{verbPast1}} across the classroom, knocked over somebody's {{food1}}, and caused the entire class to become extremely {{emotion1}}.",
       "tags": [
         "school",
         "classroom"
@@ -226,7 +226,7 @@
           "label": "Emotion"
         }
       ],
-      "template": "Our camping trip to {location1} started off very {adjective1}. We made {food1} over the fire and spent the evening {verbIng1} under the stars. Unfortunately, a group of wild {animalPlural1} appeared during the night and stole our {object1}. Everyone became extremely {emotion1}, especially my dad, who claimed the animals were \"working together strategically.\"",
+      "template": "Our camping trip to {{location1}} started off very {{adjective1}}. We made {{food1}} over the fire and spent the evening {{verbIng1}} under the stars. Unfortunately, a group of wild {{animalPlural1}} appeared during the night and stole our {{object1}}. Everyone became extremely {{emotion1}}, especially my dad, who claimed the animals were \"working together strategically.\"",
       "tags": [
         "camping",
         "outdoors"
@@ -289,7 +289,7 @@
           "label": "Vehicle"
         }
       ],
-      "template": "Our school field trip to {place1} started off completely normal. {teacher1} told everyone to stay together, avoid touching anything weird, and absolutely not throw {food1} at the exhibits. Naturally, this lasted about six minutes.\n\nThings became strange when a very loud {animal1} escaped from somewhere nearby and started aggressively {verbIng1} beside a giant {object1}. Half the class screamed, three kids started laughing uncontrollably, and one parent volunteer immediately became extremely {emotion1}.\n\nMeanwhile, {friend1} somehow wandered into a restricted area filled with mysterious {pluralNoun1}. Nobody noticed until an announcement came over the speakers describing \"a small child wearing a {color1} shirt and carrying a suspicious {noun1}.\" At this point, the teachers looked completely exhausted.\n\nThe trip finally ended after somebody accidentally pressed a button they definitely should not have touched, causing alarms to go off and forcing everyone to leave in a hurry. On the ride home, the entire class sat silently on the {vehicle1} while pretending none of this had happened."
+      "template": "Our school field trip to {{place1}} started off completely normal. {{teacher1}} told everyone to stay together, avoid touching anything weird, and absolutely not throw {{food1}} at the exhibits. Naturally, this lasted about six minutes.\n\nThings became strange when a very loud {{animal1}} escaped from somewhere nearby and started aggressively {{verbIng1}} beside a giant {{object1}}. Half the class screamed, three kids started laughing uncontrollably, and one parent volunteer immediately became extremely {{emotion1}}.\n\nMeanwhile, {{friend1}} somehow wandered into a restricted area filled with mysterious {{pluralNoun1}}. Nobody noticed until an announcement came over the speakers describing \"a small child wearing a {{color1}} shirt and carrying a suspicious {{noun1}}.\" At this point, the teachers looked completely exhausted.\n\nThe trip finally ended after somebody accidentally pressed a button they definitely should not have touched, causing alarms to go off and forcing everyone to leave in a hurry. On the ride home, the entire class sat silently on the {{vehicle1}} while pretending none of this had happened."
     },
     {
       "id": "lost-tooth",

@@ -266,13 +266,11 @@ private class MainViewModel(private val repository: StoryRepository) : ViewModel
     }
 
     fun completeStory(packId: String, story: Story, values: Map<String, String>) {
-        // Normalize {{key}} -> {key} so both placeholder styles render correctly.
-        val normalized = story.template.replace(Regex("\\{\\{(\\w+)\\}\\}"), "{$1}")
-        val rendered = values.entries.fold(normalized) { acc, entry ->
-            acc.replace("{${entry.key}}", entry.value)
+        val rendered = values.entries.fold(story.template) { acc, entry ->
+            acc.replace("{{${entry.key}}}", entry.value)
         }
         val labels = story.prompts.associate { it.key to it.label }
-        val tokens = tokenizeTemplate(normalized, values, labels)
+        val tokens = tokenizeTemplate(story.template, values, labels)
         completedStory = CompletedStory(
             packId = packId,
             storyId = story.id,
@@ -288,7 +286,7 @@ private class MainViewModel(private val repository: StoryRepository) : ViewModel
         values: Map<String, String>,
         labels: Map<String, String>
     ): List<com.butterfeetlabs.badstories.data.RenderedToken> {
-        val regex = Regex("\\{([^}]+)\\}")
+        val regex = Regex("\\{\\{(\\w+)\\}\\}")
         val out = mutableListOf<com.butterfeetlabs.badstories.data.RenderedToken>()
         var cursor = 0
         regex.findAll(template).forEach { match ->

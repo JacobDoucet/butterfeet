@@ -33,7 +33,7 @@
           "label": "Verb"
         }
       ],
-      "template": "As Head of {jobTitle1}, I regret to announce that the {adjective1} {pluralNoun1} have learned how to {verb1}.",
+      "template": "As Head of {{jobTitle1}}, I regret to announce that the {{adjective1}} {{pluralNoun1}} have learned how to {{verb1}}.",
       "tags": [
         "work",
         "corporate"
@@ -60,7 +60,7 @@
           "label": "Celebrity"
         }
       ],
-      "template": "My {relative1} accidentally sent a photo of {food1} to the family group chat and now everyone thinks {celebrity1} is feeling {emotion1}.",
+      "template": "My {{relative1}} accidentally sent a photo of {{food1}} to the family group chat and now everyone thinks {{celebrity1}} is feeling {{emotion1}}.",
       "tags": [
         "family",
         "chat"
@@ -87,7 +87,7 @@
           "label": "Verb"
         }
       ],
-      "template": "By day I am normal. By night I become The {adjective1} {food1}, protector of all innocent {pluralNoun1} who simply cannot {verb1}.",
+      "template": "By day I am normal. By night I become The {{adjective1}} {{food1}}, protector of all innocent {{pluralNoun1}} who simply cannot {{verb1}}.",
       "tags": [
         "superhero",
         "origin-story"
@@ -114,7 +114,7 @@
           "label": "Emotion"
         }
       ],
-      "template": "Hey guys, {name1} here. I want to apologize for the {object1}. I never meant to {verbPast1} anyone, and I am taking time to feel {emotion1}.",
+      "template": "Hey guys, {{name1}} here. I want to apologize for the {{object1}}. I never meant to {{verbPast1}} anyone, and I am taking time to feel {{emotion1}}.",
       "tags": [
         "internet",
         "apology"
@@ -141,7 +141,7 @@
           "label": "Emotion"
         }
       ],
-      "template": "The AI became self-aware after a {occupation1} spent 14 straight hours {verbIng1} at a {object1}, leaving humanity deeply {emotion1}.",
+      "template": "The AI became self-aware after a {{occupation1}} spent 14 straight hours {{verbIng1}} at a {{object1}}, leaving humanity deeply {{emotion1}}.",
       "tags": [
         "sci-fi",
         "technology"

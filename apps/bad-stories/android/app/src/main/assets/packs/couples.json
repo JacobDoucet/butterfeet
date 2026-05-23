@@ -29,7 +29,7 @@
           "label": "Verb ending in -ing"
         }
       ],
-      "template": "It was a {adjective1} night when I brought a {noun1} to the restaurant and started {verbIng1}.",
+      "template": "It was a {{adjective1}} night when I brought a {{noun1}} to the restaurant and started {{verbIng1}}.",
       "tags": [
         "dating",
         "awkward"
@@ -56,7 +56,7 @@
           "label": "Verb ending in -ing"
         }
       ],
-      "template": "Security stopped me in {city1} after they found a suspicious {object1} covered in photos of a {animal1} {verbIng1}.",
+      "template": "Security stopped me in {{city1}} after they found a suspicious {{object1}} covered in photos of a {{animal1}} {{verbIng1}}.",
       "tags": [
         "travel",
         "security"
@@ -83,7 +83,7 @@
           "label": "Adjective"
         }
       ],
-      "template": "My trainer says if I pour {liquid1} directly onto my {bodyPart1} for {number1} minutes a day, I will become unbelievably {adjective1}.",
+      "template": "My trainer says if I pour {{liquid1}} directly onto my {{bodyPart1}} for {{number1}} minutes a day, I will become unbelievably {{adjective1}}.",
       "tags": [
         "fitness",
         "bad-advice"
@@ -110,7 +110,7 @@
           "label": "Plural animal"
         }
       ],
-      "template": "At 3am we heard a {sound1} coming from the {adjective1} {room1}, followed by at least twelve furious {pluralAnimal1}.",
+      "template": "At 3am we heard a {{sound1}} coming from the {{adjective1}} {{room1}}, followed by at least twelve furious {{pluralAnimal1}}.",
       "tags": [
         "spooky",
         "house"
@@ -137,7 +137,7 @@
           "label": "Past tense verb"
         }
       ],
-      "template": "During the wedding speech, my {relationship1} became extremely {emotion1} and accidentally {verbPast1} a full {noun1} into the cake.",
+      "template": "During the wedding speech, my {{relationship1}} became extremely {{emotion1}} and accidentally {{verbPast1}} a full {{noun1}} into the cake.",
       "tags": [
         "wedding",
         "speech"

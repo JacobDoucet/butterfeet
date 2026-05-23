@@ -24,7 +24,7 @@
           "label": "Emotion"
         }
       ],
-      "template": "At 1:47am, I texted {name1}, “I miss your {adjective1} {noun1},” and honestly I have never felt more {emotion1}.",
+      "template": "At 1:47am, I texted {{name1}}, “I miss your {{adjective1}} {{noun1}},” and honestly I have never felt more {{emotion1}}.",
       "tags": [
         "night-out",
         "texts"
@@ -51,7 +51,7 @@
           "label": "Past tense verb"
         }
       ],
-      "template": "I grabbed the mic, dedicated {song1} to {celebrity1}, and immediately {verbPast1} so hard my {bodyPart1} made a noise.",
+      "template": "I grabbed the mic, dedicated {{song1}} to {{celebrity1}}, and immediately {{verbPast1}} so hard my {{bodyPart1}} made a noise.",
       "tags": [
         "music",
         "performance"
@@ -78,7 +78,7 @@
           "label": "Animal"
         }
       ],
-      "template": "The party was going great until someone filled the {room1} with {liquid1}, knocked over the {pluralNoun1}, and blamed it all on a {animal1}.",
+      "template": "The party was going great until someone filled the {{room1}} with {{liquid1}}, knocked over the {{pluralNoun1}}, and blamed it all on a {{animal1}}.",
       "tags": [
         "party",
         "disaster"
@@ -105,7 +105,7 @@
           "label": "Place"
         }
       ],
-      "template": "The next morning, the group chat had 94 messages, one blurry photo of {name1} holding a {object1}, and several witnesses claiming I was {verbIng1} near the {place1}.",
+      "template": "The next morning, the group chat had 94 messages, one blurry photo of {{name1}} holding a {{object1}}, and several witnesses claiming I was {{verbIng1}} near the {{place1}}.",
       "tags": [
         "afterparty",
         "chat"
@@ -132,7 +132,7 @@
           "label": "Emotion"
         }
       ],
-      "template": "A {adjective1} stranger in the bathroom grabbed my shoulder, stared into my soul, and said, “Remember: {lifeAdvice1}.” Then they handed me a {noun1} and walked away looking {emotion1}.",
+      "template": "A {{adjective1}} stranger in the bathroom grabbed my shoulder, stared into my soul, and said, “Remember: {{lifeAdvice1}}.” Then they handed me a {{noun1}} and walked away looking {{emotion1}}.",
       "tags": [
         "bar",
         "advice"
@@ -159,7 +159,7 @@
           "label": "Location"
         }
       ],
-      "template": "On the ride home, I requested {song1}, ate {food1} with my bare hands, and {verbPast1} directly outside {location1}.",
+      "template": "On the ride home, I requested {{song1}}, ate {{food1}} with my bare hands, and {{verbPast1}} directly outside {{location1}}.",
       "tags": [
         "ride-home",
         "late-night"
@@ -186,7 +186,7 @@
           "label": "Verb"
         }
       ],
-      "template": "I raised my glass and said, “To my {relationship1}: may your {adjective1} {pluralNoun1} always {verb1} with dignity.” Nobody clapped.",
+      "template": "I raised my glass and said, “To my {{relationship1}}: may your {{adjective1}} {{pluralNoun1}} always {{verb1}} with dignity.” Nobody clapped.",
       "tags": [
         "speech",
         "ceremony"
@@ -213,7 +213,7 @@
           "label": "First name"
         }
       ],
-      "template": "Nobody knows how the {color1} stain got on my {clothing1}, but {name1} keeps saying it “smells like {food1}” and that feels legally important.",
+      "template": "Nobody knows how the {{color1}} stain got on my {{clothing1}}, but {{name1}} keeps saying it “smells like {{food1}}” and that feels legally important.",
       "tags": [
         "mystery",
         "mess"
@@ -240,7 +240,7 @@
           "label": "Adjective"
         }
       ],
-      "template": "The DJ stopped the music and yelled, “Can {name1} please stop {verbIng1} the {pluralNoun1}? Security says it’s getting {adjective1}.”",
+      "template": "The DJ stopped the music and yelled, “Can {{name1}} please stop {{verbIng1}} the {{pluralNoun1}}? Security says it’s getting {{adjective1}}.”",
       "tags": [
         "dj",
         "crowd"
@@ -267,7 +267,7 @@
           "label": "Animal"
         }
       ],
-      "template": "The official party foul happened when someone dropped a {object1} into the {drink1}, {verbPast1} on the couch, and blamed a completely innocent {animal1}.",
+      "template": "The official party foul happened when someone dropped a {{object1}} into the {{drink1}}, {{verbPast1}} on the couch, and blamed a completely innocent {{animal1}}.",
       "tags": [
         "party",
         "oops"
@@ -310,7 +310,7 @@
           "label": "Food"
         }
       ],
-      "template": "Things went downhill almost immediately during our casino night in {city1}. The moment we arrived, a man who looked suspiciously like {celebrity1} handed me a {drink1} and told me to \"trust the process.\" Roughly twenty minutes later, someone accidentally used a {noun1} as gambling collateral, several people {verbPast1} near the slot machines, and security had to escort out a deeply {emotion1} {animal1}. The night officially ended when somebody attempted to order {food1} from the blackjack dealer.",
+      "template": "Things went downhill almost immediately during our casino night in {{city1}}. The moment we arrived, a man who looked suspiciously like {{celebrity1}} handed me a {{drink1}} and told me to \"trust the process.\" Roughly twenty minutes later, someone accidentally used a {{noun1}} as gambling collateral, several people {{verbPast1}} near the slot machines, and security had to escort out a deeply {{emotion1}} {{animal1}}. The night officially ended when somebody attempted to order {{food1}} from the blackjack dealer.",
       "tags": [
         "casino",
         "gambling"
@@ -369,7 +369,7 @@
           "label": "Object"
         }
       ],
-      "template": "My {age1}th birthday party started off surprisingly {adjective1}. Everyone arrived on time, there was an unreasonable amount of {food1}, and somebody had already connected to the speaker and started aggressively {verbIng1}. Things took a turn when {friend1} claimed they once met {celebrity1} in a parking garage and somehow used that story to justify standing on a {noun1}.\n\nAbout an hour later, the entire kitchen became deeply {emotion1} after somebody spilled {liquid1} onto several important-looking {pluralNoun1}. At this point, a loose {animal1} appeared from absolutely nowhere and began chasing people through the house while music continued playing at full volume.\n\nThe final disaster happened around 2am when someone attempted to open a bottle using a {object1}, which caused three people to scream, one lamp to collapse, and at least two friendships to end permanently. My neighbors described the evening as \"psychologically exhausting,\" and honestly I think that was fair.",
+      "template": "My {{age1}}th birthday party started off surprisingly {{adjective1}}. Everyone arrived on time, there was an unreasonable amount of {{food1}}, and somebody had already connected to the speaker and started aggressively {{verbIng1}}. Things took a turn when {{friend1}} claimed they once met {{celebrity1}} in a parking garage and somehow used that story to justify standing on a {{noun1}}.\n\nAbout an hour later, the entire kitchen became deeply {{emotion1}} after somebody spilled {{liquid1}} onto several important-looking {{pluralNoun1}}. At this point, a loose {{animal1}} appeared from absolutely nowhere and began chasing people through the house while music continued playing at full volume.\n\nThe final disaster happened around 2am when someone attempted to open a bottle using a {{object1}}, which caused three people to scream, one lamp to collapse, and at least two friendships to end permanently. My neighbors described the evening as \"psychologically exhausting,\" and honestly I think that was fair.",
       "tags": [
         "birthday",
         "meltdown"
@@ -416,7 +416,7 @@
           "label": "Animal"
         }
       ],
-      "template": "The rooftop party in {city1} started with incredible vibes and an extremely {adjective1} playlist. Everyone was holding a {drink1}, pretending to enjoy rooftop conversations, and aggressively {verbIng1} whenever a good song came on. Things got strange when a man claiming to be cousins with {celebrity1} arrived carrying several suspicious {pluralNoun1}.\n\nAt first nobody questioned it, but the mood became increasingly {emotion1} after he attempted to use a {object1} as a microphone and started giving relationship advice to strangers. The night officially peaked when somebody screamed, everyone turned around, and a completely loose {animal1} sprinted across the rooftop bar while music continued playing like nothing was happening.",
+      "template": "The rooftop party in {{city1}} started with incredible vibes and an extremely {{adjective1}} playlist. Everyone was holding a {{drink1}}, pretending to enjoy rooftop conversations, and aggressively {{verbIng1}} whenever a good song came on. Things got strange when a man claiming to be cousins with {{celebrity1}} arrived carrying several suspicious {{pluralNoun1}}.\n\nAt first nobody questioned it, but the mood became increasingly {{emotion1}} after he attempted to use a {{object1}} as a microphone and started giving relationship advice to strangers. The night officially peaked when somebody screamed, everyone turned around, and a completely loose {{animal1}} sprinted across the rooftop bar while music continued playing like nothing was happening.",
       "tags": [
         "rooftop",
         "nightlife"
@@ -479,7 +479,7 @@
           "label": "Noun"
         }
       ],
-      "template": "Our New Year's party in {city1} was supposed to be classy, but things immediately became extremely {adjective1} the second {friend1} arrived carrying six trays of {food1} and a backpack full of {drink1}. Somehow this was not even close to the weirdest thing that happened.\n\nAt around 10pm, a stranger who claimed to be the \"personal wellness advisor\" for {celebrity1} started aggressively {verbIng1} near the speakers while giving unsolicited financial advice to random people. Nobody knew who invited him, but by midnight he had somehow gathered a small audience and convinced several guests to throw their {pluralNoun1} into a decorative fountain \"for manifestation purposes.\"\n\nThe situation became increasingly {emotion1} after someone lost an entire {object1}, two couples began arguing in the kitchen, and a loose {animal1} appeared upstairs with what looked like glitter on its {bodyPart1}. Despite this, the countdown continued as normal.\n\nExactly thirty seconds after midnight, somebody knocked over a massive {noun1}, the music stopped completely, and every person in the apartment went silent at the same time. Then, from somewhere deep in the building, we heard a single person yell \"LET'S GOOOOOO,\" and the party somehow became even worse.",
+      "template": "Our New Year's party in {{city1}} was supposed to be classy, but things immediately became extremely {{adjective1}} the second {{friend1}} arrived carrying six trays of {{food1}} and a backpack full of {{drink1}}. Somehow this was not even close to the weirdest thing that happened.\n\nAt around 10pm, a stranger who claimed to be the \"personal wellness advisor\" for {{celebrity1}} started aggressively {{verbIng1}} near the speakers while giving unsolicited financial advice to random people. Nobody knew who invited him, but by midnight he had somehow gathered a small audience and convinced several guests to throw their {{pluralNoun1}} into a decorative fountain \"for manifestation purposes.\"\n\nThe situation became increasingly {{emotion1}} after someone lost an entire {{object1}}, two couples began arguing in the kitchen, and a loose {{animal1}} appeared upstairs with what looked like glitter on its {{bodyPart1}}. Despite this, the countdown continued as normal.\n\nExactly thirty seconds after midnight, somebody knocked over a massive {{noun1}}, the music stopped completely, and every person in the apartment went silent at the same time. Then, from somewhere deep in the building, we heard a single person yell \"LET'S GOOOOOO,\" and the party somehow became even worse.",
       "tags": [
         "new-year",
         "countdown"
@@ -546,7 +546,7 @@
           "label": "Vehicle"
         }
       ],
-      "template": "The boat party in {location1} sounded like an incredible idea at the time. The brochure promised \"luxury vibes,\" but the moment we stepped onboard it became clear this was going to be an extremely {adjective1} experience. {friend1} immediately opened a bottle of {drink1}, somebody dropped an entire tray of {food1} onto the floor, and the captain looked visibly exhausted before we had even left the dock.\n\nThings escalated quickly when a man claiming to have once worked for {celebrity1} started aggressively {verbIng1} near the front of the boat while yelling about \"energy frequencies.\" Somehow this led to several strangers throwing their {pluralNoun1} into the ocean for \"good luck.\" Nobody could explain why.\n\nAbout an hour later, the atmosphere became deeply {emotion1} after somebody misplaced a very important-looking {object1}. Accusations started flying, two groups formed naturally, and one woman insisted a suspicious {animal1} had stolen it. The captain attempted to calm everyone down over the speaker system, but his speech was interrupted by a loud crashing sound from below deck.\n\nAt this point, absolutely nobody was behaving normally. Someone was crying beside a cooler, one guy attempted to freestyle rap about the meaning of friendship, and another person repeatedly referred to himself as \"The {noun1}.\" Meanwhile, glitter had somehow appeared on multiple people's {bodyPart1}, despite nobody bringing glitter to the party.\n\nThe night officially ended when a completely unrelated {vehicle1} approached the boat close enough for everyone onboard to panic simultaneously. The music stopped, people started grabbing random belongings, and one deeply confused tourist quietly asked if this was still part of the experience package.",
+      "template": "The boat party in {{location1}} sounded like an incredible idea at the time. The brochure promised \"luxury vibes,\" but the moment we stepped onboard it became clear this was going to be an extremely {{adjective1}} experience. {{friend1}} immediately opened a bottle of {{drink1}}, somebody dropped an entire tray of {{food1}} onto the floor, and the captain looked visibly exhausted before we had even left the dock.\n\nThings escalated quickly when a man claiming to have once worked for {{celebrity1}} started aggressively {{verbIng1}} near the front of the boat while yelling about \"energy frequencies.\" Somehow this led to several strangers throwing their {{pluralNoun1}} into the ocean for \"good luck.\" Nobody could explain why.\n\nAbout an hour later, the atmosphere became deeply {{emotion1}} after somebody misplaced a very important-looking {{object1}}. Accusations started flying, two groups formed naturally, and one woman insisted a suspicious {{animal1}} had stolen it. The captain attempted to calm everyone down over the speaker system, but his speech was interrupted by a loud crashing sound from below deck.\n\nAt this point, absolutely nobody was behaving normally. Someone was crying beside a cooler, one guy attempted to freestyle rap about the meaning of friendship, and another person repeatedly referred to himself as \"The {{noun1}}.\" Meanwhile, glitter had somehow appeared on multiple people's {{bodyPart1}}, despite nobody bringing glitter to the party.\n\nThe night officially ended when a completely unrelated {{vehicle1}} approached the boat close enough for everyone onboard to panic simultaneously. The music stopped, people started grabbing random belongings, and one deeply confused tourist quietly asked if this was still part of the experience package.",
       "tags": [
         "boat",
         "vacation"
