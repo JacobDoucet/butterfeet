@@ -1,0 +1,15 @@
+{
+  "id": "science-fiction",
+  "title": "Science Fiction Pack",
+  "description": "Advanced technology. Primitive decision-making.",
+  "rating": "teen",
+  "status": "coming_soon",
+  "emoji": "🚀",
+  "tags": [
+    "sci-fi",
+    "future",
+    "space"
+  ],
+  "accentName": "sci-fi-static",
+  "stories": []
+}

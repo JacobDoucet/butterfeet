@@ -93,6 +93,7 @@ Each coming-soon pack should have:
 
 - Correct `status: "coming_soon"`
 - Real metadata (title, description, emoji, tags, rating) — this is what players see
+- At most 3 tags (keep them high-signal)
 - `stories: []` — empty until the pack is ready to ship
 - A tone that feels distinct and makes players want to come back
 

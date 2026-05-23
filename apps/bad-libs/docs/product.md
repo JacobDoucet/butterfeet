@@ -38,9 +38,9 @@ When a coming-soon pack is ready to ship, change `"status"` to `"available"` and
 ### Visible but coming soon
 
 - 💼 Office Pack
-- ✈️ Vacation Disaster Pack
-- 💍 Wedding Pack
-- 🎄 Holiday Pack
+- 📺 Reality TV Pack
+- 🚀 Science Fiction Pack
+- 🕵️ Crime Documentary Pack
 - ☢️ Gen Alpha Pack
 
 Coming-soon packs are intentionally visible in browse UI to build anticipation, but are not playable yet.
@@ -48,9 +48,9 @@ Coming-soon packs are intentionally visible in browse UI to build anticipation, 
 ## Content Schema Notes
 
 - `StoryPack` owns rating and metadata:
-  - `id`, `title`, `description`, `rating`, `status`, `emoji`, `tags`, optional `accentName`, `stories`
+  - `id`, `title`, `description`, `rating`, `status`, `emoji`, `tags` (max 3), optional `accentName`, `stories`
 - `Story` owns content-level metadata:
-  - `id`, `title`, `tags`, `prompts`, `template`
+  - `id`, `title`, `tags` (max 3), `prompts`, `template`
 - No story-level rating.
 - No dedicated story length field.
 - Length UX is inferred from prompt count:

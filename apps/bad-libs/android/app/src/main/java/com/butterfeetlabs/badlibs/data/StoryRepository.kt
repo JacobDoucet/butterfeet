@@ -14,9 +14,9 @@ class StoryRepository(
         "couples" to 2,
         "kids" to 3,
         "office" to 4,
-        "vacation-disaster" to 5,
-        "wedding" to 6,
-        "holiday" to 7,
+        "reality-tv" to 5,
+        "science-fiction" to 6,
+        "crime-documentary" to 7,
         "gen-alpha" to 8
     )
 

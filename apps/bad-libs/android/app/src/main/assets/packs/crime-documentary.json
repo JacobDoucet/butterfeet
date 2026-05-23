@@ -1,0 +1,15 @@
+{
+  "id": "crime-documentary",
+  "title": "Crime Documentary Pack",
+  "description": "A completely unnecessary investigation.",
+  "rating": "teen",
+  "status": "coming_soon",
+  "emoji": "🕵️",
+  "tags": [
+    "crime",
+    "mystery",
+    "dramatic"
+  ],
+  "accentName": "case-file",
+  "stories": []
+}

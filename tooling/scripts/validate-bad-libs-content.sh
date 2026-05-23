@@ -5,6 +5,7 @@
 # Fails if:
 #   - JSON is invalid
 #   - a pack is missing required fields (id, title, description, rating, status, emoji, tags)
+#   - a pack or story has more than 3 tags
 #   - a coming_soon pack has any playable stories
 #   - a story has more than 15 prompts
 #   - a story contains a rating field
@@ -45,6 +46,13 @@ for FILE in "$PACKS_DIR"/*.json; do
 
   STATUS="$(jq -r '.status' "$FILE")"
 
+  # 2b. Pack tag cap (≤3)
+  PACK_TAG_COUNT="$(jq '.tags | length' "$FILE")"
+  if [[ "$PACK_TAG_COUNT" -gt 3 ]]; then
+    echo "FAIL [$PACK] Pack has $PACK_TAG_COUNT tags (max 3)" >&2
+    ERRORS=$((ERRORS + 1))
+  fi
+
   # 3. coming_soon packs must have no stories
   if [[ "$STATUS" == "coming_soon" ]]; then
     STORY_COUNT="$(jq '.stories | length' "$FILE")"
@@ -75,7 +83,14 @@ for FILE in "$PACKS_DIR"/*.json; do
       ERRORS=$((ERRORS + 1))
     fi
 
-    # 4c. Duplicate prompt keys within a story
+    # 4c. Story tag cap (≤3)
+    STORY_TAG_COUNT="$(jq --argjson i "$i" '.stories[$i].tags | length' "$FILE")"
+    if [[ "$STORY_TAG_COUNT" -gt 3 ]]; then
+      echo "FAIL [$PACK] Story '$STORY_ID' has $STORY_TAG_COUNT tags (max 3)" >&2
+      ERRORS=$((ERRORS + 1))
+    fi
+
+    # 4d. Duplicate prompt keys within a story
     DUP_KEYS="$(jq -r --argjson i "$i" '[.stories[$i].prompts[].key] | group_by(.) | map(select(length > 1)) | .[] | .[0]' "$FILE")"
     if [[ -n "$DUP_KEYS" ]]; then
       echo "FAIL [$PACK] Story '$STORY_ID' has duplicate prompt keys: $DUP_KEYS" >&2

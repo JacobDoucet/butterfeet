@@ -1,0 +1,15 @@
+{
+  "id": "reality-tv",
+  "title": "Reality TV Pack",
+  "description": "Emotionally unstable people competing for absolutely nothing.",
+  "rating": "teen",
+  "status": "coming_soon",
+  "emoji": "📺",
+  "tags": [
+    "reality-tv",
+    "drama",
+    "chaotic"
+  ],
+  "accentName": "reality-meltdown",
+  "stories": []
+}
