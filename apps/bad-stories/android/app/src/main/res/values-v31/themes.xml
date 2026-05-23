@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.BadStories.Splash" parent="Theme.BadStories">
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <item name="android:windowBackground">@drawable/splash_screen</item>
+    </style>
+</resources>

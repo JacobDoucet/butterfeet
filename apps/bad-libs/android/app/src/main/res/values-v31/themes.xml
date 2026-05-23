@@ -1,7 +1,0 @@
-<resources>
-    <style name="Theme.BadLibs.Splash" parent="Theme.BadLibs">
-        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
-        <item name="android:windowBackground">@drawable/splash_screen</item>
-    </style>
-</resources>

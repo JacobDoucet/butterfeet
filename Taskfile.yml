@@ -112,7 +112,7 @@ tasks:
       - sh: test -n "{{.SDK_PATH}}"
         msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
       - sh: test -n "{{.ANDROID_DIR}}"
-        msg: Provide ANDROID_DIR, e.g. apps/bad-libs/android.
+        msg: Provide ANDROID_DIR, e.g. apps/bad-stories/android.
     dir: "{{.ANDROID_DIR}}"
     cmds:
       - 'ANDROID_SDK_ROOT="{{.SDK_PATH}}" ./gradlew :{{if .APP_MODULE}}{{.APP_MODULE}}{{else}}{{.DEFAULT_APP_MODULE}}{{end}}:assembleDebug'
@@ -126,7 +126,7 @@ tasks:
       - sh: test -n "{{.SDK_PATH}}"
         msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
       - sh: test -n "{{.ANDROID_DIR}}"
-        msg: Provide ANDROID_DIR, e.g. apps/bad-libs/android.
+        msg: Provide ANDROID_DIR, e.g. apps/bad-stories/android.
     dir: "{{.ANDROID_DIR}}"
     cmds:
       - 'ANDROID_SDK_ROOT="{{.SDK_PATH}}" ./gradlew :{{if .APP_MODULE}}{{.APP_MODULE}}{{else}}{{.DEFAULT_APP_MODULE}}{{end}}:installDebug'
@@ -157,7 +157,7 @@ tasks:
       - sh: test -n "{{.SDK_PATH}}"
         msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
       - sh: test -n "{{.ANDROID_DIR}}"
-        msg: Provide ANDROID_DIR, e.g. apps/bad-libs/android.
+        msg: Provide ANDROID_DIR, e.g. apps/bad-stories/android.
       - sh: test -x "{{.SDK_PATH}}/platform-tools/adb"
         msg: adb not found at SDK path.
       - sh: test -n "{{.APP_PACKAGE}}"
@@ -181,7 +181,7 @@ tasks:
       - sh: test -x "{{.SDK_PATH}}/platform-tools/adb"
         msg: adb not found at SDK path.
       - sh: test -n "{{.ANDROID_DIR}}"
-        msg: Provide ANDROID_DIR, e.g. apps/bad-libs/android.
+        msg: Provide ANDROID_DIR, e.g. apps/bad-stories/android.
       - sh: test -n "{{.APP_PACKAGE}}"
         msg: Provide APP_PACKAGE, e.g. com.example.app.
       - sh: test -n "{{.APP_ACTIVITY}}"
@@ -225,10 +225,10 @@ tasks:
     desc: "Build/install/run app by APP key from registry"
     summary: |
       Usage:
-        task android:app:build-install-run APP=bad-libs
+        task android:app:build-install-run APP=bad-stories
     preconditions:
       - sh: test -n "{{.APP}}"
-        msg: Provide APP, e.g. APP=bad-libs.
+        msg: Provide APP, e.g. APP=bad-stories.
       - sh: test -f "{{.ANDROID_APPS_FILE}}"
         msg: Missing app registry file at {{.ANDROID_APPS_FILE}}.
     cmds:
@@ -247,10 +247,10 @@ tasks:
     desc: "Boot emulator then build/install/run app by APP key from registry"
     summary: |
       Usage:
-        task android:app:cold-start APP=bad-libs [AVD=Pixel_8]
+        task android:app:cold-start APP=bad-stories [AVD=Pixel_8]
     preconditions:
       - sh: test -n "{{.APP}}"
-        msg: Provide APP, e.g. APP=bad-libs.
+        msg: Provide APP, e.g. APP=bad-stories.
       - sh: test -f "{{.ANDROID_APPS_FILE}}"
         msg: Missing app registry file at {{.ANDROID_APPS_FILE}}.
     cmds:
@@ -265,37 +265,37 @@ tasks:
         echo "Cold-starting app: $APP_KEY"
         task android:cold-start ANDROID_DIR="$ANDROID_DIR" APP_MODULE="$APP_MODULE" APP_PACKAGE="$APP_PACKAGE" APP_ACTIVITY="$APP_ACTIVITY" AVD="{{.AVD}}"
 
-  "bad-libs:assemble":
-    desc: "Build Bad Libs debug APK"
+  "bad-stories:assemble":
+    desc: "Build Bad Stories debug APK"
     cmds:
-      - task android:assemble ANDROID_DIR=apps/bad-libs/android APP_MODULE=app
+      - task android:assemble ANDROID_DIR=apps/bad-stories/android APP_MODULE=app
 
-  "bad-libs:install":
-    desc: "Install Bad Libs debug APK on connected device/emulator"
+  "bad-stories:install":
+    desc: "Install Bad Stories debug APK on connected device/emulator"
     cmds:
-      - task android:install ANDROID_DIR=apps/bad-libs/android APP_MODULE=app
+      - task android:install ANDROID_DIR=apps/bad-stories/android APP_MODULE=app
 
-  "bad-libs:run":
-    desc: "Launch Bad Libs app on connected device/emulator"
+  "bad-stories:run":
+    desc: "Launch Bad Stories app on connected device/emulator"
     cmds:
-      - task android:run APP_PACKAGE=com.butterfeetlabs.badlibs APP_ACTIVITY=.MainActivity
+      - task android:run APP_PACKAGE=com.butterfeetlabs.badstories APP_ACTIVITY=.MainActivity
 
-  "bad-libs:build-install-run":
-    desc: "Build, install, then launch Bad Libs"
+  "bad-stories:build-install-run":
+    desc: "Build, install, then launch Bad Stories"
     cmds:
-      - task android:app:build-install-run APP=bad-libs
+      - task android:app:build-install-run APP=bad-stories
 
-  "bad-libs:cold-start":
-    desc: "Launch emulator (bg), wait for boot, then build/install/run Bad Libs"
+  "bad-stories:cold-start":
+    desc: "Launch emulator (bg), wait for boot, then build/install/run Bad Stories"
     cmds:
-      - task android:app:cold-start APP=bad-libs AVD="{{.AVD}}"
+      - task android:app:cold-start APP=bad-stories AVD="{{.AVD}}"
 
-  "bad-libs:validate-content":
-    desc: "Validate all Bad Libs content pack JSON files"
+  "bad-stories:validate-content":
+    desc: "Validate all Bad Stories content pack JSON files"
     cmds:
-      - ./tooling/scripts/validate-bad-libs-content.sh
+      - ./tooling/scripts/validate-bad-stories-content.sh
 
-  "bad-libs:sync-assets":
-    desc: "Sync Bad Libs content packs into Android assets (run after editing pack JSON)"
+  "bad-stories:sync-assets":
+    desc: "Sync Bad Stories content packs into Android assets (run after editing pack JSON)"
     cmds:
-      - ./tooling/scripts/sync-bad-libs-assets.sh
+      - ./tooling/scripts/sync-bad-stories-assets.sh

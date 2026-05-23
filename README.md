@@ -8,9 +8,9 @@ Butter Feet Labs is an experimental app studio for shipping small, weird, fun so
 - Shared code belongs in `packages/` **only after** it has been reused by more than one app.
 - Tooling, scripts, and templates live in `tooling/`.
 
-## First App: Bad Libs
+## First App: Bad Stories
 
-The first app is **Bad Libs**, an Android word-game app inspired by fill-in-the-blank party games.
+The first app is **Bad Stories**, an Android word-game app inspired by fill-in-the-blank party games.
 
 ## CLI Workflow (Taskfile)
 
@@ -53,19 +53,19 @@ task android:cold-start ANDROID_DIR=apps/<app-name>/android APP_MODULE=app APP_P
 
 # Registry-based shortcuts (recommended for multiple apps)
 task android:apps:list
-task android:app:build-install-run APP=bad-libs
-task android:app:cold-start APP=bad-libs AVD=Pixel_8
+task android:app:build-install-run APP=bad-stories
+task android:app:cold-start APP=bad-stories AVD=Pixel_8
 
-# Bad Libs shortcuts
-task bad-libs:assemble
-task bad-libs:install
-task bad-libs:run
+# Bad Stories shortcuts
+task bad-stories:assemble
+task bad-stories:install
+task bad-stories:run
 
 # One-shot build + install + run
-task bad-libs:build-install-run
+task bad-stories:build-install-run
 
 # One-shot cold start: boot emulator + build + install + run
-task bad-libs:cold-start
+task bad-stories:cold-start
 ```
 
 Note: if both `ANDROID_HOME` and `ANDROID_SDK_ROOT` are set differently on your machine, align them to the same SDK path.
@@ -96,7 +96,7 @@ task android:app:cold-start APP=word-bonks AVD=Pixel_8
 ```text
 butter-feet-labs/
   apps/
-    bad-libs/
+    bad-stories/
       android/
       content/
       docs/

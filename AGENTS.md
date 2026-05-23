@@ -13,7 +13,7 @@ This is an experiment-focused monorepo for Butter Feet Labs.
 - For a registered app key, prefer:
   - `task android:app:build-install-run APP=<app-key>`
   - `task android:app:cold-start APP=<app-key> AVD=<name>`
-- Bad Libs is already registered as `bad-libs`.
+- Bad Stories is already registered as `bad-stories`.
 
 ## Android Environment Notes
 
@@ -25,8 +25,8 @@ This is an experiment-focused monorepo for Butter Feet Labs.
 - Keep architecture intentionally simple:
   - No backend/auth/analytics by default.
   - No DI framework unless needed.
-  - No database for current Bad Libs MVP.
-- Content source lives at `apps/bad-libs/content/packs/starter.json` and is bundled to Android assets.
+  - No database for current Bad Stories MVP.
+- Content source lives at `apps/bad-stories/content/packs/starter.json` and is bundled to Android assets.
 
 ## Adding New Android Apps
 

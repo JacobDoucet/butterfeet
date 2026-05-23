@@ -1,2 +1,2 @@
 # app_key|android_dir|app_module|app_package|app_activity
-bad-libs|apps/bad-libs/android|app|com.butterfeetlabs.badlibs|.MainActivity
+bad-stories|apps/bad-stories/android|app|com.butterfeetlabs.badstories|.MainActivity
