@@ -74,6 +74,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -577,15 +579,33 @@ private fun ChaosScaffold(
 }
 
 @Composable
+private fun rememberPressBounce(): Pair<MutableInteractionSource, Float> {
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.96f else 1f,
+        animationSpec = tween(durationMillis = 140, easing = FastOutSlowInEasing),
+        label = "press_bounce"
+    )
+    return source to scale
+}
+
+@Composable
 private fun ChaosPrimaryButton(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val tokens = BadLibs.tokens
+    val haptics = LocalHapticFeedback.current
+    val (source, scale) = rememberPressBounce()
     Button(
-        onClick = onClick,
-        modifier = modifier,
+        onClick = {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
+        modifier = modifier.graphicsLayer { scaleX = scale; scaleY = scale },
+        interactionSource = source,
         colors = ButtonDefaults.buttonColors(
             containerColor = tokens.ink,
             contentColor = tokens.paper
@@ -863,6 +883,8 @@ private fun HomeActionTile(
     enabled: Boolean = true
 ) {
     val tokens = BadLibs.tokens
+    val haptics = LocalHapticFeedback.current
+    val (source, scale) = rememberPressBounce()
     val container = when {
         !enabled -> tokens.ink.copy(alpha = 0.06f)
         primary -> tokens.ink
@@ -880,9 +902,15 @@ private fun HomeActionTile(
     }
 
     androidx.compose.material3.Surface(
-        onClick = onClick,
+        onClick = {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
         enabled = enabled,
-        modifier = Modifier.fillMaxWidth(),
+        interactionSource = source,
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer { scaleX = scale; scaleY = scale },
         shape = RoundedCornerShape(22.dp),
         color = container,
         border = BorderStroke(if (primary) 0.dp else 1.5.dp, border)
@@ -1047,12 +1075,18 @@ private fun PackListScreen(
                             val onPaletteColor = onColorFor(palette.primary)
                             val packIcon = if (isAvailable) pack.emoji else "🔒"
                             val highlighted = isAvailable && roulettePackId == pack.id
+                            val haptics = LocalHapticFeedback.current
+                            val (source, scale) = rememberPressBounce()
 
                             androidx.compose.material3.Surface(
                                 onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                     if (isAvailable) onOpenPack(pack.id) else onPackLocked()
                                 },
-                                modifier = Modifier.fillMaxWidth(),
+                                interactionSource = source,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .graphicsLayer { scaleX = scale; scaleY = scale },
                                 shape = RoundedCornerShape(22.dp),
                                 color = palette.primary,
                                 border = if (highlighted) BorderStroke(2.dp, BadLibs.tokens.ink) else null
@@ -1508,6 +1542,7 @@ private fun PromptInputScreen(
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val haptics = LocalHapticFeedback.current
     val isKeyboardOpen = WindowInsets.isImeVisible
     val inputMap = remember(story?.id) { mutableStateMapOf<String, String>() }
     val errorMap = remember(story?.id) { mutableStateMapOf<String, Boolean>() }
@@ -1570,8 +1605,10 @@ private fun PromptInputScreen(
 
             errorMap[activePrompt.key] = false
             if (isLastPrompt) {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 submitStory()
             } else {
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 currentPromptIndex = (safeIndex + 1).coerceAtMost(story.prompts.lastIndex)
             }
         }
