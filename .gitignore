@@ -20,3 +20,6 @@ captures/
 
 # Logs
 *.log
+
+# Bad Stories evaluator feedback (local-only notes)
+apps/bad-stories/feedback/

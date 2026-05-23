@@ -143,6 +143,29 @@
   .legend { font-size: 11px; color: var(--muted); margin-top: 8px; }
   .empty { color: var(--muted); padding: 32px; text-align: center; }
   .error { color: #b91c1c; padding: 16px; }
+
+  /* feedback */
+  .feedback-input { display: flex; flex-direction: column; gap: 8px; }
+  .feedback-input textarea {
+    width: 100%; min-height: 70px; padding: 8px; resize: vertical;
+    border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+    border-radius: 6px; font: inherit;
+  }
+  .feedback-list { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 8px; }
+  .feedback-entry {
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px;
+    background: var(--bg);
+  }
+  .feedback-entry.resolved { opacity: 0.55; }
+  .feedback-entry .fb-meta { font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .feedback-entry .fb-text { white-space: pre-wrap; }
+  .feedback-entry .fb-actions { display: flex; gap: 6px; margin-top: 6px; }
+  .feedback-entry .fb-actions button { padding: 2px 8px; font-size: 12px; }
+  .fb-count { font-size: 11px; color: var(--muted); margin-left: 6px; }
+  .fb-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); margin-left: 4px; vertical-align: middle;
+  }
 </style>
 </head>
 <body>
@@ -184,6 +207,7 @@ const state = {
   stories: [], // flattened
   selectedId: null,
   values: {},  // per-story values: { storyId: { key: value } }
+  feedback: {}, // { storyKey: [entries] }
   filters: { search: "", pack: "", tag: "", status: "available", sort: "pack" },
 };
 
@@ -288,27 +312,30 @@ function renderList() {
   ul.innerHTML = list.map(s => {
     const m = s._metrics;
     const cls = m.maxGap >= GAP_BAD ? "bad" : m.maxGap >= GAP_WARN ? "warn" : "ok";
-    const active = s.id === state.selectedId ? "active" : "";
-    return `<li class="${active}" data-id="${escapeHtml(s.id)}" data-pack="${escapeHtml(s.packId)}">
-      <div><strong>${escapeHtml(s.title)}</strong>
+    const active = storyKey(s) === state.selectedId ? "active" : "";
+    const open = (state.feedback[storyKey(s)] || []).filter(e => e.status !== "resolved").length;
+    const dot = open ? `<span class="fb-dot" title="${open} open feedback"></span>` : "";
+    return `<li class="${active}" data-key="${escapeHtml(storyKey(s))}">
+      <div><strong>${escapeHtml(s.title)}</strong>${dot}
         <span class="badge ${cls}">gap ${m.maxGap}</span></div>
       <div class="pack">${escapeHtml(s.packTitle)}</div>
-      <div class="meta">${m.n} prompts · ${m.totalWords} words · ${m.wpp.toFixed(1)} w/slot</div>
+      <div class="meta">${m.n} prompts · ${m.totalWords} words · ${m.wpp.toFixed(1)} w/slot${open ? ` · <b>${open}</b> feedback` : ""}</div>
     </li>`;
   }).join("");
   ul.querySelectorAll("li").forEach(li => {
     li.addEventListener("click", () => {
-      state.selectedId = li.dataset.id + "::" + li.dataset.pack;
+      state.selectedId = li.dataset.key;
       renderList();
       renderMain();
     });
   });
 }
 
+function storyKey(s) { return `${s.packId}::${s.id}`; }
+
 function findSelected() {
   if (!state.selectedId) return null;
-  const [id, packId] = state.selectedId.split("::");
-  return state.stories.find(s => s.id === id && s.packId === packId) || null;
+  return state.stories.find(s => storyKey(s) === state.selectedId) || null;
 }
 
 function renderTemplate(story, withFills) {
@@ -378,6 +405,18 @@ function renderMain() {
         </div>
       </div>
     </div>
+
+    <div class="panel">
+      <h3>Feedback <span class="fb-count" id="fb-count"></span></h3>
+      <div class="feedback-input">
+        <textarea id="fb-text" placeholder="Note for this story (what to change, tone, density, prompt labels, etc.)"></textarea>
+        <div class="actions">
+          <button id="fb-save" class="primary">Save feedback</button>
+          <span class="legend">Saved to <code>apps/bad-stories/feedback/feedback.json</code> (gitignored).</span>
+        </div>
+      </div>
+      <ul class="feedback-list" id="fb-list"></ul>
+    </div>
   `;
 
   const promptsEl = document.getElementById("prompts");
@@ -406,6 +445,89 @@ function renderMain() {
     state.values[state.selectedId] = {};
     renderMain();
   });
+
+  renderFeedback(s);
+  document.getElementById("fb-save").addEventListener("click", async () => {
+    const ta = document.getElementById("fb-text");
+    const text = ta.value.trim();
+    if (!text) return;
+    try {
+      const r = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storyKey: storyKey(s), text }),
+      });
+      if (!r.ok) throw new Error(await r.text());
+      const { entry } = await r.json();
+      state.feedback[storyKey(s)] = state.feedback[storyKey(s)] || [];
+      state.feedback[storyKey(s)].push(entry);
+      ta.value = "";
+      renderFeedback(s);
+      renderList();
+    } catch (e) {
+      alert("Failed to save feedback: " + e.message);
+    }
+  });
+}
+
+function renderFeedback(s) {
+  const key = storyKey(s);
+  const entries = state.feedback[key] || [];
+  const open = entries.filter(e => e.status !== "resolved").length;
+  document.getElementById("fb-count").textContent =
+    entries.length ? `(${open} open · ${entries.length} total)` : "(none)";
+  const ul = document.getElementById("fb-list");
+  ul.innerHTML = entries
+    .slice()
+    .sort((a, b) => (b.ts || "").localeCompare(a.ts || ""))
+    .map(e => `
+      <li class="feedback-entry ${e.status === "resolved" ? "resolved" : ""}" data-id="${escapeHtml(e.id)}">
+        <div class="fb-meta">
+          <span>${escapeHtml(e.ts)}${e.status === "resolved" ? ` · resolved ${escapeHtml(e.resolved_ts || "")}` : ""}</span>
+          <span>${escapeHtml(e.status || "open")}</span>
+        </div>
+        <div class="fb-text">${escapeHtml(e.text)}</div>
+        <div class="fb-actions">
+          ${e.status === "resolved" ? "" : `<button data-act="resolve">Mark resolved</button>`}
+          <button data-act="delete">Delete</button>
+        </div>
+      </li>
+    `).join("") || `<li class="empty" style="padding:8px;">No feedback yet.</li>`;
+  ul.querySelectorAll("button[data-act]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const li = btn.closest(".feedback-entry");
+      const entryId = li.dataset.id;
+      const act = btn.dataset.act;
+      const url = act === "resolve" ? "/api/feedback/resolve" : "/api/feedback/delete";
+      try {
+        const r = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ storyKey: key, entryId }),
+        });
+        if (!r.ok) throw new Error(await r.text());
+        const entries = state.feedback[key] || [];
+        if (act === "delete") {
+          state.feedback[key] = entries.filter(x => x.id !== entryId);
+          if (!state.feedback[key].length) delete state.feedback[key];
+        } else {
+          const e = entries.find(x => x.id === entryId);
+          if (e) { e.status = "resolved"; e.resolved_ts = new Date().toISOString(); }
+        }
+        renderFeedback(s);
+        renderList();
+      } catch (e) {
+        alert("Failed: " + e.message);
+      }
+    });
+  });
+}
+
+async function loadFeedback() {
+  try {
+    const r = await fetch("/api/feedback");
+    if (r.ok) state.feedback = await r.json();
+  } catch (_) { /* server may not be running with API */ }
 }
 
 function examplify(label) {
@@ -446,6 +568,7 @@ function wireFilters() {
   try {
     state.packs = await loadPacks();
     state.stories = flatten(state.packs);
+    await loadFeedback();
     populateFilters();
     wireFilters();
     renderList();
