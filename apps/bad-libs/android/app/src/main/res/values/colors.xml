@@ -1,0 +1,7 @@
+<resources>
+    <color name="icon_background">#00000000</color>
+    <color name="icon_secondary">#8E2E63</color>
+    <color name="icon_foreground">#FFF7EE</color>
+    <color name="splash_background">#FFE5C7</color>
+    <color name="splash_icon_bg">#FFB790</color>
+</resources>

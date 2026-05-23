@@ -745,12 +745,21 @@ private fun IntroScreen(onStart: () -> Unit) {
                 }
             }
             item {
-                Text(
-                    text = "How it works",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                )
+                Column(
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = "How it works",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Quick guide before you start",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    )
+                }
             }
             item {
                 IntroGuideTile(
@@ -790,17 +799,12 @@ private fun IntroGuideTile(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, accent.copy(alpha = 0.4f), RoundedCornerShape(22.dp))
+            .border(1.dp, Color.Black.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
             .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        accent.copy(alpha = 0.14f),
-                        accent.copy(alpha = 0.25f)
-                    )
-                ),
-                RoundedCornerShape(22.dp)
+                Color.White.copy(alpha = 0.58f),
+                RoundedCornerShape(18.dp)
             )
-            .padding(horizontal = 16.dp, vertical = 15.dp)
+            .padding(horizontal = 14.dp, vertical = 13.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -808,24 +812,25 @@ private fun IntroGuideTile(
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
-                    .background(accent.copy(alpha = 0.95f), RoundedCornerShape(11.dp)),
+                    .size(30.dp)
+                    .border(1.dp, accent.copy(alpha = 0.45f), CircleShape)
+                    .background(accent.copy(alpha = 0.08f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = emoji,
-                    color = Color.White,
+                    color = accent,
                     fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
             Column {
-                Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = copy,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.74f)
                 )
             }
         }
@@ -844,7 +849,6 @@ private fun HomeHubScreen(
     onQuickChaos: () -> Unit,
     onShowIntro: () -> Unit
 ) {
-    val totalStories = packs.sumOf { it.stories.size }
     val canQuickPlay = quickPlayCandidates.isNotEmpty()
 
     ChaosScaffold(title = "Bad Libs") { innerPadding ->
@@ -866,11 +870,6 @@ private fun HomeHubScreen(
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.ExtraBold,
                         lineHeight = 38.sp
-                    )
-                    Text(
-                        text = "${packs.size} packs • $totalStories stories ready to ruin grammar.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
                     )
                 }
             }
@@ -1270,6 +1269,10 @@ private fun StoryListScreen(
                         items(pack.stories, key = { it.id }) { story ->
                             val accent = accentForSeed(story.id)
                             val lengthCategory = StoryLengthCategory.fromPromptCount(story.prompts.size)
+                            val lengthChipLabel = lengthChipLabelForPack(
+                                category = lengthCategory,
+                                packRating = pack.rating
+                            )
                             ChaosSurfaceCard(
                                 modifier = Modifier.fillMaxWidth(),
                                 accentColor = accent,
@@ -1284,7 +1287,7 @@ private fun StoryListScreen(
                                         verticalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         StoryMetaChip(
-                                            label = "${lengthCategory.emoji} ${lengthCategory.label}",
+                                            label = lengthChipLabel,
                                             accent = accent
                                         )
                                         story.tags.forEach { tag ->
@@ -1324,6 +1327,14 @@ private fun StoryListScreen(
                 }
             }
         }
+    }
+}
+
+private fun lengthChipLabelForPack(category: StoryLengthCategory, packRating: String): String {
+    return if (packRating.equals("kids", ignoreCase = true) && category == StoryLengthCategory.BrainDamage) {
+        "🐢 Long"
+    } else {
+        "${category.emoji} ${category.label}"
     }
 }
 

@@ -231,6 +231,65 @@
         "camping",
         "outdoors"
       ]
+    },
+    {
+      "id": "school-field-trip",
+      "title": "School Field Trip",
+      "tags": [
+        "school",
+        "animals"
+      ],
+      "prompts": [
+        {
+          "key": "place1",
+          "label": "Place"
+        },
+        {
+          "key": "teacher1",
+          "label": "Teacher name"
+        },
+        {
+          "key": "food1",
+          "label": "Food"
+        },
+        {
+          "key": "animal1",
+          "label": "Animal"
+        },
+        {
+          "key": "verbIng1",
+          "label": "Verb ending in -ing"
+        },
+        {
+          "key": "object1",
+          "label": "Object"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        },
+        {
+          "key": "pluralNoun1",
+          "label": "Plural noun"
+        },
+        {
+          "key": "color1",
+          "label": "Color"
+        },
+        {
+          "key": "friend1",
+          "label": "Friend's name"
+        },
+        {
+          "key": "noun1",
+          "label": "Noun"
+        },
+        {
+          "key": "vehicle1",
+          "label": "Vehicle"
+        }
+      ],
+      "template": "Our school field trip to {place1} started off completely normal. {teacher1} told everyone to stay together, avoid touching anything weird, and absolutely not throw {food1} at the exhibits. Naturally, this lasted about six minutes.\n\nThings became strange when a very loud {animal1} escaped from somewhere nearby and started aggressively {verbIng1} beside a giant {object1}. Half the class screamed, three kids started laughing uncontrollably, and one parent volunteer immediately became extremely {emotion1}.\n\nMeanwhile, {friend1} somehow wandered into a restricted area filled with mysterious {pluralNoun1}. Nobody noticed until an announcement came over the speakers describing \"a small child wearing a {color1} shirt and carrying a suspicious {noun1}.\" At this point, the teachers looked completely exhausted.\n\nThe trip finally ended after somebody accidentally pressed a button they definitely should not have touched, causing alarms to go off and forcing everyone to leave in a hurry. On the ride home, the entire class sat silently on the {vehicle1} while pretending none of this had happened."
     }
   ],
   "rating": "kids"

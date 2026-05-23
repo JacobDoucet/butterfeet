@@ -3,4 +3,8 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/black</item>
     </style>
+
+    <style name="Theme.BadLibs.Splash" parent="Theme.BadLibs">
+        <item name="android:windowBackground">@drawable/splash_screen</item>
+    </style>
 </resources>
