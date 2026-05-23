@@ -515,76 +515,23 @@ fun BadLibsApp() {
 
 @Composable
 private fun ChaosBackdrop(content: @Composable BoxScope.() -> Unit) {
-    val transition = rememberInfiniteTransition(label = "chaos_backdrop")
-    val orb1X = transition.animateFloat(
-        initialValue = -120f,
-        targetValue = 90f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(8000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "orb1x"
-    )
-    val orb1Y = transition.animateFloat(
-        initialValue = 20f,
-        targetValue = 220f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(12000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "orb1y"
-    )
-    val orb2X = transition.animateFloat(
-        initialValue = 240f,
-        targetValue = 20f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(10000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "orb2x"
-    )
-    val orb2Y = transition.animateFloat(
-        initialValue = 420f,
-        targetValue = 180f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(14000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "orb2y"
-    )
-
+    val tokens = BadLibs.tokens
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFFFE5C7),
-                        Color(0xFFFFC7A8),
-                        Color(0xFFFFF2DE)
-                    )
-                )
-            )
+            .background(tokens.paper)
     ) {
         Box(
             modifier = Modifier
-                .size(220.dp)
-                .graphicsLayer {
-                    translationX = orb1X.value
-                    translationY = orb1Y.value
-                    alpha = 0.22f
-                }
-                .background(Color(0x55FF9B6A), CircleShape)
+                .size(360.dp)
+                .offset(x = (-80).dp, y = (-120).dp)
+                .background(tokens.highlight.copy(alpha = 0.55f), CircleShape)
         )
         Box(
             modifier = Modifier
-                .size(180.dp)
-                .graphicsLayer {
-                    translationX = orb2X.value
-                    translationY = orb2Y.value
-                    alpha = 0.18f
-                }
-                .background(Color(0x55F06A99), CircleShape)
+                .size(220.dp)
+                .offset(x = 260.dp, y = 520.dp)
+                .background(tokens.ink.copy(alpha = 0.06f), CircleShape)
         )
         content()
     }
@@ -602,11 +549,21 @@ private fun ChaosScaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = title, style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        text = "// " + title.lowercase(),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    )
                 },
                 navigationIcon = {
                     if (onBack != null) {
-                        TextButton(onClick = onBack) { Text("Back") }
+                        TextButton(onClick = onBack) {
+                            Text(
+                                "← back",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -625,13 +582,21 @@ private fun ChaosPrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val tokens = BadLibs.tokens
     Button(
         onClick = onClick,
         modifier = modifier,
-        colors = ButtonDefaults.buttonColors(containerColor = ChaosOrange),
-        shape = RoundedCornerShape(16.dp)
+        colors = ButtonDefaults.buttonColors(
+            containerColor = tokens.ink,
+            contentColor = tokens.paper
+        ),
+        shape = RoundedCornerShape(14.dp)
     ) {
-        Text(text = label, fontWeight = FontWeight.Bold)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.ExtraBold
+        )
     }
 }
 
@@ -718,181 +683,81 @@ private fun ChaosSurfaceCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun IntroScreen(onStart: () -> Unit) {
+    val tokens = BadLibs.tokens
     ChaosScaffold(title = "Bad Libs") { innerPadding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp)
+                .navigationBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 2.dp, vertical = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        text = "Make stupid stories with serious confidence.",
-                        style = MaterialTheme.typography.headlineLarge,
-                        lineHeight = 40.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    Text(
-                        text = "Pick a pack, add cursed words, and reveal your literary disaster.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
-                    )
-                }
-            }
-            item {
-                androidx.compose.material3.Surface(
-                    onClick = onStart,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    color = Color.Transparent,
-                    border = BorderStroke(1.dp, Color(0xFFE5533D).copy(alpha = 0.6f))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .background(
-                                Brush.linearGradient(
-                                    colors = listOf(
-                                        Color(0xFFFFB06F).copy(alpha = 0.4f),
-                                        Color(0xFF8E2E63).copy(alpha = 0.28f)
-                                    )
-                                )
-                            )
-                            .padding(horizontal = 18.dp, vertical = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .background(Color(0xFF8E2E63), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("⚡", fontSize = 23.sp, color = Color.White)
-                            }
-                            Column {
-                                Text(
-                                    text = "Start The Chaos",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(3.dp))
-                                Text(
-                                    text = "Jump in fast and build your cursed masterpiece.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f)
-                                )
-                            }
-                        }
-                        Text(
-                            text = "→",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Color(0xFF8E2E63),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-            item {
-                Column(
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Text(
-                        text = "How it works",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Quick guide before you start",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                    )
-                }
-            }
-            item {
-                IntroGuideTile(
-                    emoji = "1",
-                    title = "Pick a pack",
-                    accent = Color(0xFF6C63FF),
-                    copy = "Choose your flavor of nonsense and lock in the vibe."
-                )
-            }
-            item {
-                IntroGuideTile(
-                    emoji = "2",
-                    title = "Fill prompts",
-                    accent = Color(0xFF8E2E63),
-                    copy = "Use weird words. Regret nothing. Spell-check optional."
-                )
-            }
-            item {
-                IntroGuideTile(
-                    emoji = "3",
-                    title = "Reveal and share",
-                    accent = Color(0xFFE5533D),
-                    copy = "Drop your masterpiece in group chat and cause mild panic."
-                )
-            }
+            Text(
+                text = "// terrible stories, on demand",
+                style = MaterialTheme.typography.labelMedium,
+                color = tokens.ink.copy(alpha = 0.6f)
+            )
+            Text(
+                text = "BAD\nLIBS.",
+                style = MaterialTheme.typography.displayLarge,
+                color = tokens.ink,
+                lineHeight = 64.sp
+            )
+            Text(
+                text = "A fill-in-the-blank disaster generator for road trips, dinner parties, and the group chat that never sleeps.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = tokens.ink.copy(alpha = 0.78f)
+            )
+
+            ChaosPrimaryButton(
+                label = "start the chaos →",
+                onClick = onStart,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "// how it works",
+                style = MaterialTheme.typography.labelMedium,
+                color = tokens.ink.copy(alpha = 0.55f)
+            )
+            IntroStep(number = "01", title = "Pick a pack.", body = "Choose your flavor of nonsense.")
+            IntroStep(number = "02", title = "Fill the prompts.", body = "Weird words win. Spell-check optional.")
+            IntroStep(number = "03", title = "Reveal & share.", body = "Drop the masterpiece in the group chat.")
         }
     }
 }
 
 @Composable
-private fun IntroGuideTile(
-    emoji: String,
-    title: String,
-    copy: String,
-    accent: Color
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, Color.Black.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
-            .background(
-                Color.White.copy(alpha = 0.58f),
-                RoundedCornerShape(18.dp)
-            )
-            .padding(horizontal = 14.dp, vertical = 13.dp)
+private fun IntroStep(number: String, title: String, body: String) {
+    val tokens = BadLibs.tokens
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(30.dp)
-                    .border(1.dp, accent.copy(alpha = 0.45f), CircleShape)
-                    .background(accent.copy(alpha = 0.08f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = emoji,
-                    color = accent,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
-            Column {
-                Text(text = title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                Spacer(modifier = Modifier.height(3.dp))
-                Text(
-                    text = copy,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.74f)
-                )
-            }
+        Text(
+            text = number,
+            style = MaterialTheme.typography.labelLarge,
+            color = tokens.ink.copy(alpha = 0.5f),
+            modifier = Modifier.padding(top = 4.dp)
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = tokens.ink
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodyMedium,
+                color = tokens.ink.copy(alpha = 0.72f)
+            )
         }
     }
 }
@@ -910,84 +775,78 @@ private fun HomeHubScreen(
     onShowIntro: () -> Unit
 ) {
     val canQuickPlay = quickPlayCandidates.isNotEmpty()
+    val tokens = BadLibs.tokens
 
     ChaosScaffold(title = "Bad Libs") { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .padding(horizontal = 18.dp, vertical = 10.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 16.dp)
+                .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 2.dp, vertical = 6.dp)
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = "Ready to wreck another perfectly good story?",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        lineHeight = 38.sp
-                    )
-                }
-            }
+            Text(
+                text = "// home",
+                style = MaterialTheme.typography.labelMedium,
+                color = tokens.ink.copy(alpha = 0.55f)
+            )
+            Text(
+                text = "Make stories\nworse, together.",
+                style = MaterialTheme.typography.displayMedium,
+                color = tokens.ink,
+                lineHeight = 50.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
 
             if (lastStoryLabel != null) {
                 HomeActionTile(
-                    title = "Continue Last Story",
+                    eyebrow = "// continue",
+                    title = "Pick up where you left off",
                     subtitle = lastStoryLabel,
-                    emoji = "↺",
-                    accent = Color(0xFF8E2E63),
-                    emojiSizeSp = 24,
-                    emojiOffsetY = (-3).dp,
+                    primary = true,
                     onClick = onContinueLast
                 )
             }
 
             if (dailyChallengeLabel != null) {
                 HomeActionTile(
+                    eyebrow = "// today",
                     title = "Daily Challenge",
                     subtitle = dailyChallengeLabel,
-                    emoji = "☀",
-                    accent = Color(0xFFFF7B54),
-                    iconCircleColor = Color(0xFF5A2A14),
+                    primary = lastStoryLabel == null,
                     onClick = onPlayDailyChallenge
                 )
             }
 
             HomeActionTile(
+                eyebrow = "// library",
                 title = "Browse Packs",
                 subtitle = if (packs.isEmpty()) "No packs loaded yet" else "Pick a flavor and start causing damage.",
-                emoji = "📚",
-                accent = Color(0xFF6C63FF),
+                primary = false,
                 onClick = onPlayPacks
             )
 
             HomeActionTile(
-                title = if (canQuickPlay) "Quick Chaos" else "Quick Chaos",
+                eyebrow = "// random",
+                title = "Quick Chaos",
                 subtitle = if (canQuickPlay) "Random story, dramatic entrance." else "No stories loaded yet.",
-                emoji = "🎲",
-                accent = Color(0xFFFFB06F),
+                primary = false,
                 enabled = canQuickPlay,
                 onClick = onQuickChaos
             )
 
-            if (!canQuickPlay) {
-                Text(
-                    text = "Add more story packs to unlock Quick Chaos.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 TextButton(onClick = onShowIntro) {
-                    Text("Replay Intro")
+                    Text(
+                        "// replay intro",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = tokens.ink.copy(alpha = 0.55f)
+                    )
                 }
             }
         }
@@ -996,88 +855,68 @@ private fun HomeHubScreen(
 
 @Composable
 private fun HomeActionTile(
+    eyebrow: String,
     title: String,
     subtitle: String,
-    emoji: String,
-    accent: Color,
+    primary: Boolean,
     onClick: () -> Unit,
-    enabled: Boolean = true,
-    iconCircleColor: Color = accent,
-    emojiSizeSp: Int = 22,
-    emojiOffsetY: Dp = 0.dp
+    enabled: Boolean = true
 ) {
-    val backgroundTint = if (enabled) accent.copy(alpha = 0.18f) else Color.Black.copy(alpha = 0.05f)
-    val borderTint = if (enabled) accent.copy(alpha = 0.45f) else Color.Black.copy(alpha = 0.12f)
-    val titleColor = if (enabled) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.45f)
-    val subtitleColor = if (enabled) MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.35f)
+    val tokens = BadLibs.tokens
+    val container = when {
+        !enabled -> tokens.ink.copy(alpha = 0.06f)
+        primary -> tokens.ink
+        else -> Color.Transparent
+    }
+    val onContainer = when {
+        !enabled -> tokens.ink.copy(alpha = 0.4f)
+        primary -> tokens.paper
+        else -> tokens.ink
+    }
+    val border = when {
+        !enabled -> tokens.ink.copy(alpha = 0.12f)
+        primary -> Color.Transparent
+        else -> tokens.ink.copy(alpha = 0.45f)
+    }
 
     androidx.compose.material3.Surface(
         onClick = onClick,
         enabled = enabled,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = Color.Transparent,
-        border = BorderStroke(1.dp, borderTint)
+        shape = RoundedCornerShape(22.dp),
+        color = container,
+        border = BorderStroke(if (primary) 0.dp else 1.5.dp, border)
     ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            backgroundTint,
-                            backgroundTint.copy(alpha = if (enabled) 0.26f else 0.10f)
-                        )
-                    )
-                )
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .background(iconCircleColor.copy(alpha = if (enabled) 0.95f else 0.35f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = emoji,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontSize = emojiSizeSp.sp,
-                        lineHeight = emojiSizeSp.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .offset(y = emojiOffsetY)
-                            .fillMaxWidth()
-                    )
-                }
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = titleColor
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = subtitleColor,
-                        lineHeight = 20.sp
-                    )
-                }
-
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "→",
+                    text = eyebrow,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = onContainer.copy(alpha = 0.62f)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    color = if (enabled) accent else subtitleColor,
-                    fontWeight = FontWeight.Bold
+                    color = onContainer
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = onContainer.copy(alpha = 0.72f),
+                    lineHeight = 19.sp
                 )
             }
+            Text(
+                text = "→",
+                style = MaterialTheme.typography.displaySmall,
+                color = onContainer
+            )
         }
     }
 }
@@ -1204,43 +1043,57 @@ private fun PackListScreen(
                     ) {
                         items(packs, key = { it.id }) { pack ->
                             val isAvailable = pack.status.equals("available", ignoreCase = true)
-                            val accent = if (isAvailable) accentForSeed(pack.id) else ComingSoonAccent
+                            val palette = paletteForPack(pack.id, available = isAvailable)
+                            val onPaletteColor = onColorFor(palette.primary)
                             val packIcon = if (isAvailable) pack.emoji else "🔒"
-                            ChaosSurfaceCard(
-                                modifier = Modifier.fillMaxWidth(),
-                                accentColor = accent,
-                                highlighted = isAvailable && roulettePackId == pack.id,
+                            val highlighted = isAvailable && roulettePackId == pack.id
+
+                            androidx.compose.material3.Surface(
                                 onClick = {
-                                    if (isAvailable) {
-                                        onOpenPack(pack.id)
-                                    } else {
-                                        onPackLocked()
-                                    }
-                                }
+                                    if (isAvailable) onOpenPack(pack.id) else onPackLocked()
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(22.dp),
+                                color = palette.primary,
+                                border = if (highlighted) BorderStroke(2.dp, BadLibs.tokens.ink) else null
                             ) {
                                 Column(
                                     modifier = Modifier
-                                        .padding(18.dp)
-                                        .graphicsLayer { alpha = if (isAvailable) 1f else 0.74f }
+                                        .padding(20.dp)
+                                        .graphicsLayer { alpha = if (isAvailable) 1f else 0.85f }
                                 ) {
+                                    Text(
+                                        text = "// ${palette.vibe.lowercase()}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = onPaletteColor.copy(alpha = 0.7f)
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                        verticalAlignment = Alignment.Top
                                     ) {
                                         Text(
                                             text = "$packIcon ${pack.title}",
-                                            style = MaterialTheme.typography.titleLarge,
-                                            modifier = Modifier.weight(1f)
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            color = onPaletteColor,
+                                            modifier = Modifier.weight(1f),
+                                            lineHeight = 32.sp
                                         )
-                                        PackCountPill(
-                                            label = if (isAvailable) "${pack.stories.size} stories" else "Coming Soon",
-                                            accent = accent
+                                        Text(
+                                            text = if (isAvailable) "${pack.stories.size}" else "—",
+                                            style = MaterialTheme.typography.displaySmall,
+                                            color = onPaletteColor.copy(alpha = 0.55f)
                                         )
                                     }
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(pack.description, style = MaterialTheme.typography.bodyMedium)
                                     Spacer(modifier = Modifier.height(10.dp))
+                                    Text(
+                                        text = pack.description,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = onPaletteColor.copy(alpha = 0.85f),
+                                        lineHeight = 19.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(14.dp))
                                     FlowRow(
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -1249,22 +1102,13 @@ private fun PackListScreen(
                                         val hiddenPackTagCount = (pack.tags.size - visiblePackTags.size).coerceAtLeast(0)
 
                                         visiblePackTags.forEach { tag ->
-                                            StoryMetaChip(
-                                                label = formatStoryTag(tag),
-                                                accent = accent
-                                            )
+                                            PackTagChip(label = formatStoryTag(tag), onColor = onPaletteColor)
                                         }
                                         if (hiddenPackTagCount > 0) {
-                                            StoryMetaChip(
-                                                label = "+$hiddenPackTagCount more",
-                                                accent = accent
-                                            )
+                                            PackTagChip(label = "+$hiddenPackTagCount", onColor = onPaletteColor)
                                         }
                                         if (!isAvailable) {
-                                            StoryMetaChip(
-                                                label = "This pack is still being cooked",
-                                                accent = accent
-                                            )
+                                            PackTagChip(label = "coming soon", onColor = onPaletteColor)
                                         }
                                     }
                                 }
@@ -1311,6 +1155,21 @@ private fun PackCountPill(label: String, accent: Color = Color(0xFFFFB06F)) {
             text = label,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onBackground
+        )
+    }
+}
+
+@Composable
+private fun PackTagChip(label: String, onColor: Color) {
+    Box(
+        modifier = Modifier
+            .background(onColor.copy(alpha = 0.14f), RoundedCornerShape(50))
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = onColor.copy(alpha = 0.95f)
         )
     }
 }
@@ -1741,19 +1600,20 @@ private fun PromptInputScreen(
                 )
             ) {
                 Text(
-                    text = "One prompt at a time. Keep it weird.",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.82f),
+                    text = "// one at a time. keep it weird.",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = BadLibs.tokens.ink.copy(alpha = 0.55f),
                     modifier = Modifier.padding(horizontal = 4.dp)
                 )
             }
 
             LinearProgressIndicator(
                 progress = { progress },
-                modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFF8E2E63),
-                trackColor = Color.White.copy(alpha = 0.45f)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp),
+                color = BadLibs.tokens.ink,
+                trackColor = BadLibs.tokens.ink.copy(alpha = 0.12f)
             )
 
             AnimatedContent(
@@ -1767,6 +1627,7 @@ private fun PromptInputScreen(
                 val promptHasError = errorMap[prompt.key] == true
                 val displayedIsLast = displayedIndex == story.prompts.lastIndex
                 val promptFocusRequester = remember(displayedIndex) { FocusRequester() }
+                val tokens = BadLibs.tokens
 
                 LaunchedEffect(displayedIndex) {
                     delay(120)
@@ -1774,100 +1635,76 @@ private fun PromptInputScreen(
                     keyboardController?.show()
                 }
 
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 4.dp)
+                        .padding(top = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
-                    Box(
+                    Text(
+                        text = "// prompt ${"%02d".format(displayedIndex + 1)} of ${"%02d".format(story.prompts.size)}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = tokens.ink.copy(alpha = 0.55f)
+                    )
+                    Text(
+                        text = prompt.label,
+                        style = MaterialTheme.typography.displaySmall,
+                        color = tokens.ink,
+                        lineHeight = 44.sp
+                    )
+                    OutlinedTextField(
+                        value = inputMap[prompt.key].orEmpty(),
+                        onValueChange = {
+                            inputMap[prompt.key] = it
+                            if (it.isNotBlank()) {
+                                errorMap[prompt.key] = false
+                            }
+                        },
+                        placeholder = {
+                            Text(
+                                "type something unhinged",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = tokens.ink.copy(alpha = 0.35f)
+                            )
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(
-                                width = if (promptHasError) 1.5.dp else 1.dp,
-                                color = if (promptHasError) MaterialTheme.colorScheme.error else Color(0xFF8E2E63).copy(alpha = 0.28f),
-                                shape = RoundedCornerShape(20.dp)
-                            )
-                            .background(
-                                Color.White.copy(alpha = if (promptHasError) 0.82f else 0.72f),
-                                RoundedCornerShape(20.dp)
-                            )
-                            .padding(16.dp)
-                    ) {
-                        Column {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .background(Color(0xFF8E2E63), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "${displayedIndex + 1}",
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Text(
-                                    text = "Question ${displayedIndex + 1} of ${story.prompts.size}",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = prompt.label,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.ExtraBold
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            OutlinedTextField(
-                                value = inputMap[prompt.key].orEmpty(),
-                                onValueChange = {
-                                    inputMap[prompt.key] = it
-                                    if (it.isNotBlank()) {
-                                        errorMap[prompt.key] = false
-                                    }
-                                },
-                                label = { Text(prompt.label) },
-                                placeholder = { Text("Type something unhinged") },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .focusRequester(promptFocusRequester),
-                                singleLine = true,
-                                isError = promptHasError,
-                                shape = RoundedCornerShape(14.dp),
-                                keyboardOptions = KeyboardOptions(
-                                    imeAction = if (displayedIsLast) ImeAction.Done else ImeAction.Next
-                                ),
-                                keyboardActions = KeyboardActions(
-                                    onNext = { advancePrompt() },
-                                    onDone = { advancePrompt() }
-                                ),
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White.copy(alpha = 0.9f),
-                                    unfocusedContainerColor = Color.White.copy(alpha = 0.72f)
-                                )
-                            )
-                            if (promptHasError) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Need a value for this one.",
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = if (displayedIsLast) "Final prompt. Lock it in." else "Answer this to unlock the next one.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.68f)
-                            )
-                        }
+                            .focusRequester(promptFocusRequester),
+                        singleLine = true,
+                        isError = promptHasError,
+                        textStyle = MaterialTheme.typography.titleLarge.copy(
+                            color = tokens.ink,
+                            fontWeight = FontWeight.ExtraBold
+                        ),
+                        shape = RoundedCornerShape(14.dp),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = if (displayedIsLast) ImeAction.Done else ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { advancePrompt() },
+                            onDone = { advancePrompt() }
+                        ),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = tokens.paper,
+                            unfocusedContainerColor = tokens.paper,
+                            focusedIndicatorColor = tokens.ink,
+                            unfocusedIndicatorColor = tokens.ink.copy(alpha = 0.4f),
+                            cursorColor = tokens.ink,
+                            errorContainerColor = tokens.paper
+                        )
+                    )
+                    if (promptHasError) {
+                        Text(
+                            text = "// needs a value",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
                     }
+                    Text(
+                        text = if (displayedIsLast) "// final one. lock it in." else "// next: ${story.prompts.getOrNull(displayedIndex + 1)?.label?.lowercase() ?: ""}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = tokens.ink.copy(alpha = 0.55f)
+                    )
                 }
             }
 
@@ -1876,7 +1713,8 @@ private fun PromptInputScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
                         onClick = {
@@ -1884,13 +1722,19 @@ private fun PromptInputScreen(
                             if (safeIndex > 0) currentPromptIndex = safeIndex - 1
                         },
                         enabled = safeIndex > 0,
+                        shape = RoundedCornerShape(14.dp),
+                        border = BorderStroke(1.dp, BadLibs.tokens.ink.copy(alpha = 0.45f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = BadLibs.tokens.ink),
                         modifier = Modifier.weight(0.85f)
                     ) {
-                        Text("Previous")
+                        Text(
+                            "← back",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
 
                     ChaosPrimaryButton(
-                        label = if (isLastPrompt) "Reveal Story" else "Next Prompt",
+                        label = if (isLastPrompt) "reveal story →" else "next →",
                         onClick = { advancePrompt() },
                         modifier = Modifier.weight(1.15f)
                     )
