@@ -21,6 +21,7 @@
   - ❌ Bad: `the therapist's name`, `the post that broke the camel's back`, `a hyper-specific rule the mod enforced`, `the answer your partner gave that blindsided you`
   - Rule of thumb: a player reading the prompt out of context should have no idea what story it belongs to.
 - Template `{{key}}` placeholders must match the prompt keys exactly.
+- **Placeholder density.** The fun is in the reveals — long stretches of static prose between reveals kill the pace. Target ~5–8 words per placeholder on average, and **no more than ~12 words of static text between any two consecutive placeholders**. If a sentence is going more than a clause without a `{{...}}` in it, cut the prose or add a prompt.
 - **Template syntax is `{{key}}` — double braces, always.** Single-brace `{key}` is invalid and will be rejected by the content validator. The app renderer only substitutes `{{key}}`; anything else will leak into the rendered story (or worse, render as a stray `}`). Every `{{key}}` in the template must have a matching prompt `key`, and every prompt `key` must appear in the template.
 - Don't pad stories with throwaway prompts just to hit a word count.
 

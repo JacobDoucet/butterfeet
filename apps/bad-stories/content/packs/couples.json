@@ -173,7 +173,7 @@
           "label": "a verb ending in -ing"
         }
       ],
-      "template": "We went in for {{intent}}. We left with that, plus {{extra}}, plus an unresolved argument about {{argument}} that started somewhere near the bedroom displays. The fight only ended in the cafeteria when one of us silently bought the other {{snack}}. We made it to the car, looked at each other, and {{exit}}."
+      "template": "We went in for {{intent}}. We left with that, plus {{extra}}, plus an unresolved argument about {{argument}}. The fight ended in the cafeteria when one of us silently bought the other {{snack}}. In the parking lot, we looked at each other and {{exit}}."
     },
     {
       "id": "thermostat-war",
@@ -289,7 +289,7 @@
           "label": "a sentence"
         }
       ],
-      "template": "We were watching {{show}} together. We agreed: no episodes alone. I opened the app tonight and the algorithm casually informed me they were {{episodes}} episodes ahead. The evidence was right there: {{evidence}}. When confronted, they offered: {{apology}}. I have already started watching it twice as fast just to catch up out of spite."
+      "template": "We were watching {{show}}. We agreed: no episodes alone. I opened the app tonight and the algorithm informed me they were {{episodes}} episodes ahead. The evidence was right there: {{evidence}}. When confronted, they offered: {{apology}}. I am already watching it twice as fast out of spite."
     },
     {
       "id": "moving-day",
@@ -329,7 +329,7 @@
           "label": "a noun"
         }
       ],
-      "template": "We packed up {{fromPlace}} into 47 boxes, most of them labeled simply {{boxLabel}}. We moved into {{toPlace}} and immediately discovered that {{broken}} did not survive the trip. {{missingItem}} has vanished entirely; it is in one of the boxes, but which one is a problem for future us. We sat on the kitchen floor with {{delivery}}, and at 11 PM we had a low-energy argument about {{argument}} that we both knew wasn't really about that."
+      "template": "We packed up {{fromPlace}} into 47 boxes, most labeled simply {{boxLabel}}. We moved into {{toPlace}}. {{broken}} did not survive the trip. {{missingItem}} has vanished into a box we cannot find. We sat on the kitchen floor with {{delivery}}. At 11pm, a low-energy argument about {{argument}} that wasn't really about that."
     },
     {
       "id": "meeting-the-parents",
@@ -457,7 +457,7 @@
           "label": "a verb"
         }
       ],
-      "template": "For our anniversary we booked the kind of restaurant {{restaurant}} requires {{dressCode}}. We ordered {{drink}} and {{appetizer}}, which arrived looking like art. Right as the candle flickered between us, {{interruption}} ruined the moment completely. They handed me a small box. Inside was {{gift}}. My reaction was {{reaction}}, which was not the reaction they were hoping for. The night ended the only way it could: {{ending}}."
+      "template": "For our anniversary we booked the kind of restaurant {{restaurant}} requires {{dressCode}}. We ordered {{drink}} and {{appetizer}}, which arrived looking like art. Right as the candle flickered, {{interruption}} ruined it. They handed me a small box. Inside: {{gift}}. My reaction was {{reaction}}, not what they were hoping for. The night ended the only way it could: {{ending}}."
     },
     {
       "id": "couples-therapy-first-session",
@@ -541,7 +541,7 @@
           "label": "an object"
         }
       ],
-      "template": "We were six hours into a drive to {{destination}}. Specifically, hour {{hour}}. The fight started over {{trigger}}, which was the smallest possible thing. Within minutes, the {{snack}} between us had become weaponized evidence of an unrelated betrayal. {{playlist}} played, very quietly, for {{silence}} minutes of dead silence. Peace was eventually negotiated at a gas station, brokered entirely by a single purchase: {{peace}}. We did not speak about it again."
+      "template": "Six hours into a drive to {{destination}}. Specifically, hour {{hour}}. The fight started over {{trigger}}, the smallest possible thing. Within minutes, the {{snack}} between us had become weaponized evidence. {{playlist}} played quietly for {{silence}} minutes of dead air. Peace was brokered at a gas station by a single purchase: {{peace}}. We did not speak of it again."
     },
     {
       "id": "wedding-planning-meltdown",
@@ -601,7 +601,7 @@
           "label": "a sentence"
         }
       ],
-      "template": "We were going to get married at {{venue}}. Budget: {{budget}}. Real budget: {{newBudget}}. They insisted on inviting {{guestThey}}. I am still quietly trying to uninvite {{guestYou}}. The wedding colors were {{color1}}, then somehow also {{color2}}, then officially neither. {{vendor}} ghosted us in week three. The dinner menu fight was, of all things, about {{menuFight}}. The registry includes {{registry}}, which someone is going to buy us, and we will have to thank them for it. The wedding was saved entirely by {{compromise}}. At 2 AM the night before the final headcount was due, one of us said: {{verdict}}. We are still getting married. Probably."
+      "template": "We were getting married at {{venue}}. Budget: {{budget}}. Real budget: {{newBudget}}. They insisted on inviting {{guestThey}}. I am still trying to uninvite {{guestYou}}. Colors: {{color1}}, then somehow {{color2}}, then neither. {{vendor}} ghosted us week three. The dinner-menu fight was about {{menuFight}}. The registry includes {{registry}}, which someone will buy us. The wedding was saved entirely by {{compromise}}. At 2am the night before the headcount was due, one of us said: {{verdict}}. Probably still getting married."
     },
     {
       "id": "destination-wedding-trip",
@@ -657,7 +657,7 @@
           "label": "a sentence"
         }
       ],
-      "template": "We flew to {{location}} for {{couple}}'s wedding. {{flightProblem}} happened immediately. The rental was supposed to be perfect, except {{rental}}. By day two, I deeply regretted packing {{outfit}}. At the rehearsal dinner, {{rehearsalDinner}}. The best man's speech was about {{speech}} and lasted nineteen minutes. The signature cocktail was {{drink}}, which we ordered eight of. On the dance floor, {{danceFloor}}. Throughout the entire trip, we were quietly keeping a secret from the rest of the group: {{secret}}. At the airport, waiting at the gate, exhausted and sunburned, one of us whispered: {{verdict}}. Worth it."
+      "template": "We flew to {{location}} for {{couple}}'s wedding. {{flightProblem}} happened immediately. The rental was supposed to be perfect, except {{rental}}. By day two, I deeply regretted packing {{outfit}}. At the rehearsal dinner, {{rehearsalDinner}}. The best man's speech was about {{speech}} and lasted nineteen minutes. The signature cocktail was {{drink}}, which we ordered eight of. On the dance floor, {{danceFloor}}. The whole trip, we were quietly keeping a secret: {{secret}}. At the airport, sunburned, one of us whispered: {{verdict}}."
     }
   ]
 }

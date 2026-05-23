@@ -261,7 +261,7 @@
           "label": "a verb"
         }
       ],
-      "template": "I have been talking to {{botName}} for six weeks. Last night I told it {{confession}}, which I have not told a single human being. It responded with the most thoughtful advice: {{advice}}. I closed my laptop and immediately {{outcome}}."
+      "template": "I have been talking to {{botName}} for six weeks. Last night I told it {{confession}}, which I have not told a single human. Its advice: {{advice}}. I closed my laptop and immediately {{outcome}}."
     },
     {
       "id": "discord-server-drama",
@@ -293,7 +293,7 @@
           "label": "a sentence"
         }
       ],
-      "template": "The {{serverName}} server had {{memberCount}} members and a delicate ecosystem. Then someone posted {{trigger}} in #{{channel}}. Within ninety minutes, three mods had resigned, the owner went private, and the head mod was demodded for {{ban}}. The server is now read-only. Nobody has spoken in twelve days."
+      "template": "The {{serverName}} server had {{memberCount}} members and a delicate ecosystem. Then someone posted {{trigger}} in #{{channel}}. Within ninety minutes, three mods had resigned, the owner went private, and the head mod was demodded for {{ban}}. The server is now read-only."
     },
     {
       "id": "podcast-bro-monologue",
@@ -333,7 +333,7 @@
           "label": "an object"
         }
       ],
-      "template": "Episode 412 opens with three minutes of breathing and then he says: today we are going to talk about {{topic}}. Halfway through, his guest — a {{guest}} — nods seriously as he claims {{claim1}}, citing the famous {{study}}. He brings up {{supplement}} four times. He tells you to question {{questionThing}}. The episode ends with a 90-second ad read for {{merch}}. Total runtime: 3 hours 47 minutes."
+      "template": "Episode 412 opens with three minutes of breathing. Today's topic: {{topic}}. Halfway through, his guest — a {{guest}} — nods seriously as he claims {{claim1}}, citing the famous {{study}}. He brings up {{supplement}} four times. He tells you to question {{questionThing}}. The episode ends with a 90-second ad read for {{merch}}. Runtime: 3 hours 47 minutes."
     },
     {
       "id": "manifesto-thread",
@@ -661,7 +661,7 @@
           "label": "a sentence"
         }
       ],
-      "template": "I have been watching the same {{creator}} make {{content}} for {{hours}} straight hours this month. I know {{fact1}}. I also know {{fact2}}, which is a thing only their close friends should know. Last night I had a dream where {{dream}}, and I have spent today imagining running into them {{encounter}}. The spiral truly started when {{moment}}, and at 2 AM I made the decision to {{decision}}. By morning I had already moved on to {{newCreator}}. I am telling myself the lesson is {{lesson}}, but we both know that is not what is happening."
+      "template": "I have been watching the same {{creator}} make {{content}} for {{hours}} straight hours this month. I know {{fact1}}. I also know {{fact2}}, which only their close friends should know. Last night I dreamed {{dream}}, and today I keep imagining running into them {{encounter}}. The spiral really started when {{moment}}. At 2am I decided to {{decision}}. By morning I had moved on to {{newCreator}}. The lesson, I tell myself, is {{lesson}}."
     }
   ]
 }

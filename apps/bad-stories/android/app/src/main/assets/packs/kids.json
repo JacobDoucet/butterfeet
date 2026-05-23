@@ -289,7 +289,7 @@
           "label": "Vehicle"
         }
       ],
-      "template": "Our school field trip to {{place1}} started off completely normal. {{teacher1}} told everyone to stay together, avoid touching anything weird, and absolutely not throw {{food1}} at the exhibits. Naturally, this lasted about six minutes.\n\nThings became strange when a very loud {{animal1}} escaped from somewhere nearby and started aggressively {{verbIng1}} beside a giant {{object1}}. Half the class screamed, three kids started laughing uncontrollably, and one parent volunteer immediately became extremely {{emotion1}}.\n\nMeanwhile, {{friend1}} somehow wandered into a restricted area filled with mysterious {{pluralNoun1}}. Nobody noticed until an announcement came over the speakers describing \"a small child wearing a {{color1}} shirt and carrying a suspicious {{noun1}}.\" At this point, the teachers looked completely exhausted.\n\nThe trip finally ended after somebody accidentally pressed a button they definitely should not have touched, causing alarms to go off and forcing everyone to leave in a hurry. On the ride home, the entire class sat silently on the {{vehicle1}} while pretending none of this had happened."
+      "template": "Our field trip to {{place1}}. {{teacher1}} said: stay together, don't touch anything, don't throw {{food1}}. Lasted six minutes.\n\nA loud {{animal1}} escaped and started {{verbIng1}} beside a giant {{object1}}. Half the class screamed. One parent volunteer got extremely {{emotion1}}.\n\nMeanwhile {{friend1}} wandered into a restricted area full of {{pluralNoun1}}. The speakers announced: 'a small child in a {{color1}} shirt carrying a suspicious {{noun1}}.'\n\nSomebody pressed a button. Alarms went off. The whole class rode home on the {{vehicle1}} in total silence."
     },
     {
       "id": "lost-tooth",
@@ -317,7 +317,7 @@
           "label": "a sentence"
         }
       ],
-      "template": "I lost my tooth {{place}} while eating {{snack}}. Mom said the tooth fairy probably wouldn't come if it was missing, but she came anyway. She left {{amount}} under my pillow and a tiny note that said: {{note}}."
+      "template": "I lost my tooth {{place}} while eating {{snack}}. Mom said the tooth fairy probably wouldn't come, but she did. She left {{amount}} under my pillow and a tiny note that said: {{note}}."
     },
     {
       "id": "ice-cream-truck",
@@ -377,7 +377,7 @@
           "label": "a verb"
         }
       ],
-      "template": "For show and tell I brought {{item}}. I told the class it was special because {{story}}. The teacher said {{teacher}} and then very quietly took it away. At the end of the day my mom got an email about it. Now {{ending}}."
+      "template": "For show and tell I brought {{item}}. I told the class it was special because {{story}}. The teacher said {{teacher}} and very quietly took it away. Mom got an email. Now {{ending}}."
     },
     {
       "id": "talent-show",
