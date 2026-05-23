@@ -783,7 +783,7 @@ private fun IntroScreen(onStart: () -> Unit) {
                 color = tokens.ink.copy(alpha = 0.6f)
             )
             Text(
-                text = "BAD\nLIBS.",
+                text = "BAD\nSTORIES.",
                 style = MaterialTheme.typography.displayLarge,
                 color = tokens.ink,
                 lineHeight = 64.sp
