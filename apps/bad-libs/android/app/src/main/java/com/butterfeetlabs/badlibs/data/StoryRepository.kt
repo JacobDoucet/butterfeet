@@ -8,6 +8,18 @@ class StoryRepository(
     private val context: Context,
     private val json: Json = Json { ignoreUnknownKeys = true }
 ) {
+    private val packDisplayOrder = mapOf(
+        "party" to 0,
+        "internet-brainrot" to 1,
+        "couples" to 2,
+        "kids" to 3,
+        "office" to 4,
+        "vacation-disaster" to 5,
+        "wedding" to 6,
+        "holiday" to 7,
+        "gen-alpha" to 8
+    )
+
     fun loadStoryPacks(): Result<List<StoryPack>> {
         return runCatching {
             val packDir = "packs"
@@ -16,7 +28,8 @@ class StoryRepository(
                 val content = context.assets.open("$packDir/$fileName").bufferedReader().use { it.readText() }
                 json.decodeFromString<StoryPack>(content)
             }.sortedWith(
-                compareBy<StoryPack> { if (it.id.equals("starter", ignoreCase = true)) 0 else 1 }
+                compareBy<StoryPack> { if (it.status.equals("available", ignoreCase = true)) 0 else 1 }
+                    .thenBy { packDisplayOrder[it.id] ?: Int.MAX_VALUE }
                     .thenBy { it.title.lowercase() }
             )
         }

@@ -1,0 +1,15 @@
+{
+  "id": "holiday",
+  "title": "Holiday",
+  "description": "Festive psychological damage.",
+  "rating": "family",
+  "status": "coming_soon",
+  "emoji": "🎄",
+  "tags": [
+    "holiday",
+    "family",
+    "seasonal"
+  ],
+  "accentName": "holiday-meltdown",
+  "stories": []
+}

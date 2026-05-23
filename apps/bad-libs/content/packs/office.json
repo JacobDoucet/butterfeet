@@ -1,0 +1,15 @@
+{
+  "id": "office",
+  "title": "Office",
+  "description": "HR violations and corporate instability.",
+  "rating": "teen",
+  "status": "coming_soon",
+  "emoji": "💼",
+  "tags": [
+    "office",
+    "work",
+    "awkward"
+  ],
+  "accentName": "office-chaos",
+  "stories": []
+}

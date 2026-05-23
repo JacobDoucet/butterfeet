@@ -291,6 +291,11 @@ tasks:
       - task android:app:cold-start APP=bad-libs AVD="{{.AVD}}"
 
   "bad-libs:validate-content":
-    desc: "Validate bad-libs starter content JSON"
+    desc: "Validate all Bad Libs content pack JSON files"
     cmds:
       - ./tooling/scripts/validate-bad-libs-content.sh
+
+  "bad-libs:sync-assets":
+    desc: "Sync Bad Libs content packs into Android assets (run after editing pack JSON)"
+    cmds:
+      - ./tooling/scripts/sync-bad-libs-assets.sh

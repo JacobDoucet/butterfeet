@@ -290,7 +290,283 @@
         }
       ],
       "template": "Our school field trip to {place1} started off completely normal. {teacher1} told everyone to stay together, avoid touching anything weird, and absolutely not throw {food1} at the exhibits. Naturally, this lasted about six minutes.\n\nThings became strange when a very loud {animal1} escaped from somewhere nearby and started aggressively {verbIng1} beside a giant {object1}. Half the class screamed, three kids started laughing uncontrollably, and one parent volunteer immediately became extremely {emotion1}.\n\nMeanwhile, {friend1} somehow wandered into a restricted area filled with mysterious {pluralNoun1}. Nobody noticed until an announcement came over the speakers describing \"a small child wearing a {color1} shirt and carrying a suspicious {noun1}.\" At this point, the teachers looked completely exhausted.\n\nThe trip finally ended after somebody accidentally pressed a button they definitely should not have touched, causing alarms to go off and forcing everyone to leave in a hurry. On the ride home, the entire class sat silently on the {vehicle1} while pretending none of this had happened."
+    },
+    {
+      "id": "lost-tooth",
+      "title": "Lost Tooth",
+      "tags": [
+        "school",
+        "tooth-fairy",
+        "absurd"
+      ],
+      "prompts": [
+        {
+          "key": "place",
+          "label": "a weird place to lose a tooth"
+        },
+        {
+          "key": "snack",
+          "label": "a snack you were eating"
+        },
+        {
+          "key": "amount",
+          "label": "how much the tooth fairy paid"
+        },
+        {
+          "key": "note",
+          "label": "what the tooth fairy wrote on the note"
+        }
+      ],
+      "template": "I lost my tooth {{place}} while eating {{snack}}. Mom said the tooth fairy probably wouldn't come if it was missing, but she came anyway. She left {{amount}} under my pillow and a tiny note that said: {{note}}."
+    },
+    {
+      "id": "ice-cream-truck",
+      "title": "Ice Cream Truck",
+      "tags": [
+        "summer",
+        "snacks",
+        "panic"
+      ],
+      "prompts": [
+        {
+          "key": "flavor",
+          "label": "a weird ice cream flavor"
+        },
+        {
+          "key": "song",
+          "label": "a song the truck plays"
+        },
+        {
+          "key": "coins",
+          "label": "a number of coins"
+        },
+        {
+          "key": "topping",
+          "label": "a topping that should not exist"
+        },
+        {
+          "key": "noise",
+          "label": "a happy animal noise"
+        }
+      ],
+      "template": "The ice cream truck came down the street playing {{song}} and I sprinted out of the house with {{coins}} coins. I ordered the {{flavor}} cone with extra {{topping}}. When the man handed it to me I made the {{noise}} so loud my neighbor came outside to see what was wrong."
+    },
+    {
+      "id": "show-and-tell",
+      "title": "Show and Tell",
+      "tags": [
+        "school",
+        "embarrassing",
+        "silly"
+      ],
+      "prompts": [
+        {
+          "key": "item",
+          "label": "something weird you brought to school"
+        },
+        {
+          "key": "story",
+          "label": "a made-up reason it's special"
+        },
+        {
+          "key": "teacher",
+          "label": "a teacher's reaction"
+        },
+        {
+          "key": "ending",
+          "label": "what happened to it after"
+        }
+      ],
+      "template": "For show and tell I brought {{item}}. I told the class it was special because {{story}}. The teacher said {{teacher}} and then very quietly took it away. At the end of the day my mom got an email about it. Now {{ending}}."
+    },
+    {
+      "id": "talent-show",
+      "title": "Talent Show",
+      "tags": [
+        "performance",
+        "school",
+        "chaos"
+      ],
+      "prompts": [
+        {
+          "key": "talent",
+          "label": "a talent you definitely don't have"
+        },
+        {
+          "key": "costume",
+          "label": "an outfit"
+        },
+        {
+          "key": "song",
+          "label": "a song"
+        },
+        {
+          "key": "prop",
+          "label": "a prop you brought on stage"
+        },
+        {
+          "key": "accident",
+          "label": "something that went wrong"
+        },
+        {
+          "key": "audienceNoise",
+          "label": "a sound the audience made"
+        },
+        {
+          "key": "verdict",
+          "label": "what the judges wrote on their cards"
+        }
+      ],
+      "template": "For the talent show I signed up to do {{talent}}. I wore {{costume}} and walked out to {{song}}. Halfway through, my {{prop}} fell off the stage and {{accident}}. The entire audience made the sound: {{audienceNoise}}. The judges held up their cards and they all said the same thing: {{verdict}}."
+    },
+    {
+      "id": "treehouse-club",
+      "title": "Treehouse Club",
+      "tags": [
+        "friends",
+        "rules",
+        "imagination"
+      ],
+      "prompts": [
+        {
+          "key": "clubName",
+          "label": "a serious-sounding club name"
+        },
+        {
+          "key": "rule1",
+          "label": "a club rule"
+        },
+        {
+          "key": "rule2",
+          "label": "another club rule"
+        },
+        {
+          "key": "password",
+          "label": "a secret password"
+        },
+        {
+          "key": "snack",
+          "label": "an official club snack"
+        },
+        {
+          "key": "enemy",
+          "label": "the club's mortal enemy"
+        },
+        {
+          "key": "mission",
+          "label": "the club's first mission"
+        }
+      ],
+      "template": "We started a club called the {{clubName}}. The official rules were: 1) {{rule1}}. 2) {{rule2}}. The password to get in the treehouse is {{password}}. The official club snack is {{snack}}. Our mortal enemy is {{enemy}}, and our first mission is to {{mission}}. We will be famous one day."
+    },
+    {
+      "id": "snow-day",
+      "title": "Snow Day",
+      "tags": [
+        "winter",
+        "outside",
+        "adventure"
+      ],
+      "prompts": [
+        {
+          "key": "outfit",
+          "label": "what you wore"
+        },
+        {
+          "key": "snowman",
+          "label": "what you used for the snowman's face"
+        },
+        {
+          "key": "weapon",
+          "label": "what you used to throw snowballs"
+        },
+        {
+          "key": "fort",
+          "label": "what the fort was named"
+        },
+        {
+          "key": "enemy",
+          "label": "your enemy in the snowball war"
+        },
+        {
+          "key": "rescue",
+          "label": "the reason your mom called you in"
+        },
+        {
+          "key": "drink",
+          "label": "the warm drink you got after"
+        },
+        {
+          "key": "verdict",
+          "label": "what you decided about winter"
+        }
+      ],
+      "template": "School was cancelled. I wore {{outfit}} and ran outside before breakfast. We built a snowman with {{snowman}} for the face. Then me and {{enemy}} declared a snowball war with {{weapon}} as our official weapons. Our fort was called {{fort}}. The war ended when my mom yelled out the door because {{rescue}}. Inside, she made me {{drink}} and I decided that {{verdict}}."
+    },
+    {
+      "id": "summer-camp-adventure",
+      "title": "Summer Camp Adventure",
+      "tags": [
+        "camp",
+        "long",
+        "everything-happens"
+      ],
+      "prompts": [
+        {
+          "key": "campName",
+          "label": "a goofy camp name"
+        },
+        {
+          "key": "counselor",
+          "label": "a counselor's first name"
+        },
+        {
+          "key": "cabin",
+          "label": "the name of your cabin"
+        },
+        {
+          "key": "bunkmate",
+          "label": "a description of your bunkmate"
+        },
+        {
+          "key": "lakeThing",
+          "label": "something weird you saw in the lake"
+        },
+        {
+          "key": "activity",
+          "label": "a camp activity"
+        },
+        {
+          "key": "injury",
+          "label": "a minor injury someone got"
+        },
+        {
+          "key": "campfireStory",
+          "label": "what the scary story was about"
+        },
+        {
+          "key": "snack",
+          "label": "a snack you smuggled in"
+        },
+        {
+          "key": "prank",
+          "label": "a prank you played"
+        },
+        {
+          "key": "ending",
+          "label": "what was waiting for you on the bus home"
+        }
+      ],
+      "template": "I went to {{campName}} for two weeks. My counselor was {{counselor}} and my cabin was called {{cabin}}. My bunkmate was {{bunkmate}}, which made every night interesting. On day three, I swear I saw {{lakeThing}} in the lake during {{activity}}. During the same week, {{counselor}} got {{injury}} but said it was fine. The scariest campfire story was about {{campfireStory}}, and afterward I could not sleep, so I ate the {{snack}} I had smuggled in. The best memory was when we pulled off the {{prank}} — we still laugh about it. On the last morning, the bus picked us up and {{ending}}. I am already begging to go back next year."
     }
   ],
-  "rating": "kids"
+  "rating": "kids",
+  "status": "available",
+  "emoji": "🦖",
+  "tags": [
+    "kids",
+    "family",
+    "silly"
+  ],
+  "accentName": "dino-fun"
 }

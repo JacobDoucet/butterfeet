@@ -1,0 +1,15 @@
+{
+  "id": "vacation-disaster",
+  "title": "Vacation Disaster",
+  "description": "Flights delayed. Relationships tested.",
+  "rating": "teen",
+  "status": "coming_soon",
+  "emoji": "✈️",
+  "tags": [
+    "travel",
+    "vacation",
+    "chaotic"
+  ],
+  "accentName": "vacation-mess",
+  "stories": []
+}

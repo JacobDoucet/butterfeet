@@ -1,0 +1,663 @@
+{
+  "id": "couples",
+  "title": "Couples",
+  "description": "Romance, arguments, and IKEA-related suffering.",
+  "rating": "teen",
+  "status": "available",
+  "emoji": "❤️",
+  "tags": [
+    "couples",
+    "dating",
+    "awkward"
+  ],
+  "accentName": "heart-chaos",
+  "stories": [
+    {
+      "id": "first-date-chaos",
+      "title": "First Date Chaos",
+      "prompts": [
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        },
+        {
+          "key": "noun1",
+          "label": "Noun"
+        },
+        {
+          "key": "verbIng1",
+          "label": "Verb ending in -ing"
+        }
+      ],
+      "template": "It was a {adjective1} night when I brought a {noun1} to the restaurant and started {verbIng1}.",
+      "tags": [
+        "dating",
+        "awkward"
+      ]
+    },
+    {
+      "id": "airport-security",
+      "title": "Airport Security",
+      "prompts": [
+        {
+          "key": "city1",
+          "label": "City"
+        },
+        {
+          "key": "object1",
+          "label": "Object"
+        },
+        {
+          "key": "animal1",
+          "label": "Animal"
+        },
+        {
+          "key": "verbIng1",
+          "label": "Verb ending in -ing"
+        }
+      ],
+      "template": "Security stopped me in {city1} after they found a suspicious {object1} covered in photos of a {animal1} {verbIng1}.",
+      "tags": [
+        "travel",
+        "security"
+      ]
+    },
+    {
+      "id": "gym-advice",
+      "title": "Gym Advice",
+      "prompts": [
+        {
+          "key": "bodyPart1",
+          "label": "Body part"
+        },
+        {
+          "key": "liquid1",
+          "label": "Liquid"
+        },
+        {
+          "key": "number1",
+          "label": "Number"
+        },
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        }
+      ],
+      "template": "My trainer says if I pour {liquid1} directly onto my {bodyPart1} for {number1} minutes a day, I will become unbelievably {adjective1}.",
+      "tags": [
+        "fitness",
+        "bad-advice"
+      ]
+    },
+    {
+      "id": "haunted-rental",
+      "title": "Haunted Rental",
+      "prompts": [
+        {
+          "key": "sound1",
+          "label": "Weird sound"
+        },
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        },
+        {
+          "key": "room1",
+          "label": "Room in a house"
+        },
+        {
+          "key": "pluralAnimal1",
+          "label": "Plural animal"
+        }
+      ],
+      "template": "At 3am we heard a {sound1} coming from the {adjective1} {room1}, followed by at least twelve furious {pluralAnimal1}.",
+      "tags": [
+        "spooky",
+        "house"
+      ]
+    },
+    {
+      "id": "wedding-speech",
+      "title": "Wedding Speech",
+      "prompts": [
+        {
+          "key": "relationship1",
+          "label": "Relationship title"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        },
+        {
+          "key": "noun1",
+          "label": "Noun"
+        },
+        {
+          "key": "verbPast1",
+          "label": "Past tense verb"
+        }
+      ],
+      "template": "During the wedding speech, my {relationship1} became extremely {emotion1} and accidentally {verbPast1} a full {noun1} into the cake.",
+      "tags": [
+        "wedding",
+        "speech"
+      ]
+    },
+    {
+      "id": "ikea-trip",
+      "title": "IKEA Trip",
+      "tags": [
+        "ikea",
+        "furniture",
+        "endurance"
+      ],
+      "prompts": [
+        {
+          "key": "intent",
+          "label": "what you went in for"
+        },
+        {
+          "key": "extra",
+          "label": "something you absolutely did not need"
+        },
+        {
+          "key": "argument",
+          "label": "the thing you argued about in the showroom"
+        },
+        {
+          "key": "snack",
+          "label": "the cafeteria item that ended the fight"
+        },
+        {
+          "key": "exit",
+          "label": "how you left"
+        }
+      ],
+      "template": "We went in for {{intent}}. We left with that, plus {{extra}}, plus an unresolved argument about {{argument}} that started somewhere near the bedroom displays. The fight only ended in the cafeteria when one of us silently bought the other {{snack}}. We made it to the car, looked at each other, and {{exit}}."
+    },
+    {
+      "id": "thermostat-war",
+      "title": "Thermostat War",
+      "tags": [
+        "domestic",
+        "petty",
+        "ongoing"
+      ],
+      "prompts": [
+        {
+          "key": "temp1",
+          "label": "your preferred temperature"
+        },
+        {
+          "key": "temp2",
+          "label": "their preferred temperature"
+        },
+        {
+          "key": "tactic",
+          "label": "a sneaky thing they do to win"
+        },
+        {
+          "key": "verdict",
+          "label": "the deal you eventually make"
+        }
+      ],
+      "template": "I keep the thermostat at {{temp1}}. They insist on {{temp2}}, which is criminal. Every time I leave the room, they {{tactic}}. After three weeks of cold war diplomacy, we finally agreed: {{verdict}}. Neither of us is honoring it."
+    },
+    {
+      "id": "doordash-debate",
+      "title": "DoorDash Debate",
+      "tags": [
+        "hungry",
+        "indecisive",
+        "tense"
+      ],
+      "prompts": [
+        {
+          "key": "minutes",
+          "label": "how long the debate has lasted"
+        },
+        {
+          "key": "option1",
+          "label": "the restaurant they want"
+        },
+        {
+          "key": "option2",
+          "label": "the restaurant you want"
+        },
+        {
+          "key": "compromise",
+          "label": "the compromise restaurant"
+        }
+      ],
+      "template": "{{minutes}} into the DoorDash debate, neither of us is closer to ordering. They want {{option1}}. I want {{option2}}. We are both hungry enough to be passive-aggressive about it. The compromise — {{compromise}} — is somehow worse than both of our original picks, and we order it anyway."
+    },
+    {
+      "id": "the-dishes-conversation",
+      "title": "The Dishes Conversation",
+      "tags": [
+        "chores",
+        "passive-aggressive",
+        "again"
+      ],
+      "prompts": [
+        {
+          "key": "dish",
+          "label": "the dish that has been there for days"
+        },
+        {
+          "key": "tone",
+          "label": "the tone of voice they use"
+        },
+        {
+          "key": "yourExcuse",
+          "label": "your excuse"
+        },
+        {
+          "key": "theirCounter",
+          "label": "their counter"
+        },
+        {
+          "key": "resolution",
+          "label": "how it resolves"
+        }
+      ],
+      "template": "We are once again standing in the kitchen having The Dishes Conversation. Specifically about {{dish}}, which has been in the sink since Tuesday. They open with {{tone}}. I respond with my usual defense: {{yourExcuse}}. They counter with {{theirCounter}}, which is, annoyingly, accurate. The conversation resolves the way it always does: {{resolution}}."
+    },
+    {
+      "id": "shared-streaming-account",
+      "title": "Shared Streaming Account",
+      "tags": [
+        "streaming",
+        "betrayal",
+        "rewatch"
+      ],
+      "prompts": [
+        {
+          "key": "show",
+          "label": "a show you were watching together"
+        },
+        {
+          "key": "episodes",
+          "label": "how many episodes ahead they got"
+        },
+        {
+          "key": "evidence",
+          "label": "the evidence in the Continue Watching row"
+        },
+        {
+          "key": "apology",
+          "label": "their unconvincing apology"
+        }
+      ],
+      "template": "We were watching {{show}} together. We agreed: no episodes alone. I opened the app tonight and the algorithm casually informed me they were {{episodes}} episodes ahead. The evidence was right there: {{evidence}}. When confronted, they offered: {{apology}}. I have already started watching it twice as fast just to catch up out of spite."
+    },
+    {
+      "id": "moving-day",
+      "title": "Moving Day",
+      "tags": [
+        "moving",
+        "boxes",
+        "regret"
+      ],
+      "prompts": [
+        {
+          "key": "fromPlace",
+          "label": "the old apartment"
+        },
+        {
+          "key": "toPlace",
+          "label": "the new apartment"
+        },
+        {
+          "key": "boxLabel",
+          "label": "a uselessly vague box label"
+        },
+        {
+          "key": "broken",
+          "label": "something that broke in transit"
+        },
+        {
+          "key": "missingItem",
+          "label": "something nobody can find"
+        },
+        {
+          "key": "delivery",
+          "label": "the food you ordered while sitting on boxes"
+        },
+        {
+          "key": "argument",
+          "label": "the argument you had at 11 PM"
+        }
+      ],
+      "template": "We packed up {{fromPlace}} into 47 boxes, most of them labeled simply {{boxLabel}}. We moved into {{toPlace}} and immediately discovered that {{broken}} did not survive the trip. {{missingItem}} has vanished entirely; it is in one of the boxes, but which one is a problem for future us. We sat on the kitchen floor with {{delivery}}, and at 11 PM we had a low-energy argument about {{argument}} that we both knew wasn't really about that."
+    },
+    {
+      "id": "meeting-the-parents",
+      "title": "Meeting the Parents",
+      "tags": [
+        "family",
+        "performance",
+        "anxiety"
+      ],
+      "prompts": [
+        {
+          "key": "outfit",
+          "label": "what you wore"
+        },
+        {
+          "key": "gift",
+          "label": "the gift you brought"
+        },
+        {
+          "key": "parentName",
+          "label": "their parent's first name"
+        },
+        {
+          "key": "dish",
+          "label": "a dish you pretended to love"
+        },
+        {
+          "key": "question",
+          "label": "an invasive question they asked"
+        },
+        {
+          "key": "answer",
+          "label": "your panicked answer"
+        },
+        {
+          "key": "story",
+          "label": "an embarrassing story the parent told"
+        },
+        {
+          "key": "verdict",
+          "label": "the parent's verdict on the car ride home"
+        }
+      ],
+      "template": "I wore {{outfit}}, which was either perfect or a disaster. I brought {{gift}}. {{parentName}} hugged me. Dinner was {{dish}}, which I claimed to love. Somewhere between the main and dessert, {{parentName}} asked {{question}}. I panicked and answered {{answer}}. Then, with no warning, they told the story about {{story}}. On the car ride home, the verdict came in: {{verdict}}. Honestly? I'll take it."
+    },
+    {
+      "id": "couples-yoga",
+      "title": "Couples Yoga",
+      "tags": [
+        "wellness",
+        "physical-comedy",
+        "tension"
+      ],
+      "prompts": [
+        {
+          "key": "studio",
+          "label": "the name of the studio"
+        },
+        {
+          "key": "instructor",
+          "label": "the instructor's vibe"
+        },
+        {
+          "key": "pose",
+          "label": "a pose that broke you"
+        },
+        {
+          "key": "noise",
+          "label": "a noise your partner made"
+        },
+        {
+          "key": "whisper",
+          "label": "what you whispered to them mid-pose"
+        },
+        {
+          "key": "neighbor",
+          "label": "what the couple next to you was doing"
+        },
+        {
+          "key": "aftermath",
+          "label": "what you said in the car"
+        }
+      ],
+      "template": "We signed up for couples yoga at {{studio}}. The instructor was {{instructor}}. We got through warm-up. Then she announced {{pose}}, and within thirty seconds my partner made {{noise}} loud enough for the whole room. I leaned over and whispered {{whisper}}. The couple next to us was {{neighbor}} the entire time, somehow perfectly. In the car afterward, one of us finally said {{aftermath}}. We are not going back."
+    },
+    {
+      "id": "anniversary-dinner",
+      "title": "Anniversary Dinner",
+      "tags": [
+        "anniversary",
+        "fancy",
+        "almost-romantic"
+      ],
+      "prompts": [
+        {
+          "key": "restaurant",
+          "label": "the kind of restaurant"
+        },
+        {
+          "key": "dressCode",
+          "label": "the dress code"
+        },
+        {
+          "key": "drink",
+          "label": "a drink one of you ordered"
+        },
+        {
+          "key": "appetizer",
+          "label": "an appetizer you didn't recognize"
+        },
+        {
+          "key": "interruption",
+          "label": "what interrupted the romantic moment"
+        },
+        {
+          "key": "gift",
+          "label": "a gift one of you gave"
+        },
+        {
+          "key": "reaction",
+          "label": "the reaction to the gift"
+        },
+        {
+          "key": "ending",
+          "label": "how the night actually ended"
+        }
+      ],
+      "template": "For our anniversary we booked the kind of restaurant {{restaurant}} requires {{dressCode}}. We ordered {{drink}} and {{appetizer}}, which arrived looking like art. Right as the candle flickered between us, {{interruption}} ruined the moment completely. They handed me a small box. Inside was {{gift}}. My reaction was {{reaction}}, which was not the reaction they were hoping for. The night ended the only way it could: {{ending}}."
+    },
+    {
+      "id": "couples-therapy-first-session",
+      "title": "Couples Therapy, First Session",
+      "tags": [
+        "therapy",
+        "growth",
+        "exposed"
+      ],
+      "prompts": [
+        {
+          "key": "therapist",
+          "label": "the therapist's name"
+        },
+        {
+          "key": "question",
+          "label": "her opening question"
+        },
+        {
+          "key": "yourAnswer",
+          "label": "the answer you rehearsed"
+        },
+        {
+          "key": "theirAnswer",
+          "label": "the answer your partner gave that blindsided you"
+        },
+        {
+          "key": "tissue",
+          "label": "who reached for the tissues first"
+        },
+        {
+          "key": "homework",
+          "label": "the homework she assigned"
+        },
+        {
+          "key": "carRide",
+          "label": "what happened on the car ride home"
+        },
+        {
+          "key": "verdict",
+          "label": "the text you sent your group chat afterward"
+        }
+      ],
+      "template": "Our therapist's name is {{therapist}}. She started with: {{question}}. I gave the answer I had clearly rehearsed: {{yourAnswer}}. Then my partner answered: {{theirAnswer}}. I was not ready for that. {{tissue}} reached for the tissues first. Before we left, she gave us homework: {{homework}}. On the car ride home, {{carRide}}. As soon as I got inside I texted the group chat: {{verdict}}. We have booked next week."
+    },
+    {
+      "id": "road-trip-fight",
+      "title": "Road Trip Fight",
+      "tags": [
+        "road-trip",
+        "car",
+        "tense"
+      ],
+      "prompts": [
+        {
+          "key": "destination",
+          "label": "where you were going"
+        },
+        {
+          "key": "hour",
+          "label": "what hour of the drive it was"
+        },
+        {
+          "key": "trigger",
+          "label": "the small thing that started it"
+        },
+        {
+          "key": "snack",
+          "label": "the snack that became evidence"
+        },
+        {
+          "key": "playlist",
+          "label": "what was playing"
+        },
+        {
+          "key": "silence",
+          "label": "how long the silence lasted"
+        },
+        {
+          "key": "peace",
+          "label": "the gas station purchase that ended the war"
+        }
+      ],
+      "template": "We were six hours into a drive to {{destination}}. Specifically, hour {{hour}}. The fight started over {{trigger}}, which was the smallest possible thing. Within minutes, the {{snack}} between us had become weaponized evidence of an unrelated betrayal. {{playlist}} played, very quietly, for {{silence}} minutes of dead silence. Peace was eventually negotiated at a gas station, brokered entirely by a single purchase: {{peace}}. We did not speak about it again."
+    },
+    {
+      "id": "wedding-planning-meltdown",
+      "title": "Wedding Planning Meltdown",
+      "tags": [
+        "wedding-planning",
+        "long",
+        "stress"
+      ],
+      "prompts": [
+        {
+          "key": "venue",
+          "label": "your dream venue"
+        },
+        {
+          "key": "budget",
+          "label": "your original budget"
+        },
+        {
+          "key": "newBudget",
+          "label": "your actual budget"
+        },
+        {
+          "key": "guestThey",
+          "label": "a guest they insist on inviting"
+        },
+        {
+          "key": "guestYou",
+          "label": "a guest you are quietly trying to uninvite"
+        },
+        {
+          "key": "color1",
+          "label": "your wedding color"
+        },
+        {
+          "key": "color2",
+          "label": "their wedding color"
+        },
+        {
+          "key": "vendor",
+          "label": "a vendor who ghosted you"
+        },
+        {
+          "key": "menuFight",
+          "label": "what you argued about over the menu"
+        },
+        {
+          "key": "registry",
+          "label": "the weirdest thing on the registry"
+        },
+        {
+          "key": "compromise",
+          "label": "the compromise that saved the wedding"
+        },
+        {
+          "key": "verdict",
+          "label": "what one of you said at 2 AM"
+        }
+      ],
+      "template": "We were going to get married at {{venue}}. Budget: {{budget}}. Real budget: {{newBudget}}. They insisted on inviting {{guestThey}}. I am still quietly trying to uninvite {{guestYou}}. The wedding colors were {{color1}}, then somehow also {{color2}}, then officially neither. {{vendor}} ghosted us in week three. The dinner menu fight was, of all things, about {{menuFight}}. The registry includes {{registry}}, which someone is going to buy us, and we will have to thank them for it. The wedding was saved entirely by {{compromise}}. At 2 AM the night before the final headcount was due, one of us said: {{verdict}}. We are still getting married. Probably."
+    },
+    {
+      "id": "destination-wedding-trip",
+      "title": "Destination Wedding Trip",
+      "tags": [
+        "travel",
+        "weddings",
+        "long"
+      ],
+      "prompts": [
+        {
+          "key": "location",
+          "label": "the destination"
+        },
+        {
+          "key": "couple",
+          "label": "whose wedding it is"
+        },
+        {
+          "key": "flightProblem",
+          "label": "what went wrong with the flight"
+        },
+        {
+          "key": "rental",
+          "label": "what was wrong with the rental"
+        },
+        {
+          "key": "outfit",
+          "label": "an outfit choice you regretted"
+        },
+        {
+          "key": "rehearsalDinner",
+          "label": "what happened at the rehearsal dinner"
+        },
+        {
+          "key": "speech",
+          "label": "the speech that went too long"
+        },
+        {
+          "key": "drink",
+          "label": "the signature cocktail"
+        },
+        {
+          "key": "danceFloor",
+          "label": "what happened on the dance floor"
+        },
+        {
+          "key": "secret",
+          "label": "a secret you and your partner kept from the group"
+        },
+        {
+          "key": "verdict",
+          "label": "what you whispered to each other at the airport"
+        }
+      ],
+      "template": "We flew to {{location}} for {{couple}}'s wedding. {{flightProblem}} happened immediately. The rental was supposed to be perfect, except {{rental}}. By day two, I deeply regretted packing {{outfit}}. At the rehearsal dinner, {{rehearsalDinner}}. The best man's speech was about {{speech}} and lasted nineteen minutes. The signature cocktail was {{drink}}, which we ordered eight of. On the dance floor, {{danceFloor}}. Throughout the entire trip, we were quietly keeping a secret from the rest of the group: {{secret}}. At the airport, waiting at the gate, exhausted and sunburned, one of us whispered: {{verdict}}. Worth it."
+    }
+  ]
+}

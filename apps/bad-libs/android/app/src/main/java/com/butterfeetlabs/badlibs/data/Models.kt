@@ -8,6 +8,10 @@ data class StoryPack(
     val title: String,
     val description: String,
     val rating: String,
+    val status: String,
+    val emoji: String,
+    val tags: List<String> = emptyList(),
+    val accentName: String? = null,
     val stories: List<Story>
 )
 

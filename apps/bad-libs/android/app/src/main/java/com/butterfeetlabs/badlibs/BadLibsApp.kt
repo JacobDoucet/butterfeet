@@ -145,6 +145,8 @@ private val PackAccents = listOf(
     Color(0xFF2E83C6)
 )
 
+private val ComingSoonAccent = Color(0xFF8C9099)
+
 private fun accentForSeed(seed: String): Color {
     if (seed.isEmpty()) return ChaosOrange
     val index = seed.fold(0) { acc, c -> acc + c.code } % PackAccents.size
@@ -217,6 +219,7 @@ fun BadLibsApp() {
     val prefs = remember { context.getSharedPreferences(AppPrefs, Context.MODE_PRIVATE) }
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
+    val appScope = rememberCoroutineScope()
     var hasSeenIntro by remember {
         mutableStateOf(
             prefs.getBoolean(IntroSeenKey, false)
@@ -243,7 +246,9 @@ fun BadLibsApp() {
     }
 
     val allStories = remember(viewModel.packs) {
-        viewModel.packs.flatMap { pack -> pack.stories.map { story -> pack.id to story.id } }
+        viewModel.packs
+            .filter { it.status.equals("available", ignoreCase = true) }
+            .flatMap { pack -> pack.stories.map { story -> pack.id to story.id } }
     }
     val dailyChallenge = remember(allStories) {
         if (allStories.isEmpty()) {
@@ -356,7 +361,12 @@ fun BadLibsApp() {
                         packs = viewModel.packs,
                         onBack = { navController.popBackStack() },
                         onRetry = { viewModel.loadContent() },
-                        onOpenPack = { packId -> navController.navigate("stories/$packId") }
+                        onOpenPack = { packId -> navController.navigate("stories/$packId") },
+                        onPackLocked = {
+                            appScope.launch {
+                                snackbarHostState.showSnackbar("This pack is still being cooked.")
+                            }
+                        }
                     )
                 }
                 composable(
@@ -1052,7 +1062,7 @@ private fun ChaosStepCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun PackListScreen(
     isLoading: Boolean,
@@ -1060,7 +1070,8 @@ private fun PackListScreen(
     packs: List<StoryPack>,
     onBack: () -> Unit,
     onRetry: () -> Unit,
-    onOpenPack: (String) -> Unit
+    onOpenPack: (String) -> Unit,
+    onPackLocked: () -> Unit
 ) {
     ChaosScaffold(title = "Choose A Pack") { innerPadding ->
         when {
@@ -1125,6 +1136,9 @@ private fun PackListScreen(
 
             else -> {
                 val rouletteScope = rememberCoroutineScope()
+                val availablePacks = remember(packs) {
+                    packs.filter { it.status.equals("available", ignoreCase = true) }
+                }
                 var roulettePackId by remember(packs) { mutableStateOf<String?>(null) }
                 var rouletteRunning by remember { mutableStateOf(false) }
 
@@ -1139,33 +1153,70 @@ private fun PackListScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(packs, key = { it.id }) { pack ->
-                            val accent = accentForSeed(pack.id)
+                            val isAvailable = pack.status.equals("available", ignoreCase = true)
+                            val accent = if (isAvailable) accentForSeed(pack.id) else ComingSoonAccent
+                            val packIcon = if (isAvailable) pack.emoji else "🔒"
                             ChaosSurfaceCard(
                                 modifier = Modifier.fillMaxWidth(),
                                 accentColor = accent,
-                                highlighted = roulettePackId == pack.id,
-                                onClick = { onOpenPack(pack.id) }
+                                highlighted = isAvailable && roulettePackId == pack.id,
+                                onClick = {
+                                    if (isAvailable) {
+                                        onOpenPack(pack.id)
+                                    } else {
+                                        onPackLocked()
+                                    }
+                                }
                             ) {
-                                Column(modifier = Modifier.padding(18.dp)) {
+                                Column(
+                                    modifier = Modifier
+                                        .padding(18.dp)
+                                        .graphicsLayer { alpha = if (isAvailable) 1f else 0.74f }
+                                ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = pack.title,
+                                            text = "$packIcon ${pack.title}",
                                             style = MaterialTheme.typography.titleLarge,
                                             modifier = Modifier.weight(1f)
                                         )
-                                        PackCountPill(count = pack.stories.size, accent = accent)
+                                        PackCountPill(
+                                            label = if (isAvailable) "${pack.stories.size} stories" else "Coming Soon",
+                                            accent = accent
+                                        )
                                     }
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(pack.description, style = MaterialTheme.typography.bodyMedium)
                                     Spacer(modifier = Modifier.height(10.dp))
-                                    StoryMetaChip(
-                                        label = "Rated ${pack.rating.uppercase()}",
-                                        accent = accent
-                                    )
+                                    FlowRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        val visiblePackTags = pack.tags.take(3)
+                                        val hiddenPackTagCount = (pack.tags.size - visiblePackTags.size).coerceAtLeast(0)
+
+                                        visiblePackTags.forEach { tag ->
+                                            StoryMetaChip(
+                                                label = formatStoryTag(tag),
+                                                accent = accent
+                                            )
+                                        }
+                                        if (hiddenPackTagCount > 0) {
+                                            StoryMetaChip(
+                                                label = "+$hiddenPackTagCount more",
+                                                accent = accent
+                                            )
+                                        }
+                                        if (!isAvailable) {
+                                            StoryMetaChip(
+                                                label = "This pack is still being cooked",
+                                                accent = accent
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1174,14 +1225,14 @@ private fun PackListScreen(
                     GameFooterBar(
                         primaryLabel = if (rouletteRunning) "Rolling..." else "Pick Random",
                         onPrimary = {
-                            if (rouletteRunning || packs.isEmpty()) return@GameFooterBar
+                            if (rouletteRunning || availablePacks.isEmpty()) return@GameFooterBar
                             rouletteScope.launch {
                                 rouletteRunning = true
                                 repeat(8) { step ->
-                                    roulettePackId = packs.random().id
+                                    roulettePackId = availablePacks.random().id
                                     delay(55L + (step * 18L))
                                 }
-                                val winner = packs.random().id
+                                val winner = availablePacks.random().id
                                 roulettePackId = winner
                                 delay(140L)
                                 rouletteRunning = false
@@ -1200,14 +1251,14 @@ private fun PackListScreen(
 }
 
 @Composable
-private fun PackCountPill(count: Int, accent: Color = Color(0xFFFFB06F)) {
+private fun PackCountPill(label: String, accent: Color = Color(0xFFFFB06F)) {
     Box(
         modifier = Modifier
             .background(accent.copy(alpha = 0.22f), RoundedCornerShape(50))
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(
-            text = "$count stories",
+            text = label,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onBackground
         )
@@ -1269,10 +1320,7 @@ private fun StoryListScreen(
                         items(pack.stories, key = { it.id }) { story ->
                             val accent = accentForSeed(story.id)
                             val lengthCategory = StoryLengthCategory.fromPromptCount(story.prompts.size)
-                            val lengthChipLabel = lengthChipLabelForPack(
-                                category = lengthCategory,
-                                packRating = pack.rating
-                            )
+                            val lengthChipLabel = "${lengthCategory.emoji} ${lengthCategory.label}"
                             ChaosSurfaceCard(
                                 modifier = Modifier.fillMaxWidth(),
                                 accentColor = accent,
@@ -1281,6 +1329,12 @@ private fun StoryListScreen(
                             ) {
                                 Column(modifier = Modifier.padding(18.dp)) {
                                     Text(story.title, style = MaterialTheme.typography.titleLarge)
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = "${story.prompts.size} prompts",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f)
+                                    )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     FlowRow(
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1327,14 +1381,6 @@ private fun StoryListScreen(
                 }
             }
         }
-    }
-}
-
-private fun lengthChipLabelForPack(category: StoryLengthCategory, packRating: String): String {
-    return if (packRating.equals("kids", ignoreCase = true) && category == StoryLengthCategory.BrainDamage) {
-        "🐢 Long"
-    } else {
-        "${category.emoji} ${category.label}"
     }
 }
 

@@ -551,7 +551,99 @@
         "boat",
         "vacation"
       ]
+    },
+    {
+      "id": "drunk-uno",
+      "title": "Drunk Uno",
+      "tags": [
+        "games",
+        "competitive",
+        "friends"
+      ],
+      "prompts": [
+        {
+          "key": "rule",
+          "label": "a homemade Uno rule"
+        },
+        {
+          "key": "punishment",
+          "label": "a punishment for losing a hand"
+        },
+        {
+          "key": "friend",
+          "label": "a friend's first name"
+        },
+        {
+          "key": "color",
+          "label": "a color"
+        },
+        {
+          "key": "object",
+          "label": "something fragile in the room"
+        },
+        {
+          "key": "noise",
+          "label": "a loud, unholy noise"
+        },
+        {
+          "key": "decision",
+          "label": "a decision you all made together"
+        }
+      ],
+      "template": "We were playing Uno with one house rule: {{rule}}. By round four, the agreed-upon punishment for losing a hand was {{punishment}}. {{friend}} stacked +4 cards until the deck ran out, and the {{color}} cards were no longer being used as cards — they were ammunition. When someone hit the {{object}}, the only sound in the room was {{noise}}. We did not finish the game. We did, however, unanimously agree that {{decision}}."
+    },
+    {
+      "id": "house-party-cleanup",
+      "title": "House Party Cleanup",
+      "tags": [
+        "aftermath",
+        "hosting",
+        "regret"
+      ],
+      "prompts": [
+        {
+          "key": "host",
+          "label": "a friend's first name"
+        },
+        {
+          "key": "couchFind",
+          "label": "something you find in the couch"
+        },
+        {
+          "key": "tubFind",
+          "label": "something you find in the bathtub"
+        },
+        {
+          "key": "stainColor",
+          "label": "an unidentifiable color"
+        },
+        {
+          "key": "smell",
+          "label": "an unpleasant smell"
+        },
+        {
+          "key": "guest",
+          "label": "a description of the last guest still asleep"
+        },
+        {
+          "key": "missingItem",
+          "label": "something that has gone missing"
+        },
+        {
+          "key": "vow",
+          "label": "a vow you make to yourself"
+        }
+      ],
+      "template": "{{host}}'s apartment looked like it had been hit by a confused tornado. In the couch cushions: {{couchFind}}. In the bathtub: {{tubFind}}. The carpet had a {{stainColor}} stain that was definitely not there before, and the kitchen smelled like {{smell}}. On the floor near the radiator was {{guest}}, who nobody could identify. The TV remote had {{missingItem}}. While carrying a bag of bottles to the door, {{host}} quietly muttered: {{vow}}. Then ordered a breakfast burrito."
     }
   ],
-  "rating": "teen"
+  "rating": "teen",
+  "status": "available",
+  "emoji": "🎉",
+  "tags": [
+    "party",
+    "friends",
+    "chaotic"
+  ],
+  "accentName": "party-neon"
 }

@@ -1,0 +1,667 @@
+{
+  "id": "internet-brainrot",
+  "title": "Internet Brainrot",
+  "description": "Psychological damage caused by excessive internet exposure.",
+  "rating": "teen",
+  "status": "available",
+  "emoji": "🧠",
+  "tags": [
+    "internet",
+    "brainrot",
+    "chaotic"
+  ],
+  "accentName": "brainrot-glitch",
+  "stories": [
+    {
+      "id": "office-emergency",
+      "title": "Office Emergency",
+      "prompts": [
+        {
+          "key": "jobTitle1",
+          "label": "Job title"
+        },
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        },
+        {
+          "key": "pluralNoun1",
+          "label": "Plural noun"
+        },
+        {
+          "key": "verb1",
+          "label": "Verb"
+        }
+      ],
+      "template": "As Head of {jobTitle1}, I regret to announce that the {adjective1} {pluralNoun1} have learned how to {verb1}.",
+      "tags": [
+        "work",
+        "corporate"
+      ]
+    },
+    {
+      "id": "family-group-chat",
+      "title": "Family Group Chat",
+      "prompts": [
+        {
+          "key": "relative1",
+          "label": "Relative"
+        },
+        {
+          "key": "food1",
+          "label": "Food"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        },
+        {
+          "key": "celebrity1",
+          "label": "Celebrity"
+        }
+      ],
+      "template": "My {relative1} accidentally sent a photo of {food1} to the family group chat and now everyone thinks {celebrity1} is feeling {emotion1}.",
+      "tags": [
+        "family",
+        "chat"
+      ]
+    },
+    {
+      "id": "terrible-superhero",
+      "title": "Terrible Superhero",
+      "prompts": [
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        },
+        {
+          "key": "food1",
+          "label": "Food"
+        },
+        {
+          "key": "pluralNoun1",
+          "label": "Plural noun"
+        },
+        {
+          "key": "verb1",
+          "label": "Verb"
+        }
+      ],
+      "template": "By day I am normal. By night I become The {adjective1} {food1}, protector of all innocent {pluralNoun1} who simply cannot {verb1}.",
+      "tags": [
+        "superhero",
+        "origin-story"
+      ]
+    },
+    {
+      "id": "influencer-apology",
+      "title": "Influencer Apology",
+      "prompts": [
+        {
+          "key": "name1",
+          "label": "First name"
+        },
+        {
+          "key": "object1",
+          "label": "Object"
+        },
+        {
+          "key": "verbPast1",
+          "label": "Past tense verb"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        }
+      ],
+      "template": "Hey guys, {name1} here. I want to apologize for the {object1}. I never meant to {verbPast1} anyone, and I am taking time to feel {emotion1}.",
+      "tags": [
+        "internet",
+        "apology"
+      ]
+    },
+    {
+      "id": "ai-takeover",
+      "title": "AI Takeover",
+      "prompts": [
+        {
+          "key": "occupation1",
+          "label": "Occupation"
+        },
+        {
+          "key": "verbIng1",
+          "label": "Verb ending in -ing"
+        },
+        {
+          "key": "object1",
+          "label": "Object"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        }
+      ],
+      "template": "The AI became self-aware after a {occupation1} spent 14 straight hours {verbIng1} at a {object1}, leaving humanity deeply {emotion1}.",
+      "tags": [
+        "sci-fi",
+        "technology"
+      ]
+    },
+    {
+      "id": "the-tweet",
+      "title": "The Tweet",
+      "tags": [
+        "posting",
+        "consequences",
+        "3am"
+      ],
+      "prompts": [
+        {
+          "key": "subject",
+          "label": "a topic nobody asked you about"
+        },
+        {
+          "key": "opinion",
+          "label": "a take that should have stayed in your head"
+        },
+        {
+          "key": "notifs",
+          "label": "a number with way too many digits"
+        },
+        {
+          "key": "action",
+          "label": "what you did with your account"
+        }
+      ],
+      "template": "At 3:17 AM I tweeted about {{subject}}. The take was simply: {{opinion}}. I woke up to {{notifs}} notifications, a quote-tweet from someone verified, and the slow realization that I would have to {{action}}."
+    },
+    {
+      "id": "tiktok-comment-section",
+      "title": "TikTok Comment Section",
+      "tags": [
+        "comments",
+        "drama",
+        "parasocial"
+      ],
+      "prompts": [
+        {
+          "key": "video",
+          "label": "a type of video"
+        },
+        {
+          "key": "topComment",
+          "label": "a deranged comment"
+        },
+        {
+          "key": "username",
+          "label": "a chaotic username"
+        },
+        {
+          "key": "reply",
+          "label": "a reply that escalates everything"
+        }
+      ],
+      "template": "The video was just {{video}}. The top comment said: {{topComment}}. It had 84,000 likes. Then {{username}} replied with {{reply}}, and now there are seventeen reaction videos and a podcast episode about it."
+    },
+    {
+      "id": "youtube-rabbit-hole",
+      "title": "YouTube Rabbit Hole",
+      "tags": [
+        "algorithm",
+        "insomnia",
+        "regret"
+      ],
+      "prompts": [
+        {
+          "key": "start",
+          "label": "an innocent thing you searched"
+        },
+        {
+          "key": "video1",
+          "label": "a weirdly specific video title"
+        },
+        {
+          "key": "video2",
+          "label": "another video title, somehow weirder"
+        },
+        {
+          "key": "video3",
+          "label": "a video title that is just buzzwords"
+        },
+        {
+          "key": "belief",
+          "label": "something you now believe"
+        }
+      ],
+      "template": "It started innocently — I searched {{start}}. Two hours later, the autoplay had taken me through {{video1}}, then {{video2}}, then somehow {{video3}}. It is now 4 AM and I have an unshakeable belief that {{belief}}."
+    },
+    {
+      "id": "ai-chatbot-confession",
+      "title": "AI Chatbot Confession",
+      "tags": [
+        "ai",
+        "lonely",
+        "unhinged"
+      ],
+      "prompts": [
+        {
+          "key": "botName",
+          "label": "a chatbot name"
+        },
+        {
+          "key": "confession",
+          "label": "something you told it that you wouldn't tell a person"
+        },
+        {
+          "key": "advice",
+          "label": "the advice it gave you"
+        },
+        {
+          "key": "outcome",
+          "label": "what you did next"
+        }
+      ],
+      "template": "I have been talking to {{botName}} for six weeks. Last night I told it {{confession}}, which I have not told a single human being. It responded with the most thoughtful advice: {{advice}}. I closed my laptop and immediately {{outcome}}."
+    },
+    {
+      "id": "discord-server-drama",
+      "title": "Discord Server Drama",
+      "tags": [
+        "discord",
+        "drama",
+        "modlife"
+      ],
+      "prompts": [
+        {
+          "key": "serverName",
+          "label": "a niche server name"
+        },
+        {
+          "key": "memberCount",
+          "label": "a server member count"
+        },
+        {
+          "key": "trigger",
+          "label": "the thing that started it"
+        },
+        {
+          "key": "channel",
+          "label": "a Discord channel name"
+        },
+        {
+          "key": "ban",
+          "label": "the reason a mod got demodded"
+        }
+      ],
+      "template": "The {{serverName}} server had {{memberCount}} members and a delicate ecosystem. Then someone posted {{trigger}} in #{{channel}}. Within ninety minutes, three mods had resigned, the owner went private, and the head mod was demodded for {{ban}}. The server is now read-only. Nobody has spoken in twelve days."
+    },
+    {
+      "id": "podcast-bro-monologue",
+      "title": "Podcast Bro Monologue",
+      "tags": [
+        "podcast",
+        "pseudoscience",
+        "confidence"
+      ],
+      "prompts": [
+        {
+          "key": "topic",
+          "label": "a topic he has zero credentials in"
+        },
+        {
+          "key": "claim1",
+          "label": "an unhinged claim he makes"
+        },
+        {
+          "key": "study",
+          "label": "a fake study he cites"
+        },
+        {
+          "key": "supplement",
+          "label": "a supplement he plugs"
+        },
+        {
+          "key": "guest",
+          "label": "the guest's job title"
+        },
+        {
+          "key": "questionThing",
+          "label": "a thing he tells you to question"
+        },
+        {
+          "key": "merch",
+          "label": "something he sells at the end"
+        }
+      ],
+      "template": "Episode 412 opens with three minutes of breathing and then he says: today we are going to talk about {{topic}}. Halfway through, his guest — a {{guest}} — nods seriously as he claims {{claim1}}, citing the famous {{study}}. He brings up {{supplement}} four times. He tells you to question {{questionThing}}. The episode ends with a 90-second ad read for {{merch}}. Total runtime: 3 hours 47 minutes."
+    },
+    {
+      "id": "manifesto-thread",
+      "title": "Manifesto Thread",
+      "tags": [
+        "thread",
+        "main-character",
+        "delusion"
+      ],
+      "prompts": [
+        {
+          "key": "intro",
+          "label": "the opening sentence of the thread"
+        },
+        {
+          "key": "claim1",
+          "label": "claim number 1"
+        },
+        {
+          "key": "claim2",
+          "label": "claim number 2, escalated"
+        },
+        {
+          "key": "claim3",
+          "label": "claim number 3, completely unhinged"
+        },
+        {
+          "key": "credentials",
+          "label": "credentials they give themselves"
+        },
+        {
+          "key": "callToAction",
+          "label": "what they want you to do"
+        },
+        {
+          "key": "ratio",
+          "label": "the quote-tweet ratio"
+        },
+        {
+          "key": "fate",
+          "label": "what they did with their account afterward"
+        }
+      ],
+      "template": "1/8 — {{intro}} 🧵\\n\\n2/8 — Most people don't realize this, but {{claim1}}.\\n\\n3/8 — It gets worse: {{claim2}}.\\n\\n4/8 — The truth is {{claim3}}.\\n\\n5/8 — I should know — I am a {{credentials}}.\\n\\n6/8 — If you take one thing from this thread: {{callToAction}}.\\n\\nThe thread got ratio'd {{ratio}}. The next morning they {{fate}}."
+    },
+    {
+      "id": "fancam-edit",
+      "title": "Fancam Edit",
+      "tags": [
+        "edits",
+        "fandom",
+        "obsession"
+      ],
+      "prompts": [
+        {
+          "key": "subject",
+          "label": "an unexpected person to make a fancam of"
+        },
+        {
+          "key": "song",
+          "label": "a dramatic song"
+        },
+        {
+          "key": "effect",
+          "label": "a visual effect"
+        },
+        {
+          "key": "caption",
+          "label": "the caption"
+        },
+        {
+          "key": "views",
+          "label": "a view count"
+        },
+        {
+          "key": "commentWar",
+          "label": "what the comment section is fighting about"
+        },
+        {
+          "key": "stitch",
+          "label": "who stitched the video"
+        }
+      ],
+      "template": "Someone made a fancam of {{subject}} set to {{song}} with {{effect}} every time they blink. The caption was: {{caption}}. It has {{views}} views. The comment section is currently at war over {{commentWar}}. {{stitch}} stitched it with a 14-minute response and now even more people are watching the original."
+    },
+    {
+      "id": "subreddit-moderator-meltdown",
+      "title": "Subreddit Moderator Meltdown",
+      "tags": [
+        "reddit",
+        "power",
+        "drama"
+      ],
+      "prompts": [
+        {
+          "key": "subName",
+          "label": "a niche subreddit name"
+        },
+        {
+          "key": "subscribers",
+          "label": "the subscriber count"
+        },
+        {
+          "key": "rule",
+          "label": "a hyper-specific rule the mod enforced"
+        },
+        {
+          "key": "post",
+          "label": "the post that broke the camel's back"
+        },
+        {
+          "key": "banReason",
+          "label": "the reason the user was banned"
+        },
+        {
+          "key": "modAction",
+          "label": "what the mod did next"
+        },
+        {
+          "key": "aftermath",
+          "label": "what the sub became"
+        },
+        {
+          "key": "newName",
+          "label": "the new sub people fled to"
+        }
+      ],
+      "template": "r/{{subName}} had {{subscribers}} subscribers and exactly one full-time mod. Rule 7 was, very clearly: {{rule}}. Then someone posted {{post}}. The mod banned the user for {{banReason}}, then went into the wiki and {{modAction}}. Within a day, the sub became {{aftermath}}. The entire community fled to r/{{newName}}, where things are not better, just newer."
+    },
+    {
+      "id": "wikipedia-deep-dive",
+      "title": "Wikipedia Deep Dive",
+      "tags": [
+        "wikipedia",
+        "lore",
+        "nerd-snipe"
+      ],
+      "prompts": [
+        {
+          "key": "start",
+          "label": "a totally normal article you started on"
+        },
+        {
+          "key": "page1",
+          "label": "a Wikipedia article title"
+        },
+        {
+          "key": "page2",
+          "label": "another Wikipedia article title"
+        },
+        {
+          "key": "page3",
+          "label": "a deeply unrelated article"
+        },
+        {
+          "key": "fact",
+          "label": "an upsetting fact you learned"
+        },
+        {
+          "key": "category",
+          "label": "a Wikipedia category name"
+        },
+        {
+          "key": "fate",
+          "label": "what time it is when you look up"
+        }
+      ],
+      "template": "I opened Wikipedia to fact-check one thing about {{start}}. From there I clicked through to {{page1}}, then {{page2}}, then for reasons I cannot reconstruct, {{page3}}. I learned that {{fact}}, which I cannot unlearn. I am now reading every article tagged \"{{category}}.\" When I look up at the clock, it is {{fate}}."
+    },
+    {
+      "id": "stan-twitter-war",
+      "title": "Stan Twitter War",
+      "tags": [
+        "stan",
+        "fandom",
+        "violent-typing"
+      ],
+      "prompts": [
+        {
+          "key": "fandom1",
+          "label": "a fandom name"
+        },
+        {
+          "key": "fandom2",
+          "label": "a rival fandom name"
+        },
+        {
+          "key": "trigger",
+          "label": "the thing that started the war"
+        },
+        {
+          "key": "quoteTweet",
+          "label": "the quote tweet that escalated it"
+        },
+        {
+          "key": "trend",
+          "label": "a hashtag that started trending"
+        },
+        {
+          "key": "celebReaction",
+          "label": "the celebrity's vague tweet about it"
+        },
+        {
+          "key": "casualty",
+          "label": "an account that got deleted"
+        },
+        {
+          "key": "newDrama",
+          "label": "the new drama that replaced this one"
+        }
+      ],
+      "template": "The {{fandom1}} and the {{fandom2}} had been peaceful for almost six hours. Then someone posted {{trigger}}. Within minutes, {{quoteTweet}} got 200,000 likes. By morning, {{trend}} was trending worldwide. The celebrity in question subtweeted: {{celebReaction}}. {{casualty}} deleted their account. Then everyone moved on because {{newDrama}} happened by lunchtime."
+    },
+    {
+      "id": "viral-cancellation-arc",
+      "title": "Viral Cancellation Arc",
+      "tags": [
+        "cancellation",
+        "discourse",
+        "long"
+      ],
+      "prompts": [
+        {
+          "key": "person",
+          "label": "a description of the person being cancelled"
+        },
+        {
+          "key": "platform",
+          "label": "a platform"
+        },
+        {
+          "key": "original",
+          "label": "the original thing they said"
+        },
+        {
+          "key": "screenshot",
+          "label": "something old that resurfaced"
+        },
+        {
+          "key": "defender",
+          "label": "an unexpected defender"
+        },
+        {
+          "key": "apologyVideo",
+          "label": "what the apology video included"
+        },
+        {
+          "key": "applesauce",
+          "label": "a random unrelated detail people fixated on"
+        },
+        {
+          "key": "thinkpiece",
+          "label": "a publication that wrote a thinkpiece"
+        },
+        {
+          "key": "spinoff",
+          "label": "a new controversy that spun out"
+        },
+        {
+          "key": "comeback",
+          "label": "how they tried to come back"
+        },
+        {
+          "key": "newCareer",
+          "label": "what they are now doing for a living"
+        },
+        {
+          "key": "newDiscourse",
+          "label": "the new discourse nobody is paying attention to it for"
+        }
+      ],
+      "template": "Day 1: {{person}} posted something on {{platform}}. Specifically: {{original}}. Day 2: Someone resurfaced {{screenshot}} from years ago. Day 3: {{defender}} defended them, which somehow made it worse. Day 4: The apology video dropped. It included {{apologyVideo}}, and a single shot of {{applesauce}} in the background that the internet would not stop talking about. Day 5: {{thinkpiece}} ran a thinkpiece. Day 6: {{spinoff}} happened, almost completely unrelated, dragging three more people in. Day 12: The comeback attempt was {{comeback}}. Six months later they are {{newCareer}}, and nobody is paying attention because everyone is busy with {{newDiscourse}}."
+    },
+    {
+      "id": "parasocial-spiral",
+      "title": "Parasocial Spiral",
+      "tags": [
+        "parasocial",
+        "youtube",
+        "feelings"
+      ],
+      "prompts": [
+        {
+          "key": "creator",
+          "label": "a type of online creator"
+        },
+        {
+          "key": "content",
+          "label": "the content they make"
+        },
+        {
+          "key": "hours",
+          "label": "hours of their content you have watched"
+        },
+        {
+          "key": "fact1",
+          "label": "a personal fact you know about them"
+        },
+        {
+          "key": "fact2",
+          "label": "another fact, slightly weirder to know"
+        },
+        {
+          "key": "dream",
+          "label": "what you dreamed about last night"
+        },
+        {
+          "key": "encounter",
+          "label": "where you imagined running into them"
+        },
+        {
+          "key": "moment",
+          "label": "what triggered the spiral"
+        },
+        {
+          "key": "decision",
+          "label": "the decision you made at 2 AM"
+        },
+        {
+          "key": "newCreator",
+          "label": "the new creator you discovered to replace them"
+        },
+        {
+          "key": "lesson",
+          "label": "what you tell yourself you learned"
+        }
+      ],
+      "template": "I have been watching the same {{creator}} make {{content}} for {{hours}} straight hours this month. I know {{fact1}}. I also know {{fact2}}, which is a thing only their close friends should know. Last night I had a dream where {{dream}}, and I have spent today imagining running into them {{encounter}}. The spiral truly started when {{moment}}, and at 2 AM I made the decision to {{decision}}. By morning I had already moved on to {{newCreator}}. I am telling myself the lesson is {{lesson}}, but we both know that is not what is happening."
+    }
+  ]
+}
