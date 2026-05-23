@@ -101,13 +101,28 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.butterfeetlabs.badlibs.data.CompletedStory
+import com.butterfeetlabs.badlibs.data.RenderedToken
 import com.butterfeetlabs.badlibs.data.Story
 import com.butterfeetlabs.badlibs.data.StoryLengthCategory
 import com.butterfeetlabs.badlibs.data.StoryPack
 import com.butterfeetlabs.badlibs.data.StoryRepository
+import com.butterfeetlabs.badlibs.ui.theme.BadLibs
 import com.butterfeetlabs.badlibs.ui.theme.BadLibsTheme
 import com.butterfeetlabs.badlibs.ui.theme.ChaosOrange
 import com.butterfeetlabs.badlibs.ui.theme.MotionTokens
+import com.butterfeetlabs.badlibs.ui.theme.onColorFor
+import com.butterfeetlabs.badlibs.ui.theme.paletteForPack
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.only
 import java.time.LocalDate
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -129,6 +144,8 @@ private enum class QuickChaosPhase {
 
 private enum class RevealPhase {
     Anticipation,
+    Reveal,
+    Rest,
     Visible
 }
 
@@ -145,10 +162,12 @@ private val PackAccents = listOf(
     Color(0xFF2E83C6)
 )
 
-private val ComingSoonAccent = Color(0xFF8C9099)
+private val ComingSoonAccent = com.butterfeetlabs.badlibs.ui.theme.ComingSoonPalette.primary
 
 private fun accentForSeed(seed: String): Color {
     if (seed.isEmpty()) return ChaosOrange
+    val mapped = com.butterfeetlabs.badlibs.ui.theme.BadLibsPackPalettes[seed]
+    if (mapped != null) return mapped.primary
     val index = seed.fold(0) { acc, c -> acc + c.code } % PackAccents.size
     return PackAccents[index]
 }
@@ -188,16 +207,47 @@ private class MainViewModel(private val repository: StoryRepository) : ViewModel
         return findPack(packId)?.stories?.firstOrNull { it.id == storyId }
     }
 
-    fun completeStory(story: Story, values: Map<String, String>) {
+    fun completeStory(packId: String, story: Story, values: Map<String, String>) {
         val rendered = values.entries.fold(story.template) { acc, entry ->
             acc.replace("{${entry.key}}", entry.value)
         }
+        val labels = story.prompts.associate { it.key to it.label }
+        val tokens = tokenizeTemplate(story.template, values, labels)
         completedStory = CompletedStory(
+            packId = packId,
             storyId = story.id,
             storyTitle = story.title,
             values = values,
-            renderedText = rendered
+            renderedText = rendered,
+            tokens = tokens
         )
+    }
+
+    private fun tokenizeTemplate(
+        template: String,
+        values: Map<String, String>,
+        labels: Map<String, String>
+    ): List<com.butterfeetlabs.badlibs.data.RenderedToken> {
+        val regex = Regex("\\{([^}]+)\\}")
+        val out = mutableListOf<com.butterfeetlabs.badlibs.data.RenderedToken>()
+        var cursor = 0
+        regex.findAll(template).forEach { match ->
+            if (match.range.first > cursor) {
+                out += com.butterfeetlabs.badlibs.data.RenderedToken.Static(
+                    template.substring(cursor, match.range.first)
+                )
+            }
+            val key = match.groupValues[1]
+            out += com.butterfeetlabs.badlibs.data.RenderedToken.Filled(
+                value = values[key].orEmpty(),
+                promptLabel = labels[key].orEmpty()
+            )
+            cursor = match.range.last + 1
+        }
+        if (cursor < template.length) {
+            out += com.butterfeetlabs.badlibs.data.RenderedToken.Static(template.substring(cursor))
+        }
+        return out
     }
 }
 
@@ -430,7 +480,7 @@ fun BadLibsApp() {
                         onBack = { navController.popBackStack() },
                         onComplete = { values ->
                             if (story != null) {
-                                viewModel.completeStory(story, values)
+                                viewModel.completeStory(packId, story, values)
                                 navController.navigate(Screen.Result.route)
                             }
                         }
@@ -1860,173 +1910,185 @@ private fun ResultScreen(
 ) {
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
-    var revealPhase by remember(completedStory?.storyId) { mutableStateOf(RevealPhase.Anticipation) }
-    val shareScale by animateFloatAsState(
-        targetValue = if (revealPhase == RevealPhase.Visible) 1f else 0.96f,
-        animationSpec = tween(
-            durationMillis = MotionTokens.DurationMediumMs,
-            easing = MotionTokens.EaseOutEmphasized
-        ),
-        label = "reveal_share_scale"
-    )
+    val tokens = BadLibs.tokens
+    val palette = paletteForPack(completedStory?.packId.orEmpty(), available = true)
+    val backgroundColor = palette.primary
+    val onBackgroundColor = onColorFor(backgroundColor)
+    // Action surface contrasts with background: dark bg gets Highlight, light bg gets Ink.
+    val isDarkBackground = onBackgroundColor == tokens.paper
+    val actionBackground = if (isDarkBackground) tokens.highlight else tokens.ink
+    val onActionBackground = onColorFor(actionBackground)
+    val wordAccent = if (isDarkBackground) tokens.highlight else tokens.ink
 
-    ChaosScaffold(title = "Your Masterpiece") { innerPadding ->
+    var revealPhase by remember(completedStory?.storyId) { mutableStateOf(RevealPhase.Anticipation) }
+    var revealedFilled by remember(completedStory?.storyId) { mutableStateOf(0) }
+    var anticipationIndex by remember(completedStory?.storyId) { mutableStateOf(0) }
+
+    val filledTotal = completedStory?.tokens?.count { it is RenderedToken.Filled } ?: 0
+    val anticipationPhrases = remember {
+        listOf(
+            "loading the bit",
+            "consulting the group chat",
+            "asking your ex",
+            "rendering nonsense",
+            "running with scissors"
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+            .windowInsetsPadding(WindowInsets.statusBars.only(WindowInsetsSides.Top))
+    ) {
         if (completedStory == null) {
-            Box(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("No completed story yet.")
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("No completed story yet.", color = onBackgroundColor)
             }
-            return@ChaosScaffold
+            return@Box
         }
 
         LaunchedEffect(completedStory.storyId) {
             revealPhase = RevealPhase.Anticipation
+            revealedFilled = 0
+            anticipationIndex = 0
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-            delay(MotionTokens.DurationExpressiveMs.toLong())
-            revealPhase = RevealPhase.Visible
+            repeat(4) {
+                delay(180)
+                anticipationIndex = (anticipationIndex + 1) % anticipationPhrases.size
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            }
+            delay(120)
+            revealPhase = RevealPhase.Reveal
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            delay(420)
+            while (revealedFilled < filledTotal) {
+                delay(220)
+                revealedFilled += 1
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            }
+            delay(380)
+            revealPhase = RevealPhase.Rest
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
         }
 
         Column(
             modifier = Modifier
-                .padding(innerPadding)
-                .padding(horizontal = 18.dp, vertical = 12.dp)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(top = 24.dp, bottom = 16.dp)
                 .navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            AnimatedContent(targetState = revealPhase, label = "reveal_phase_title") { phase ->
+            // Top mono label — rotates during anticipation, sticks during reveal
+            AnimatedContent(
+                targetState = when (revealPhase) {
+                    RevealPhase.Anticipation -> "// " + anticipationPhrases[anticipationIndex]
+                    RevealPhase.Reveal -> "// reveal in progress"
+                    else -> "// the masterpiece"
+                },
+                label = "reveal_mono_label"
+            ) { label ->
                 Text(
-                    text = if (phase == RevealPhase.Anticipation) "PREPARING THE STAGE" else "STORY REVEAL",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Color(0xFF8E2E63),
-                    fontWeight = FontWeight.ExtraBold
+                    text = label.uppercase(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = onBackgroundColor.copy(alpha = 0.62f)
                 )
             }
-            Text(
-                text = completedStory.storyTitle,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
 
-            if (revealPhase == RevealPhase.Anticipation) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, Color(0xFFFF7B54).copy(alpha = 0.45f), RoundedCornerShape(24.dp))
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0xFFFFD7A8).copy(alpha = 0.35f),
-                                    Color(0xFFFF9E5A).copy(alpha = 0.26f)
-                                )
-                            ),
-                            RoundedCornerShape(24.dp)
-                        )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(18.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CircularProgressIndicator(color = Color(0xFF8E2E63))
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "Matching your words with maximum chaos...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
+            // Title — drops in on Reveal
+            AnimatedVisibility(
+                visible = revealPhase != RevealPhase.Anticipation,
+                enter = slideInVertically(
+                    initialOffsetY = { -it / 2 },
+                    animationSpec = tween(420, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(300))
+            ) {
+                Text(
+                    text = completedStory.storyTitle,
+                    style = MaterialTheme.typography.displayMedium,
+                    color = onBackgroundColor,
+                    fontFamily = tokens.displayFamily
+                )
             }
 
-            AnimatedVisibility(
-                visible = revealPhase == RevealPhase.Visible,
-                enter = fadeIn(
-                    animationSpec = tween(
-                        durationMillis = MotionTokens.DurationMediumMs,
-                        easing = MotionTokens.EaseOutStandard
+            // Story body — shows blanks then progressively fills
+            if (revealPhase != RevealPhase.Anticipation) {
+                val annotated = remember(completedStory.storyId, revealedFilled) {
+                    buildRevealedStory(
+                        storyTokens = completedStory.tokens,
+                        revealedCount = revealedFilled,
+                        onBackground = onBackgroundColor,
+                        accent = wordAccent,
+                        monoFamily = tokens.monoFamily,
+                        displayFamily = tokens.displayFamily
                     )
-                ) + scaleIn(
-                    animationSpec = tween(
-                        durationMillis = MotionTokens.DurationMediumMs,
-                        easing = MotionTokens.EaseOutEmphasized
+                }
+                Text(
+                    text = annotated,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = onBackgroundColor,
+                        fontSize = 19.sp,
+                        lineHeight = 30.sp
                     ),
-                    initialScale = 0.96f
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                // Anticipation hero — big mono dots so the screen isn't empty
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "• • •",
+                    style = MaterialTheme.typography.displayLarge,
+                    color = onBackgroundColor.copy(alpha = 0.55f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Actions — fade in at Rest
+            AnimatedVisibility(
+                visible = revealPhase == RevealPhase.Rest,
+                enter = fadeIn(tween(360)) + slideInVertically(
+                    initialOffsetY = { it / 4 },
+                    animationSpec = tween(360, easing = FastOutSlowInEasing)
                 )
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, Color(0xFF6C63FF).copy(alpha = 0.45f), RoundedCornerShape(24.dp))
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = 0.92f),
-                                        Color(0xFFFFF0E4).copy(alpha = 0.92f)
-                                    )
-                                ),
-                                RoundedCornerShape(24.dp)
-                            )
-                            .padding(18.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = "Read this out loud with dramatic confidence:",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f)
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = completedStory.renderedText,
-                                style = MaterialTheme.typography.bodyLarge,
-                                lineHeight = 29.sp
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     RevealPrimaryAction(
-                        label = "Share This Disaster",
-                        subtitle = "Drop this masterpiece in group chat",
-                        accent = Color(0xFF8E2E63),
+                        label = "Send to the group chat",
+                        sublabel = "↗ share this disaster",
+                        background = actionBackground,
+                        onLabel = onActionBackground,
                         onClick = {
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
                                 putExtra(Intent.EXTRA_TEXT, completedStory.renderedText)
                             }
-                            context.startActivity(Intent.createChooser(shareIntent, "Share your Bad Libs story"))
+                            context.startActivity(
+                                Intent.createChooser(shareIntent, "Share your Bad Libs story")
+                            )
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .graphicsLayer {
-                                scaleX = shareScale
-                                scaleY = shareScale
-                            }
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        RevealSecondaryAction(
-                            label = "Remix Words",
-                            accent = Color(0xFF6C63FF),
+                        RevealMonoPill(
+                            label = "remix words",
+                            onLabel = onBackgroundColor,
                             onClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onRemix()
                             },
                             modifier = Modifier.weight(1f)
                         )
-                        RevealSecondaryAction(
-                            label = "Pick Another Story",
-                            accent = Color(0xFFFF7B54),
+                        RevealMonoPill(
+                            label = "next story",
+                            onLabel = onBackgroundColor,
                             onClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onPlayAgain()
@@ -2035,10 +2097,13 @@ private fun ResultScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         TextButton(onClick = onBackHome) {
-                            Text("Back Home")
+                            Text(
+                                "← home",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = onBackgroundColor.copy(alpha = 0.7f)
+                            )
                         }
                     }
                 }
@@ -2047,53 +2112,90 @@ private fun ResultScreen(
     }
 }
 
+private fun buildRevealedStory(
+    storyTokens: List<RenderedToken>,
+    revealedCount: Int,
+    onBackground: Color,
+    accent: Color,
+    monoFamily: androidx.compose.ui.text.font.FontFamily,
+    displayFamily: androidx.compose.ui.text.font.FontFamily
+) = buildAnnotatedString {
+    var filledSeen = 0
+    storyTokens.forEach { token ->
+        when (token) {
+            is RenderedToken.Static -> {
+                withStyle(SpanStyle(color = onBackground)) {
+                    append(token.text)
+                }
+            }
+            is RenderedToken.Filled -> {
+                val isRevealed = filledSeen < revealedCount
+                filledSeen += 1
+                if (isRevealed) {
+                    withStyle(
+                        SpanStyle(
+                            color = accent,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontFamily = displayFamily,
+                            textDecoration = TextDecoration.Underline
+                        )
+                    ) {
+                        append(token.value)
+                    }
+                } else {
+                    withStyle(
+                        SpanStyle(
+                            color = onBackground.copy(alpha = 0.32f),
+                            fontFamily = monoFamily
+                        )
+                    ) {
+                        append("_".repeat((token.value.length).coerceAtLeast(4)))
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Legacy ChaosScaffold no longer used by ResultScreen, kept for unrelated screens.
 @Composable
 private fun RevealPrimaryAction(
     label: String,
-    subtitle: String,
-    accent: Color,
+    sublabel: String,
+    background: Color,
+    onLabel: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     androidx.compose.material3.Surface(
         onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(22.dp),
-        color = Color.Transparent,
-        border = BorderStroke(1.dp, accent.copy(alpha = 0.5f))
+        shape = RoundedCornerShape(20.dp),
+        color = background
     ) {
-        Row(
-            modifier = Modifier
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            accent.copy(alpha = 0.22f),
-                            accent.copy(alpha = 0.12f)
-                        )
-                    )
-                )
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(3.dp))
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f)
-                )
-            }
-            Text("↗", color = accent, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleLarge,
+                color = onLabel,
+                fontWeight = FontWeight.ExtraBold
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = sublabel,
+                style = MaterialTheme.typography.labelMedium,
+                color = onLabel.copy(alpha = 0.7f)
+            )
         }
     }
 }
 
 @Composable
-private fun RevealSecondaryAction(
+private fun RevealMonoPill(
     label: String,
-    accent: Color,
+    onLabel: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -2101,19 +2203,19 @@ private fun RevealSecondaryAction(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        color = accent.copy(alpha = 0.1f),
-        border = BorderStroke(1.dp, accent.copy(alpha = 0.45f))
+        color = Color.Transparent,
+        border = BorderStroke(1.dp, onLabel.copy(alpha = 0.45f))
     ) {
         Box(
-            modifier = Modifier.padding(vertical = 12.dp),
+            modifier = Modifier.padding(vertical = 14.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = accent
+                color = onLabel
             )
         }
     }
 }
+
