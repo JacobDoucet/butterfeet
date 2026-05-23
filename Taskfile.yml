@@ -304,5 +304,6 @@ tasks:
     desc: "Serve the Bad Stories content evaluator at http://localhost:{{.PORT}}/evaluator/"
     vars:
       PORT: '{{.PORT | default "8765"}}'
+    dir: apps/bad-stories/evaluator
     cmds:
-      - PORT={{.PORT}} python3 apps/bad-stories/evaluator/server.py
+      - PORT={{.PORT}} go run .
