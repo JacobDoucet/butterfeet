@@ -1409,174 +1409,124 @@ private fun QuickChaosScreen(
     labelFor: (Pair<String, String>) -> String,
     onContinue: (String, String) -> Unit
 ) {
-    val transition = rememberInfiniteTransition(label = "quick_chaos_screen")
-    val driftX by transition.animateFloat(
-        initialValue = -18f,
-        targetValue = 18f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3400, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "quick_chaos_drift_x"
-    )
-    val driftY by transition.animateFloat(
-        initialValue = 12f,
-        targetValue = -12f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2800, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "quick_chaos_drift_y"
-    )
-    val spin by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4200, easing = LinearEasing)
-        ),
-        label = "quick_chaos_spin"
-    )
+    val tokens = BadLibs.tokens
+    val ink = tokens.ink
+    val paper = tokens.paper
+    val highlight = tokens.highlight
+
     var phase by remember(candidates) { mutableStateOf(QuickChaosPhase.Spinning) }
-    var selectedStory by remember(candidates) { mutableStateOf<Pair<String, String>?>(null) }
-    var selectedLabel by remember(candidates) { mutableStateOf("Random story") }
+    var shuffleLabel by remember(candidates) {
+        mutableStateOf(candidates.firstOrNull()?.let(labelFor).orEmpty())
+    }
 
     LaunchedEffect(candidates) {
         phase = QuickChaosPhase.Spinning
-        selectedStory = null
-        selectedLabel = "Random story"
-        if (candidates.isEmpty()) {
-            return@LaunchedEffect
+        if (candidates.isEmpty()) return@LaunchedEffect
+        val started = System.currentTimeMillis()
+        val spinDurationMs = 1500L
+        while (System.currentTimeMillis() - started < spinDurationMs) {
+            shuffleLabel = labelFor(candidates.random())
+            delay(85L)
         }
-        delay(650L)
-        selectedStory = candidates.random()
-        selectedLabel = selectedStory?.let(labelFor) ?: "Random story"
+        val pick = candidates.random()
+        shuffleLabel = labelFor(pick)
         phase = QuickChaosPhase.Locked
-        delay(1000L)
-        selectedStory?.let { (packId, storyId) ->
-            onContinue(packId, storyId)
-        }
+        delay(950L)
+        onContinue(pick.first, pick.second)
     }
+
+    val (packTitle, storyTitle) = remember(shuffleLabel) {
+        val parts = shuffleLabel.split(": ", limit = 2)
+        if (parts.size == 2) parts[0] to parts[1] else "" to shuffleLabel
+    }
+
+    val cardBg by animateColorAsState(
+        targetValue = if (phase == QuickChaosPhase.Locked) highlight else paper,
+        animationSpec = tween(durationMillis = 220, easing = MotionTokens.EaseOutEmphasized),
+        label = "quick_chaos_card_bg"
+    )
+    val progressTarget = if (phase == QuickChaosPhase.Spinning) 0.55f else 1f
+    val progress by animateFloatAsState(
+        targetValue = progressTarget,
+        animationSpec = tween(durationMillis = 320, easing = MotionTokens.EaseOutEmphasized),
+        label = "quick_chaos_progress"
+    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFFFD7A8),
-                        Color(0xFFFF9E5A),
-                        Color(0xFF8E2E63)
-                    )
-                )
-            )
+            .background(paper)
+            .padding(horizontal = 28.dp, vertical = 36.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .size(240.dp)
-                .graphicsLayer {
-                    translationX = driftX * 1.2f
-                    translationY = driftY
-                    alpha = 0.18f
-                }
-                .background(Color.White.copy(alpha = 0.35f), CircleShape)
-        )
-        Box(
-            modifier = Modifier
-                .size(160.dp)
-                .graphicsLayer {
-                    translationX = -driftX
-                    translationY = driftY * 0.8f
-                    alpha = 0.22f
-                }
-                .background(Color(0x55F06A99), CircleShape)
-        )
-
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 28.dp),
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Quick Chaos",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "// quick chaos",
+                    style = MaterialTheme.typography.labelLarge.copy(fontFamily = tokens.monoFamily),
+                    color = ink
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = if (phase == QuickChaosPhase.Spinning) "rolling a story…" else "locked in.",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = ink.copy(alpha = 0.65f)
+                )
+            }
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            Box(contentAlignment = Alignment.Center) {
                 Box(
                     modifier = Modifier
-                        .size(184.dp)
-                        .graphicsLayer {
-                            rotationZ = spin
-                        }
-                        .background(Color.White.copy(alpha = 0.16f), CircleShape),
-                    contentAlignment = Alignment.Center
+                        .offset(x = 10.dp, y = 12.dp)
+                        .size(width = 280.dp, height = 200.dp)
+                        .background(highlight, RoundedCornerShape(28.dp))
+                )
+                Column(
+                    modifier = Modifier
+                        .size(width = 280.dp, height = 200.dp)
+                        .background(cardBg, RoundedCornerShape(28.dp))
+                        .border(2.dp, ink, RoundedCornerShape(28.dp))
+                        .padding(horizontal = 22.dp, vertical = 24.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(118.dp)
-                            .background(Color.White.copy(alpha = 0.22f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "🎯",
-                            style = MaterialTheme.typography.displayLarge
-                        )
-                    }
-                }
-
-                AnimatedContent(
-                    targetState = phase,
-                    label = "quick_chaos_phase"
-                ) { currentPhase ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = when (currentPhase) {
-                                QuickChaosPhase.Spinning -> "Landing the theme..."
-                                QuickChaosPhase.Locked -> "Theme locked"
-                            },
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = when (currentPhase) {
-                                QuickChaosPhase.Spinning -> "Let the nonsense settle for a second."
-                                QuickChaosPhase.Locked -> selectedLabel
-                            },
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White.copy(alpha = 0.92f),
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    Text(
+                        text = if (packTitle.isNotEmpty()) packTitle.uppercase() else "RANDOM",
+                        style = MaterialTheme.typography.labelMedium.copy(fontFamily = tokens.monoFamily),
+                        color = ink.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = if (storyTitle.isNotEmpty()) storyTitle else "—",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = ink,
+                        textAlign = TextAlign.Center,
+                        maxLines = 3
+                    )
                 }
             }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 LinearProgressIndicator(
-                    progress = {
-                        if (phase == QuickChaosPhase.Spinning) 0.6f else 1f
-                    },
+                    progress = { progress },
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color.White,
-                    trackColor = Color.White.copy(alpha = 0.22f)
+                    color = ink,
+                    trackColor = ink.copy(alpha = 0.12f)
                 )
-                Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = when (phase) {
-                        QuickChaosPhase.Spinning -> "Holding the line..."
-                        QuickChaosPhase.Locked -> "Launching in a beat"
-                    },
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Color.White.copy(alpha = 0.9f)
+                    text = if (phase == QuickChaosPhase.Spinning) "// holding the line" else "// launching",
+                    style = MaterialTheme.typography.labelMedium.copy(fontFamily = tokens.monoFamily),
+                    color = ink.copy(alpha = 0.7f)
                 )
             }
         }
