@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bad Stories — Evaluator</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --panel: #ffffff;
+    --ink: #1a1814;
+    --muted: #6b6960;
+    --line: #e6e2d8;
+    --accent: #c2410c;
+    --accent-soft: #fde6d3;
+    --warn-bg: #fff3cd;
+    --warn-border: #f0c14b;
+    --bad-bg: #fde2e2;
+    --bad-border: #f08a8a;
+    --slot-bg: #eaf3ff;
+    --slot-border: #b9d4f5;
+    --slot-filled: #d8efd6;
+    --slot-filled-border: #8fc28a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16140f;
+      --panel: #1f1c16;
+      --ink: #f3efe5;
+      --muted: #a09c91;
+      --line: #2c2920;
+      --accent: #f97316;
+      --accent-soft: #3a2415;
+      --warn-bg: #3a3010;
+      --warn-border: #8a7222;
+      --bad-bg: #3a1818;
+      --bad-border: #8a3636;
+      --slot-bg: #1a2638;
+      --slot-border: #2f4a72;
+      --slot-filled: #1c3320;
+      --slot-filled-border: #3d6b3f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: 100vh;
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--line); max-height: 50vh; }
+  }
+  .sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    overflow-y: auto;
+    padding: 16px;
+  }
+  .main {
+    padding: 24px;
+    overflow-y: auto;
+  }
+  h1 { font-size: 18px; margin: 0 0 12px; }
+  h2 { font-size: 16px; margin: 0 0 6px; }
+  h3 { font-size: 13px; margin: 16px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .filters { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .filters input, .filters select {
+    width: 100%; padding: 6px 8px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--ink); border-radius: 6px; font: inherit;
+  }
+  .summary { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+  .story-list { list-style: none; padding: 0; margin: 0; }
+  .story-list li {
+    padding: 8px 10px; border-radius: 6px; cursor: pointer; border: 1px solid transparent;
+    margin-bottom: 2px;
+  }
+  .story-list li:hover { background: var(--bg); }
+  .story-list li.active { background: var(--accent-soft); border-color: var(--accent); }
+  .story-list .pack { font-size: 11px; color: var(--muted); }
+  .story-list .meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .badge {
+    display: inline-block; padding: 1px 6px; border-radius: 999px;
+    font-size: 10px; font-weight: 600; vertical-align: middle;
+  }
+  .badge.warn { background: var(--warn-bg); border: 1px solid var(--warn-border); }
+  .badge.bad  { background: var(--bad-bg);  border: 1px solid var(--bad-border); }
+  .badge.ok   { background: transparent; color: var(--muted); }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 1100px) { .row { grid-template-columns: 1fr; } }
+
+  .metrics { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+  .metrics b { color: var(--ink); }
+  .tags { margin-top: 4px; }
+  .tag { display: inline-block; background: var(--bg); border: 1px solid var(--line); padding: 1px 8px; border-radius: 999px; font-size: 11px; margin-right: 4px; color: var(--muted); }
+
+  /* template viewer */
+  .template {
+    font-size: 16px; line-height: 1.7;
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 14px; white-space: pre-wrap;
+  }
+  .slot {
+    display: inline-block; padding: 1px 8px; border-radius: 6px;
+    background: var(--slot-bg); border: 1px solid var(--slot-border);
+    color: var(--accent); font-weight: 600;
+  }
+  .slot.filled { background: var(--slot-filled); border-color: var(--slot-filled-border); color: var(--ink); }
+  .gap-warn { background: var(--warn-bg); border-radius: 4px; padding: 0 2px; }
+  .gap-bad  { background: var(--bad-bg);  border-radius: 4px; padding: 0 2px; }
+
+  /* prompts */
+  .prompts { display: flex; flex-direction: column; gap: 8px; }
+  .prompt-row { display: grid; grid-template-columns: 1fr 1.2fr; gap: 8px; align-items: center; }
+  .prompt-row label { font-size: 13px; color: var(--muted); }
+  .prompt-row .key { font-family: ui-monospace, monospace; font-size: 11px; color: var(--muted); }
+  .prompt-row input {
+    padding: 6px 8px; border: 1px solid var(--line); background: var(--bg);
+    color: var(--ink); border-radius: 6px; font: inherit; width: 100%;
+  }
+  .actions { display: flex; gap: 8px; margin-top: 8px; }
+  button {
+    padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--ink); cursor: pointer; font: inherit;
+  }
+  button:hover { background: var(--bg); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: white; }
+
+  .legend { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .empty { color: var(--muted); padding: 32px; text-align: center; }
+  .error { color: #b91c1c; padding: 16px; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <h1>Bad Stories — Evaluator</h1>
+    <div class="filters">
+      <input id="search" type="search" placeholder="Search title, id, text…" />
+      <select id="pack-filter"><option value="">All packs</option></select>
+      <select id="tag-filter"><option value="">All tags</option></select>
+      <select id="status-filter">
+        <option value="available">Available only</option>
+        <option value="">All statuses</option>
+        <option value="coming_soon">coming_soon</option>
+      </select>
+      <select id="sort">
+        <option value="pack">Sort: pack → title</option>
+        <option value="maxgap-desc">Sort: worst gap first</option>
+        <option value="wpp-desc">Sort: worst words/placeholder first</option>
+        <option value="title">Sort: title</option>
+      </select>
+    </div>
+    <div class="summary" id="summary"></div>
+    <ul class="story-list" id="story-list"></ul>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="empty">Select a story from the left.</div>
+  </main>
+</div>
+
+<script>
+const PLACE_RE = /\{\{(\w+)\}\}/g;
+const GAP_WARN = 8;   // soft threshold (words of static text between placeholders)
+const GAP_BAD  = 12;  // hard threshold from content-guidelines.md
+
+const state = {
+  packs: [],
+  stories: [], // flattened
+  selectedId: null,
+  values: {},  // per-story values: { storyId: { key: value } }
+  filters: { search: "", pack: "", tag: "", status: "available", sort: "pack" },
+};
+
+async function loadPacks() {
+  // Discover packs via an index endpoint; fall back to a known list.
+  const knownPacks = [
+    "party", "couples", "kids", "internet-brainrot",
+    "office", "reality-tv", "science-fiction", "crime-documentary", "gen-alpha",
+  ];
+  const results = [];
+  for (const id of knownPacks) {
+    try {
+      const r = await fetch(`../content/packs/${id}.json`);
+      if (r.ok) results.push(await r.json());
+    } catch (_) { /* ignore */ }
+  }
+  return results;
+}
+
+function gapsFor(template) {
+  const parts = template.split(PLACE_RE);
+  // parts alternates: text, key, text, key, ... so even indices are static text.
+  const keys = [];
+  const staticChunks = [];
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 0) staticChunks.push(parts[i]);
+    else keys.push(parts[i]);
+  }
+  const wordCounts = staticChunks.map(s => (s.trim().match(/\S+/g) || []).length);
+  return { keys, staticChunks, wordCounts };
+}
+
+function metricsFor(template) {
+  const { keys, wordCounts } = gapsFor(template);
+  const totalWords = wordCounts.reduce((a, b) => a + b, 0);
+  const n = keys.length;
+  const maxGap = wordCounts.length ? Math.max(...wordCounts) : 0;
+  const wpp = n ? totalWords / n : 0;
+  return { n, totalWords, maxGap, wpp };
+}
+
+function flatten(packs) {
+  const out = [];
+  for (const p of packs) {
+    for (const s of (p.stories || [])) {
+      out.push({
+        packId: p.id,
+        packTitle: p.title,
+        packStatus: p.status || "available",
+        ...s,
+        _metrics: metricsFor(s.template || ""),
+      });
+    }
+  }
+  return out;
+}
+
+function populateFilters() {
+  const packSel = document.getElementById("pack-filter");
+  const tagSel = document.getElementById("tag-filter");
+  const packs = new Map();
+  const tags = new Set();
+  for (const p of state.packs) packs.set(p.id, p.title);
+  for (const s of state.stories) (s.tags || []).forEach(t => tags.add(t));
+  packSel.innerHTML = `<option value="">All packs</option>` +
+    [...packs.entries()].map(([id, title]) => `<option value="${id}">${escapeHtml(title)}</option>`).join("");
+  tagSel.innerHTML = `<option value="">All tags</option>` +
+    [...tags].sort().map(t => `<option value="${t}">${escapeHtml(t)}</option>`).join("");
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
+}
+
+function filterAndSort() {
+  const { search, pack, tag, status, sort } = state.filters;
+  const q = search.trim().toLowerCase();
+  let list = state.stories.filter(s => {
+    if (pack && s.packId !== pack) return false;
+    if (tag && !(s.tags || []).includes(tag)) return false;
+    if (status && s.packStatus !== status) return false;
+    if (q) {
+      const hay = `${s.id} ${s.title} ${s.template}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  switch (sort) {
+    case "maxgap-desc": list.sort((a, b) => b._metrics.maxGap - a._metrics.maxGap); break;
+    case "wpp-desc":    list.sort((a, b) => b._metrics.wpp - a._metrics.wpp); break;
+    case "title":       list.sort((a, b) => a.title.localeCompare(b.title)); break;
+    default:            list.sort((a, b) => a.packId.localeCompare(b.packId) || a.title.localeCompare(b.title));
+  }
+  return list;
+}
+
+function renderList() {
+  const list = filterAndSort();
+  const ul = document.getElementById("story-list");
+  document.getElementById("summary").textContent =
+    `${list.length} of ${state.stories.length} stories`;
+  ul.innerHTML = list.map(s => {
+    const m = s._metrics;
+    const cls = m.maxGap >= GAP_BAD ? "bad" : m.maxGap >= GAP_WARN ? "warn" : "ok";
+    const active = s.id === state.selectedId ? "active" : "";
+    return `<li class="${active}" data-id="${escapeHtml(s.id)}" data-pack="${escapeHtml(s.packId)}">
+      <div><strong>${escapeHtml(s.title)}</strong>
+        <span class="badge ${cls}">gap ${m.maxGap}</span></div>
+      <div class="pack">${escapeHtml(s.packTitle)}</div>
+      <div class="meta">${m.n} prompts · ${m.totalWords} words · ${m.wpp.toFixed(1)} w/slot</div>
+    </li>`;
+  }).join("");
+  ul.querySelectorAll("li").forEach(li => {
+    li.addEventListener("click", () => {
+      state.selectedId = li.dataset.id + "::" + li.dataset.pack;
+      renderList();
+      renderMain();
+    });
+  });
+}
+
+function findSelected() {
+  if (!state.selectedId) return null;
+  const [id, packId] = state.selectedId.split("::");
+  return state.stories.find(s => s.id === id && s.packId === packId) || null;
+}
+
+function renderTemplate(story, withFills) {
+  const tpl = story.template || "";
+  const values = withFills ? (state.values[state.selectedId] || {}) : {};
+  const { keys, staticChunks, wordCounts } = gapsFor(tpl);
+  let html = "";
+  for (let i = 0; i < staticChunks.length; i++) {
+    const chunk = staticChunks[i];
+    const wc = wordCounts[i];
+    if (wc >= GAP_BAD)      html += `<span class="gap-bad" title="${wc} words">${escapeHtml(chunk)}</span>`;
+    else if (wc >= GAP_WARN) html += `<span class="gap-warn" title="${wc} words">${escapeHtml(chunk)}</span>`;
+    else                     html += escapeHtml(chunk);
+    if (i < keys.length) {
+      const k = keys[i];
+      const v = values[k];
+      if (v) html += `<span class="slot filled">${escapeHtml(v)}</span>`;
+      else   html += `<span class="slot">${escapeHtml(k)}</span>`;
+    }
+  }
+  return html;
+}
+
+function renderMain() {
+  const main = document.getElementById("main");
+  const s = findSelected();
+  if (!s) { main.innerHTML = `<div class="empty">Select a story from the left.</div>`; return; }
+  const m = s._metrics;
+  const tplKeys = new Set(gapsFor(s.template || "").keys);
+  const promptKeys = new Set((s.prompts || []).map(p => p.key));
+  const missingPrompts = [...tplKeys].filter(k => !promptKeys.has(k));
+  const unusedPrompts = [...promptKeys].filter(k => !tplKeys.has(k));
+
+  main.innerHTML = `
+    <div class="panel">
+      <h2>${escapeHtml(s.title)} <span class="badge ok">${escapeHtml(s.id)}</span></h2>
+      <div class="metrics">
+        <span><b>${escapeHtml(s.packTitle)}</b> (${escapeHtml(s.packId)})</span>
+        <span>${m.n} prompts</span>
+        <span>${m.totalWords} words</span>
+        <span>max gap: <b>${m.maxGap}</b></span>
+        <span>avg: <b>${m.wpp.toFixed(1)}</b> w/slot</span>
+      </div>
+      <div class="tags">${(s.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>
+      ${missingPrompts.length ? `<div class="error">Missing prompts for keys: ${missingPrompts.map(escapeHtml).join(", ")}</div>` : ""}
+      ${unusedPrompts.length ? `<div class="error">Unused prompts: ${unusedPrompts.map(escapeHtml).join(", ")}</div>` : ""}
+    </div>
+
+    <div class="row">
+      <div class="panel">
+        <h3>Template</h3>
+        <div class="template" id="template-view">${renderTemplate(s, true)}</div>
+        <div class="legend">
+          <span class="gap-warn">yellow</span> = ${GAP_WARN}+ static words between slots ·
+          <span class="gap-bad">red</span> = ${GAP_BAD}+ (over guideline) ·
+          <span class="slot">slot</span> empty ·
+          <span class="slot filled">slot</span> filled
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Prompts</h3>
+        <div class="prompts" id="prompts"></div>
+        <div class="actions">
+          <button id="fill-random" class="primary">Fill with examples</button>
+          <button id="clear-fills">Clear</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const promptsEl = document.getElementById("prompts");
+  promptsEl.innerHTML = (s.prompts || []).map(p => {
+    const v = (state.values[state.selectedId] || {})[p.key] || "";
+    return `<div class="prompt-row">
+      <div><label>${escapeHtml(p.label)}</label><div class="key">${escapeHtml(p.key)}</div></div>
+      <input data-key="${escapeHtml(p.key)}" value="${escapeHtml(v)}" placeholder="${escapeHtml(p.label)}" />
+    </div>`;
+  }).join("");
+  promptsEl.querySelectorAll("input").forEach(inp => {
+    inp.addEventListener("input", () => {
+      const id = state.selectedId;
+      state.values[id] = state.values[id] || {};
+      state.values[id][inp.dataset.key] = inp.value;
+      document.getElementById("template-view").innerHTML = renderTemplate(s, true);
+    });
+  });
+  document.getElementById("fill-random").addEventListener("click", () => {
+    const id = state.selectedId;
+    state.values[id] = {};
+    for (const p of (s.prompts || [])) state.values[id][p.key] = examplify(p.label);
+    renderMain();
+  });
+  document.getElementById("clear-fills").addEventListener("click", () => {
+    state.values[state.selectedId] = {};
+    renderMain();
+  });
+}
+
+function examplify(label) {
+  const l = label.toLowerCase();
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  if (l.includes("name")) return pick(["Brad", "Avery", "Kayla", "Jordan", "Priya"]);
+  if (l.includes("celebrity")) return pick(["Nicolas Cage", "Beyoncé", "Shrek", "Guy Fieri"]);
+  if (l.includes("emotion") || l.includes("feeling")) return pick(["smug", "hollow", "feral", "weepy"]);
+  if (l.includes("adjective")) return pick(["damp", "majestic", "haunted", "questionable"]);
+  if (l.includes("verb")) return pick(["scream", "negotiate", "rebrand", "moonwalk"]);
+  if (l.includes("animal")) return pick(["raccoon", "emu", "hamster", "goose"]);
+  if (l.includes("food")) return pick(["raw garlic", "leftover sushi", "expired ranch"]);
+  if (l.includes("place") || l.includes("location")) return pick(["a Wendy's parking lot", "Costco", "the DMV"]);
+  if (l.includes("number")) return String(Math.floor(Math.random() * 99) + 1);
+  if (l.includes("body part")) return pick(["elbow", "kneecap", "left nostril"]);
+  if (l.includes("color")) return pick(["chartreuse", "beige", "neon"]);
+  if (l.includes("object") || l.includes("thing") || l.includes("noun")) return pick(["lamp", "blender", "rotisserie chicken", "vape"]);
+  return pick(["a vibe", "the situation", "chaos", "regret"]);
+}
+
+function wireFilters() {
+  const f = state.filters;
+  const search = document.getElementById("search");
+  search.addEventListener("input", () => { f.search = search.value; renderList(); });
+  ["pack-filter", "tag-filter", "status-filter", "sort"].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener("change", () => {
+      f.pack = document.getElementById("pack-filter").value;
+      f.tag  = document.getElementById("tag-filter").value;
+      f.status = document.getElementById("status-filter").value;
+      f.sort = document.getElementById("sort").value;
+      renderList();
+    });
+  });
+}
+
+(async function init() {
+  try {
+    state.packs = await loadPacks();
+    state.stories = flatten(state.packs);
+    populateFilters();
+    wireFilters();
+    renderList();
+  } catch (e) {
+    document.getElementById("main").innerHTML =
+      `<div class="error">Failed to load packs: ${escapeHtml(e.message)}.<br>Serve via <code>task bad-stories:evaluator</code> (not file://).</div>`;
+  }
+})();
+</script>
+</body>
+</html>
