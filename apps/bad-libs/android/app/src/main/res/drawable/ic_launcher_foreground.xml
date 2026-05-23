@@ -7,7 +7,8 @@
         android:pivotX="54"
         android:pivotY="59"
         android:scaleX="0.74"
-        android:scaleY="0.74">
+        android:scaleY="0.74"
+        android:translateY="-5">
         <!-- Editorial "B" mark, Ink on Highlight adaptive bg. -->
         <path
             android:fillColor="@color/icon_foreground"

@@ -1,6 +1,7 @@
 package com.butterfeetlabs.badlibs.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 
 // ---- Core identity palette ---------------------------------------------------
 // Bad Libs ships on warm Paper with deep Ink and a single Highlight yellow.
@@ -61,3 +62,13 @@ fun onColorFor(background: Color): Color {
     val l = 0.2126f * r + 0.7152f * g + 0.0722f * b
     return if (l > 0.55f) Ink else Paper
 }
+
+/**
+ * Editorial soft tint: a quiet wash of the pack's primary color over Paper.
+ * Keeps pack identity without competing with Ink type or buttons.
+ */
+fun softPackTint(palette: PackPalette, strength: Float = 0.18f): Color =
+    lerp(Paper, palette.primary, strength)
+
+fun softPackTint(packId: String, available: Boolean = true, strength: Float = 0.18f): Color =
+    softPackTint(paletteForPack(packId, available), strength)

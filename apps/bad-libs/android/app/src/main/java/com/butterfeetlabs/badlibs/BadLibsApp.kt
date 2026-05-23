@@ -114,6 +114,7 @@ import com.butterfeetlabs.badlibs.ui.theme.ChaosOrange
 import com.butterfeetlabs.badlibs.ui.theme.MotionTokens
 import com.butterfeetlabs.badlibs.ui.theme.onColorFor
 import com.butterfeetlabs.badlibs.ui.theme.paletteForPack
+import com.butterfeetlabs.badlibs.ui.theme.softPackTint
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -1072,7 +1073,9 @@ private fun PackListScreen(
                         items(packs, key = { it.id }) { pack ->
                             val isAvailable = pack.status.equals("available", ignoreCase = true)
                             val palette = paletteForPack(pack.id, available = isAvailable)
-                            val onPaletteColor = onColorFor(palette.primary)
+                            val cardColor = softPackTint(palette, strength = if (isAvailable) 0.18f else 0.10f)
+                            val onPaletteColor = onColorFor(cardColor)
+                            val accentColor = palette.primary
                             val packIcon = if (isAvailable) pack.emoji else "🔒"
                             val highlighted = isAvailable && roulettePackId == pack.id
                             val haptics = LocalHapticFeedback.current
@@ -1088,7 +1091,7 @@ private fun PackListScreen(
                                     .fillMaxWidth()
                                     .graphicsLayer { scaleX = scale; scaleY = scale },
                                 shape = RoundedCornerShape(22.dp),
-                                color = palette.primary,
+                                color = cardColor,
                                 border = if (highlighted) BorderStroke(2.dp, BadLibs.tokens.ink) else null
                             ) {
                                 Column(
@@ -1099,7 +1102,7 @@ private fun PackListScreen(
                                     Text(
                                         text = "// ${palette.vibe.lowercase()}",
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = onPaletteColor.copy(alpha = 0.7f)
+                                        color = accentColor
                                     )
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Row(
@@ -1117,7 +1120,7 @@ private fun PackListScreen(
                                         Text(
                                             text = if (isAvailable) "${pack.stories.size}" else "—",
                                             style = MaterialTheme.typography.displaySmall,
-                                            color = onPaletteColor.copy(alpha = 0.55f)
+                                            color = accentColor.copy(alpha = 0.75f)
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(10.dp))
@@ -1793,13 +1796,14 @@ private fun ResultScreen(
     val haptics = LocalHapticFeedback.current
     val tokens = BadLibs.tokens
     val palette = paletteForPack(completedStory?.packId.orEmpty(), available = true)
-    val backgroundColor = palette.primary
+    val backgroundColor = softPackTint(palette, strength = 0.16f)
     val onBackgroundColor = onColorFor(backgroundColor)
     // Action surface contrasts with background: dark bg gets Highlight, light bg gets Ink.
     val isDarkBackground = onBackgroundColor == tokens.paper
     val actionBackground = if (isDarkBackground) tokens.highlight else tokens.ink
     val onActionBackground = onColorFor(actionBackground)
-    val wordAccent = if (isDarkBackground) tokens.highlight else tokens.ink
+    // Revealed words wear the pack's saturated color as a typographic accent.
+    val wordAccent = palette.primary
 
     var revealPhase by remember(completedStory?.storyId) { mutableStateOf(RevealPhase.Anticipation) }
     var revealedFilled by remember(completedStory?.storyId) { mutableStateOf(0) }
