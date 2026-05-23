@@ -1,0 +1,127 @@
+{
+  "id": "party",
+  "title": "Party Pack",
+  "description": "Bad decisions, loud rooms, and suspiciously sticky floors.",
+  "stories": [
+    {
+      "id": "drunk-text",
+      "title": "Drunk Text",
+      "rating": "teen",
+      "prompts": [
+        { "key": "name1", "label": "First name" },
+        { "key": "adjective1", "label": "Adjective" },
+        { "key": "noun1", "label": "Noun" },
+        { "key": "emotion1", "label": "Emotion" }
+      ],
+      "template": "At 1:47am, I texted {name1}, “I miss your {adjective1} {noun1},” and honestly I have never felt more {emotion1}."
+    },
+    {
+      "id": "karaoke-night",
+      "title": "Karaoke Night",
+      "rating": "teen",
+      "prompts": [
+        { "key": "celebrity1", "label": "Celebrity" },
+        { "key": "song1", "label": "Song title" },
+        { "key": "bodyPart1", "label": "Body part" },
+        { "key": "verbPast1", "label": "Past tense verb" }
+      ],
+      "template": "I grabbed the mic, dedicated {song1} to {celebrity1}, and immediately {verbPast1} so hard my {bodyPart1} made a noise."
+    },
+    {
+      "id": "house-party-disaster",
+      "title": "House Party Disaster",
+      "rating": "teen",
+      "prompts": [
+        { "key": "room1", "label": "Room in a house" },
+        { "key": "liquid1", "label": "Liquid" },
+        { "key": "pluralNoun1", "label": "Plural noun" },
+        { "key": "animal1", "label": "Animal" }
+      ],
+      "template": "The party was going great until someone filled the {room1} with {liquid1}, knocked over the {pluralNoun1}, and blamed it all on a {animal1}."
+    },
+    {
+      "id": "group-chat-afterparty",
+      "title": "Group Chat Afterparty",
+      "rating": "teen",
+      "prompts": [
+        { "key": "name1", "label": "First name" },
+        { "key": "object1", "label": "Object" },
+        { "key": "verbIng1", "label": "Verb ending in -ing" },
+        { "key": "place1", "label": "Place" }
+      ],
+      "template": "The next morning, the group chat had 94 messages, one blurry photo of {name1} holding a {object1}, and several witnesses claiming I was {verbIng1} near the {place1}."
+    },
+    {
+      "id": "bar-bathroom-philosophy",
+      "title": "Bar Bathroom Philosophy",
+      "rating": "teen",
+      "prompts": [
+        { "key": "adjective1", "label": "Adjective" },
+        { "key": "noun1", "label": "Noun" },
+        { "key": "lifeAdvice1", "label": "Bad life advice" },
+        { "key": "emotion1", "label": "Emotion" }
+      ],
+      "template": "A {adjective1} stranger in the bathroom grabbed my shoulder, stared into my soul, and said, “Remember: {lifeAdvice1}.” Then they handed me a {noun1} and walked away looking {emotion1}."
+    },
+    {
+      "id": "uber-home",
+      "title": "Uber Home",
+      "rating": "teen",
+      "prompts": [
+        { "key": "song1", "label": "Song title" },
+        { "key": "food1", "label": "Food" },
+        { "key": "verbPast1", "label": "Past tense verb" },
+        { "key": "location1", "label": "Location" }
+      ],
+      "template": "On the ride home, I requested {song1}, ate {food1} with my bare hands, and {verbPast1} directly outside {location1}."
+    },
+    {
+      "id": "the-toast",
+      "title": "The Toast",
+      "rating": "teen",
+      "prompts": [
+        { "key": "relationship1", "label": "Relationship title" },
+        { "key": "adjective1", "label": "Adjective" },
+        { "key": "pluralNoun1", "label": "Plural noun" },
+        { "key": "verb1", "label": "Verb" }
+      ],
+      "template": "I raised my glass and said, “To my {relationship1}: may your {adjective1} {pluralNoun1} always {verb1} with dignity.” Nobody clapped."
+    },
+    {
+      "id": "mystery-stain",
+      "title": "Mystery Stain",
+      "rating": "teen",
+      "prompts": [
+        { "key": "color1", "label": "Color" },
+        { "key": "clothing1", "label": "Piece of clothing" },
+        { "key": "food1", "label": "Food" },
+        { "key": "name1", "label": "First name" }
+      ],
+      "template": "Nobody knows how the {color1} stain got on my {clothing1}, but {name1} keeps saying it “smells like {food1}” and that feels legally important."
+    },
+    {
+      "id": "dj-announcement",
+      "title": "DJ Announcement",
+      "rating": "teen",
+      "prompts": [
+        { "key": "name1", "label": "First name" },
+        { "key": "verbIng1", "label": "Verb ending in -ing" },
+        { "key": "pluralNoun1", "label": "Plural noun" },
+        { "key": "adjective1", "label": "Adjective" }
+      ],
+      "template": "The DJ stopped the music and yelled, “Can {name1} please stop {verbIng1} the {pluralNoun1}? Security says it’s getting {adjective1}.”"
+    },
+    {
+      "id": "party-foul",
+      "title": "Party Foul",
+      "rating": "teen",
+      "prompts": [
+        { "key": "object1", "label": "Object" },
+        { "key": "drink1", "label": "Drink" },
+        { "key": "verbPast1", "label": "Past tense verb" },
+        { "key": "animal1", "label": "Animal" }
+      ],
+      "template": "The official party foul happened when someone dropped a {object1} into the {drink1}, {verbPast1} on the couch, and blamed a completely innocent {animal1}."
+    }
+  ]
+}

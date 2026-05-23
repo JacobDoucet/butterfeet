@@ -1,0 +1,296 @@
+version: "3"
+
+vars:
+  DEFAULT_APP_MODULE: app
+  ANDROID_APPS_FILE: tooling/android-apps.tsv
+  SDK_PATH:
+    sh: |
+      if [ -n "${ANDROID_HOME:-}" ]; then
+        echo "$ANDROID_HOME"
+      elif [ -n "${ANDROID_SDK_ROOT:-}" ]; then
+        echo "$ANDROID_SDK_ROOT"
+      else
+        echo ""
+      fi
+
+tasks:
+  default:
+    desc: "Show available tasks"
+    cmds:
+      - task --list
+
+  "android:doctor":
+    desc: "Print Android SDK env and expected tool paths"
+    cmds:
+      - echo "ANDROID_HOME=${ANDROID_HOME:-<unset>}"
+      - echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-<unset>}"
+      - echo "Resolved SDK_PATH={{.SDK_PATH}}"
+      - test -n "{{.SDK_PATH}}" && echo "SDK path resolved" || (echo "No SDK path found" && exit 1)
+      - test -x "{{.SDK_PATH}}/emulator/emulator" && echo "emulator OK" || (echo "Missing emulator binary" && exit 1)
+      - test -x "{{.SDK_PATH}}/platform-tools/adb" && echo "adb OK" || (echo "Missing adb binary" && exit 1)
+
+  "android:list-avds":
+    desc: "List available Android Virtual Devices"
+    preconditions:
+      - sh: test -n "{{.SDK_PATH}}"
+        msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
+      - sh: test -x "{{.SDK_PATH}}/emulator/emulator"
+        msg: Android emulator binary not found at SDK path.
+    cmds:
+      - "{{.SDK_PATH}}/emulator/emulator -list-avds"
+
+  "android:emu":
+    desc: "Launch emulator (task android:emu AVD=<name>)"
+    preconditions:
+      - sh: test -n "{{.SDK_PATH}}"
+        msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
+      - sh: test -x "{{.SDK_PATH}}/emulator/emulator"
+        msg: Android emulator binary not found at SDK path.
+    cmds:
+      - |
+        AVD_NAME="${AVD:-$("{{.SDK_PATH}}/emulator/emulator" -list-avds | head -n 1)}"
+        if [ -z "$AVD_NAME" ]; then
+          echo "No AVD found. Create one in Android Studio Device Manager first."
+          exit 1
+        fi
+        echo "Launching emulator: $AVD_NAME"
+        "{{.SDK_PATH}}/emulator/emulator" -avd "$AVD_NAME"
+
+  "android:emu-bg":
+    desc: "Launch emulator in background (task android:emu-bg AVD=<name>)"
+    preconditions:
+      - sh: test -n "{{.SDK_PATH}}"
+        msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
+      - sh: test -x "{{.SDK_PATH}}/emulator/emulator"
+        msg: Android emulator binary not found at SDK path.
+    cmds:
+      - |
+        AVD_NAME="${AVD:-$("{{.SDK_PATH}}/emulator/emulator" -list-avds | head -n 1)}"
+        if [ -z "$AVD_NAME" ]; then
+          echo "No AVD found. Create one in Android Studio Device Manager first."
+          exit 1
+        fi
+        echo "Launching emulator in background: $AVD_NAME"
+        nohup "{{.SDK_PATH}}/emulator/emulator" -avd "$AVD_NAME" >/tmp/android-emulator.log 2>&1 &
+        echo "Emulator log: /tmp/android-emulator.log"
+
+  "android:wait-for-boot":
+    desc: "Wait until a device is connected and Android boot is complete"
+    preconditions:
+      - sh: test -n "{{.SDK_PATH}}"
+        msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
+      - sh: test -x "{{.SDK_PATH}}/platform-tools/adb"
+        msg: adb not found at SDK path.
+    cmds:
+      - |
+        ADB="{{.SDK_PATH}}/platform-tools/adb"
+        echo "Waiting for emulator/device connection..."
+        "$ADB" wait-for-device
+        echo "Waiting for Android boot completion..."
+        until [ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
+          sleep 2
+        done
+        "$ADB" shell input keyevent 82 >/dev/null 2>&1 || true
+        echo "Device boot complete."
+
+  "android:devices":
+    desc: "List connected Android devices/emulators"
+    preconditions:
+      - sh: test -n "{{.SDK_PATH}}"
+        msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
+      - sh: test -x "{{.SDK_PATH}}/platform-tools/adb"
+        msg: adb not found at SDK path.
+    cmds:
+      - "{{.SDK_PATH}}/platform-tools/adb devices"
+
+  "android:assemble":
+    desc: "Build debug APK for any Android app"
+    summary: |
+      Usage:
+        task android:assemble ANDROID_DIR=apps/<app>/android [APP_MODULE=app]
+    preconditions:
+      - sh: test -n "{{.SDK_PATH}}"
+        msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
+      - sh: test -n "{{.ANDROID_DIR}}"
+        msg: Provide ANDROID_DIR, e.g. apps/bad-libs/android.
+    dir: "{{.ANDROID_DIR}}"
+    cmds:
+      - 'ANDROID_SDK_ROOT="{{.SDK_PATH}}" ./gradlew :{{if .APP_MODULE}}{{.APP_MODULE}}{{else}}{{.DEFAULT_APP_MODULE}}{{end}}:assembleDebug'
+
+  "android:install":
+    desc: "Install debug APK for any Android app"
+    summary: |
+      Usage:
+        task android:install ANDROID_DIR=apps/<app>/android [APP_MODULE=app]
+    preconditions:
+      - sh: test -n "{{.SDK_PATH}}"
+        msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
+      - sh: test -n "{{.ANDROID_DIR}}"
+        msg: Provide ANDROID_DIR, e.g. apps/bad-libs/android.
+    dir: "{{.ANDROID_DIR}}"
+    cmds:
+      - 'ANDROID_SDK_ROOT="{{.SDK_PATH}}" ./gradlew :{{if .APP_MODULE}}{{.APP_MODULE}}{{else}}{{.DEFAULT_APP_MODULE}}{{end}}:installDebug'
+
+  "android:run":
+    desc: "Launch any Android app on connected device/emulator"
+    summary: |
+      Usage:
+        task android:run APP_PACKAGE=com.example.app APP_ACTIVITY=.MainActivity
+    preconditions:
+      - sh: test -n "{{.SDK_PATH}}"
+        msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
+      - sh: test -x "{{.SDK_PATH}}/platform-tools/adb"
+        msg: adb not found at SDK path.
+      - sh: test -n "{{.APP_PACKAGE}}"
+        msg: Provide APP_PACKAGE, e.g. com.example.app.
+      - sh: test -n "{{.APP_ACTIVITY}}"
+        msg: Provide APP_ACTIVITY, e.g. .MainActivity.
+    cmds:
+      - '{{.SDK_PATH}}/platform-tools/adb shell am start -n "{{.APP_PACKAGE}}/{{.APP_ACTIVITY}}"'
+
+  "android:build-install-run":
+    desc: "Build, install, and run any Android app"
+    summary: |
+      Usage:
+        task android:build-install-run ANDROID_DIR=apps/<app>/android APP_PACKAGE=com.example.app APP_ACTIVITY=.MainActivity [APP_MODULE=app]
+    preconditions:
+      - sh: test -n "{{.SDK_PATH}}"
+        msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
+      - sh: test -n "{{.ANDROID_DIR}}"
+        msg: Provide ANDROID_DIR, e.g. apps/bad-libs/android.
+      - sh: test -x "{{.SDK_PATH}}/platform-tools/adb"
+        msg: adb not found at SDK path.
+      - sh: test -n "{{.APP_PACKAGE}}"
+        msg: Provide APP_PACKAGE, e.g. com.example.app.
+      - sh: test -n "{{.APP_ACTIVITY}}"
+        msg: Provide APP_ACTIVITY, e.g. .MainActivity.
+    cmds:
+      - 'ANDROID_SDK_ROOT="{{.SDK_PATH}}" sh -c "cd {{.ANDROID_DIR}} && ./gradlew :{{if .APP_MODULE}}{{.APP_MODULE}}{{else}}{{.DEFAULT_APP_MODULE}}{{end}}:assembleDebug :{{if .APP_MODULE}}{{.APP_MODULE}}{{else}}{{.DEFAULT_APP_MODULE}}{{end}}:installDebug"'
+      - '{{.SDK_PATH}}/platform-tools/adb shell am start -n "{{.APP_PACKAGE}}/{{.APP_ACTIVITY}}"'
+
+  "android:cold-start":
+    desc: "Boot emulator in background, wait for boot, then build/install/run any Android app"
+    summary: |
+      Usage:
+        task android:cold-start ANDROID_DIR=apps/<app>/android APP_PACKAGE=com.example.app APP_ACTIVITY=.MainActivity [APP_MODULE=app] [AVD=Pixel_8]
+    preconditions:
+      - sh: test -n "{{.SDK_PATH}}"
+        msg: Set ANDROID_HOME or ANDROID_SDK_ROOT.
+      - sh: test -x "{{.SDK_PATH}}/emulator/emulator"
+        msg: Android emulator binary not found at SDK path.
+      - sh: test -x "{{.SDK_PATH}}/platform-tools/adb"
+        msg: adb not found at SDK path.
+      - sh: test -n "{{.ANDROID_DIR}}"
+        msg: Provide ANDROID_DIR, e.g. apps/bad-libs/android.
+      - sh: test -n "{{.APP_PACKAGE}}"
+        msg: Provide APP_PACKAGE, e.g. com.example.app.
+      - sh: test -n "{{.APP_ACTIVITY}}"
+        msg: Provide APP_ACTIVITY, e.g. .MainActivity.
+    cmds:
+      - |
+        AVD_NAME="${AVD:-$("{{.SDK_PATH}}/emulator/emulator" -list-avds | head -n 1)}"
+        if [ -z "$AVD_NAME" ]; then
+          echo "No AVD found. Create one in Android Studio Device Manager first."
+          exit 1
+        fi
+        echo "Launching emulator in background: $AVD_NAME"
+        nohup "{{.SDK_PATH}}/emulator/emulator" -avd "$AVD_NAME" >/tmp/android-emulator.log 2>&1 &
+        echo "Emulator log: /tmp/android-emulator.log"
+      - |
+        ADB="{{.SDK_PATH}}/platform-tools/adb"
+        echo "Waiting for emulator/device connection..."
+        "$ADB" wait-for-device
+        echo "Waiting for Android boot completion..."
+        until [ "$($ADB shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
+          sleep 2
+        done
+        "$ADB" shell input keyevent 82 >/dev/null 2>&1 || true
+        echo "Device boot complete."
+      - 'ANDROID_SDK_ROOT="{{.SDK_PATH}}" sh -c "cd {{.ANDROID_DIR}} && ./gradlew :{{if .APP_MODULE}}{{.APP_MODULE}}{{else}}{{.DEFAULT_APP_MODULE}}{{end}}:assembleDebug :{{if .APP_MODULE}}{{.APP_MODULE}}{{else}}{{.DEFAULT_APP_MODULE}}{{end}}:installDebug"'
+      - '{{.SDK_PATH}}/platform-tools/adb shell am start -n "{{.APP_PACKAGE}}/{{.APP_ACTIVITY}}"'
+
+  "android:apps:list":
+    desc: "List Android apps from registry"
+    preconditions:
+      - sh: test -f "{{.ANDROID_APPS_FILE}}"
+        msg: Missing app registry file at {{.ANDROID_APPS_FILE}}.
+    cmds:
+      - |
+        echo "Registered Android apps:"
+        awk -F'|' 'BEGIN{printf "%-16s %-28s %-32s %s\n", "APP", "ANDROID_DIR", "APP_PACKAGE", "APP_ACTIVITY"}
+          /^[[:space:]]*#/ || NF==0 {next}
+          {printf "%-16s %-28s %-32s %s\n", $1, $2, $4, $5}' "{{.ANDROID_APPS_FILE}}"
+
+  "android:app:build-install-run":
+    desc: "Build/install/run app by APP key from registry"
+    summary: |
+      Usage:
+        task android:app:build-install-run APP=bad-libs
+    preconditions:
+      - sh: test -n "{{.APP}}"
+        msg: Provide APP, e.g. APP=bad-libs.
+      - sh: test -f "{{.ANDROID_APPS_FILE}}"
+        msg: Missing app registry file at {{.ANDROID_APPS_FILE}}.
+    cmds:
+      - |
+        APP_ROW="$(awk -F'|' -v app="{{.APP}}" '$1==app {print $0}' "{{.ANDROID_APPS_FILE}}")"
+        if [ -z "$APP_ROW" ]; then
+          echo "App '{{.APP}}' not found in {{.ANDROID_APPS_FILE}}"
+          exit 1
+        fi
+        IFS='|' read -r APP_KEY ANDROID_DIR APP_MODULE APP_PACKAGE APP_ACTIVITY <<<"$APP_ROW"
+        APP_MODULE="${APP_MODULE:-{{.DEFAULT_APP_MODULE}}}"
+        echo "Running app: $APP_KEY"
+        task android:build-install-run ANDROID_DIR="$ANDROID_DIR" APP_MODULE="$APP_MODULE" APP_PACKAGE="$APP_PACKAGE" APP_ACTIVITY="$APP_ACTIVITY"
+
+  "android:app:cold-start":
+    desc: "Boot emulator then build/install/run app by APP key from registry"
+    summary: |
+      Usage:
+        task android:app:cold-start APP=bad-libs [AVD=Pixel_8]
+    preconditions:
+      - sh: test -n "{{.APP}}"
+        msg: Provide APP, e.g. APP=bad-libs.
+      - sh: test -f "{{.ANDROID_APPS_FILE}}"
+        msg: Missing app registry file at {{.ANDROID_APPS_FILE}}.
+    cmds:
+      - |
+        APP_ROW="$(awk -F'|' -v app="{{.APP}}" '$1==app {print $0}' "{{.ANDROID_APPS_FILE}}")"
+        if [ -z "$APP_ROW" ]; then
+          echo "App '{{.APP}}' not found in {{.ANDROID_APPS_FILE}}"
+          exit 1
+        fi
+        IFS='|' read -r APP_KEY ANDROID_DIR APP_MODULE APP_PACKAGE APP_ACTIVITY <<<"$APP_ROW"
+        APP_MODULE="${APP_MODULE:-{{.DEFAULT_APP_MODULE}}}"
+        echo "Cold-starting app: $APP_KEY"
+        task android:cold-start ANDROID_DIR="$ANDROID_DIR" APP_MODULE="$APP_MODULE" APP_PACKAGE="$APP_PACKAGE" APP_ACTIVITY="$APP_ACTIVITY" AVD="{{.AVD}}"
+
+  "bad-libs:assemble":
+    desc: "Build Bad Libs debug APK"
+    cmds:
+      - task android:assemble ANDROID_DIR=apps/bad-libs/android APP_MODULE=app
+
+  "bad-libs:install":
+    desc: "Install Bad Libs debug APK on connected device/emulator"
+    cmds:
+      - task android:install ANDROID_DIR=apps/bad-libs/android APP_MODULE=app
+
+  "bad-libs:run":
+    desc: "Launch Bad Libs app on connected device/emulator"
+    cmds:
+      - task android:run APP_PACKAGE=com.butterfeetlabs.badlibs APP_ACTIVITY=.MainActivity
+
+  "bad-libs:build-install-run":
+    desc: "Build, install, then launch Bad Libs"
+    cmds:
+      - task android:app:build-install-run APP=bad-libs
+
+  "bad-libs:cold-start":
+    desc: "Launch emulator (bg), wait for boot, then build/install/run Bad Libs"
+    cmds:
+      - task android:app:cold-start APP=bad-libs AVD="{{.AVD}}"
+
+  "bad-libs:validate-content":
+    desc: "Validate bad-libs starter content JSON"
+    cmds:
+      - ./tooling/scripts/validate-bad-libs-content.sh
