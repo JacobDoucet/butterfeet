@@ -15,7 +15,10 @@ class StoryRepository(
             files.map { fileName ->
                 val content = context.assets.open("$packDir/$fileName").bufferedReader().use { it.readText() }
                 json.decodeFromString<StoryPack>(content)
-            }
+            }.sortedWith(
+                compareBy<StoryPack> { if (it.id.equals("starter", ignoreCase = true)) 0 else 1 }
+                    .thenBy { it.title.lowercase() }
+            )
         }
     }
 }

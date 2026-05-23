@@ -6,121 +6,269 @@
     {
       "id": "first-date-chaos",
       "title": "First Date Chaos",
-      "rating": "teen",
       "prompts": [
-        { "key": "adjective1", "label": "Adjective" },
-        { "key": "noun1", "label": "Noun" },
-        { "key": "verbIng1", "label": "Verb ending in -ing" }
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        },
+        {
+          "key": "noun1",
+          "label": "Noun"
+        },
+        {
+          "key": "verbIng1",
+          "label": "Verb ending in -ing"
+        }
       ],
-      "template": "It was a {adjective1} night when I brought a {noun1} to the restaurant and started {verbIng1}."
+      "template": "It was a {adjective1} night when I brought a {noun1} to the restaurant and started {verbIng1}.",
+      "tags": [
+        "dating",
+        "awkward"
+      ]
     },
     {
       "id": "office-emergency",
       "title": "Office Emergency",
-      "rating": "teen",
       "prompts": [
-        { "key": "jobTitle1", "label": "Job title" },
-        { "key": "adjective1", "label": "Adjective" },
-        { "key": "pluralNoun1", "label": "Plural noun" },
-        { "key": "verb1", "label": "Verb" }
+        {
+          "key": "jobTitle1",
+          "label": "Job title"
+        },
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        },
+        {
+          "key": "pluralNoun1",
+          "label": "Plural noun"
+        },
+        {
+          "key": "verb1",
+          "label": "Verb"
+        }
       ],
-      "template": "As Head of {jobTitle1}, I regret to announce that the {adjective1} {pluralNoun1} have learned how to {verb1}."
+      "template": "As Head of {jobTitle1}, I regret to announce that the {adjective1} {pluralNoun1} have learned how to {verb1}.",
+      "tags": [
+        "work",
+        "corporate"
+      ]
     },
     {
       "id": "family-group-chat",
       "title": "Family Group Chat",
-      "rating": "teen",
       "prompts": [
-        { "key": "relative1", "label": "Relative" },
-        { "key": "food1", "label": "Food" },
-        { "key": "emotion1", "label": "Emotion" },
-        { "key": "celebrity1", "label": "Celebrity" }
+        {
+          "key": "relative1",
+          "label": "Relative"
+        },
+        {
+          "key": "food1",
+          "label": "Food"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        },
+        {
+          "key": "celebrity1",
+          "label": "Celebrity"
+        }
       ],
-      "template": "My {relative1} accidentally sent a photo of {food1} to the family group chat and now everyone thinks {celebrity1} is feeling {emotion1}."
+      "template": "My {relative1} accidentally sent a photo of {food1} to the family group chat and now everyone thinks {celebrity1} is feeling {emotion1}.",
+      "tags": [
+        "family",
+        "chat"
+      ]
     },
     {
       "id": "airport-security",
       "title": "Airport Security",
-      "rating": "teen",
       "prompts": [
-        { "key": "city1", "label": "City" },
-        { "key": "object1", "label": "Object" },
-        { "key": "animal1", "label": "Animal" },
-        { "key": "verbIng1", "label": "Verb ending in -ing" }
+        {
+          "key": "city1",
+          "label": "City"
+        },
+        {
+          "key": "object1",
+          "label": "Object"
+        },
+        {
+          "key": "animal1",
+          "label": "Animal"
+        },
+        {
+          "key": "verbIng1",
+          "label": "Verb ending in -ing"
+        }
       ],
-      "template": "Security stopped me in {city1} after they found a suspicious {object1} covered in photos of a {animal1} {verbIng1}."
+      "template": "Security stopped me in {city1} after they found a suspicious {object1} covered in photos of a {animal1} {verbIng1}.",
+      "tags": [
+        "travel",
+        "security"
+      ]
     },
     {
       "id": "terrible-superhero",
       "title": "Terrible Superhero",
-      "rating": "teen",
       "prompts": [
-        { "key": "adjective1", "label": "Adjective" },
-        { "key": "food1", "label": "Food" },
-        { "key": "pluralNoun1", "label": "Plural noun" },
-        { "key": "verb1", "label": "Verb" }
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        },
+        {
+          "key": "food1",
+          "label": "Food"
+        },
+        {
+          "key": "pluralNoun1",
+          "label": "Plural noun"
+        },
+        {
+          "key": "verb1",
+          "label": "Verb"
+        }
       ],
-      "template": "By day I am normal. By night I become The {adjective1} {food1}, protector of all innocent {pluralNoun1} who simply cannot {verb1}."
+      "template": "By day I am normal. By night I become The {adjective1} {food1}, protector of all innocent {pluralNoun1} who simply cannot {verb1}.",
+      "tags": [
+        "superhero",
+        "origin-story"
+      ]
     },
     {
       "id": "gym-advice",
       "title": "Gym Advice",
-      "rating": "teen",
       "prompts": [
-        { "key": "bodyPart1", "label": "Body part" },
-        { "key": "liquid1", "label": "Liquid" },
-        { "key": "number1", "label": "Number" },
-        { "key": "adjective1", "label": "Adjective" }
+        {
+          "key": "bodyPart1",
+          "label": "Body part"
+        },
+        {
+          "key": "liquid1",
+          "label": "Liquid"
+        },
+        {
+          "key": "number1",
+          "label": "Number"
+        },
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        }
       ],
-      "template": "My trainer says if I pour {liquid1} directly onto my {bodyPart1} for {number1} minutes a day, I will become unbelievably {adjective1}."
+      "template": "My trainer says if I pour {liquid1} directly onto my {bodyPart1} for {number1} minutes a day, I will become unbelievably {adjective1}.",
+      "tags": [
+        "fitness",
+        "bad-advice"
+      ]
     },
     {
       "id": "haunted-rental",
       "title": "Haunted Rental",
-      "rating": "teen",
       "prompts": [
-        { "key": "sound1", "label": "Weird sound" },
-        { "key": "adjective1", "label": "Adjective" },
-        { "key": "room1", "label": "Room in a house" },
-        { "key": "pluralAnimal1", "label": "Plural animal" }
+        {
+          "key": "sound1",
+          "label": "Weird sound"
+        },
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        },
+        {
+          "key": "room1",
+          "label": "Room in a house"
+        },
+        {
+          "key": "pluralAnimal1",
+          "label": "Plural animal"
+        }
       ],
-      "template": "At 3am we heard a {sound1} coming from the {adjective1} {room1}, followed by at least twelve furious {pluralAnimal1}."
+      "template": "At 3am we heard a {sound1} coming from the {adjective1} {room1}, followed by at least twelve furious {pluralAnimal1}.",
+      "tags": [
+        "spooky",
+        "house"
+      ]
     },
     {
       "id": "influencer-apology",
       "title": "Influencer Apology",
-      "rating": "teen",
       "prompts": [
-        { "key": "name1", "label": "First name" },
-        { "key": "object1", "label": "Object" },
-        { "key": "verbPast1", "label": "Past tense verb" },
-        { "key": "emotion1", "label": "Emotion" }
+        {
+          "key": "name1",
+          "label": "First name"
+        },
+        {
+          "key": "object1",
+          "label": "Object"
+        },
+        {
+          "key": "verbPast1",
+          "label": "Past tense verb"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        }
       ],
-      "template": "Hey guys, {name1} here. I want to apologize for the {object1}. I never meant to {verbPast1} anyone, and I am taking time to feel {emotion1}."
+      "template": "Hey guys, {name1} here. I want to apologize for the {object1}. I never meant to {verbPast1} anyone, and I am taking time to feel {emotion1}.",
+      "tags": [
+        "internet",
+        "apology"
+      ]
     },
     {
       "id": "wedding-speech",
       "title": "Wedding Speech",
-      "rating": "teen",
       "prompts": [
-        { "key": "relationship1", "label": "Relationship title" },
-        { "key": "emotion1", "label": "Emotion" },
-        { "key": "noun1", "label": "Noun" },
-        { "key": "verbPast1", "label": "Past tense verb" }
+        {
+          "key": "relationship1",
+          "label": "Relationship title"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        },
+        {
+          "key": "noun1",
+          "label": "Noun"
+        },
+        {
+          "key": "verbPast1",
+          "label": "Past tense verb"
+        }
       ],
-      "template": "During the wedding speech, my {relationship1} became extremely {emotion1} and accidentally {verbPast1} a full {noun1} into the cake."
+      "template": "During the wedding speech, my {relationship1} became extremely {emotion1} and accidentally {verbPast1} a full {noun1} into the cake.",
+      "tags": [
+        "wedding",
+        "speech"
+      ]
     },
     {
       "id": "ai-takeover",
       "title": "AI Takeover",
-      "rating": "teen",
       "prompts": [
-        { "key": "occupation1", "label": "Occupation" },
-        { "key": "verbIng1", "label": "Verb ending in -ing" },
-        { "key": "object1", "label": "Object" },
-        { "key": "emotion1", "label": "Emotion" }
+        {
+          "key": "occupation1",
+          "label": "Occupation"
+        },
+        {
+          "key": "verbIng1",
+          "label": "Verb ending in -ing"
+        },
+        {
+          "key": "object1",
+          "label": "Object"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        }
       ],
-      "template": "The AI became self-aware after a {occupation1} spent 14 straight hours {verbIng1} at a {object1}, leaving humanity deeply {emotion1}."
+      "template": "The AI became self-aware after a {occupation1} spent 14 straight hours {verbIng1} at a {object1}, leaving humanity deeply {emotion1}.",
+      "tags": [
+        "sci-fi",
+        "technology"
+      ]
     }
-  ]
+  ],
+  "rating": "teen"
 }

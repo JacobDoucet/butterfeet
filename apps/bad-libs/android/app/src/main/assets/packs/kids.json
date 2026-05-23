@@ -1,0 +1,237 @@
+{
+  "id": "kids",
+  "title": "Kids Pack",
+  "description": "Silly stories for chaotic little gremlins.",
+  "stories": [
+    {
+      "id": "zoo-trip",
+      "title": "Zoo Trip",
+      "prompts": [
+        {
+          "key": "animal1",
+          "label": "Animal"
+        },
+        {
+          "key": "food1",
+          "label": "Food"
+        },
+        {
+          "key": "verbIng1",
+          "label": "Verb ending in -ing"
+        },
+        {
+          "key": "color1",
+          "label": "Color"
+        },
+        {
+          "key": "noun1",
+          "label": "Noun"
+        }
+      ],
+      "template": "During our trip to the zoo, a {color1} {animal1} escaped its enclosure and started {verbIng1} directly beside the {noun1} while eating enormous amounts of {food1}.",
+      "tags": [
+        "animals",
+        "field-trip"
+      ]
+    },
+    {
+      "id": "school-picture-day",
+      "title": "School Picture Day",
+      "prompts": [
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        },
+        {
+          "key": "hairStyle1",
+          "label": "Hairstyle"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        },
+        {
+          "key": "animal1",
+          "label": "Animal"
+        }
+      ],
+      "template": "On school picture day, I showed up with a very {adjective1} {hairStyle1} and immediately felt {emotion1} after someone said I looked like a surprised {animal1}.",
+      "tags": [
+        "school",
+        "photos"
+      ]
+    },
+    {
+      "id": "birthday-cake",
+      "title": "Birthday Cake Disaster",
+      "prompts": [
+        {
+          "key": "number1",
+          "label": "Number"
+        },
+        {
+          "key": "food1",
+          "label": "Food"
+        },
+        {
+          "key": "animal1",
+          "label": "Animal"
+        },
+        {
+          "key": "verbPast1",
+          "label": "Past tense verb"
+        },
+        {
+          "key": "noun1",
+          "label": "Noun"
+        }
+      ],
+      "template": "For my {number1}th birthday, we ordered a giant {food1} cake shaped like a {animal1}, but before anyone could eat it, my cousin accidentally {verbPast1} directly into the {noun1}.",
+      "tags": [
+        "birthday",
+        "cake"
+      ]
+    },
+    {
+      "id": "sleepover",
+      "title": "Sleepover Night",
+      "prompts": [
+        {
+          "key": "friend1",
+          "label": "Friend's name"
+        },
+        {
+          "key": "sound1",
+          "label": "Funny sound"
+        },
+        {
+          "key": "object1",
+          "label": "Object"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        },
+        {
+          "key": "pluralNoun1",
+          "label": "Plural noun"
+        },
+        {
+          "key": "verbIng1",
+          "label": "Verb ending in -ing"
+        }
+      ],
+      "template": "{friend1} came over for a sleepover, but nobody slept because we kept hearing {sound1} noises coming from the kitchen. Eventually we discovered a mysterious {object1} surrounded by {pluralNoun1} that appeared to be slowly {verbIng1}. We were deeply {emotion1} but also kind of impressed.",
+      "tags": [
+        "sleepover",
+        "mystery"
+      ]
+    },
+    {
+      "id": "superhero-kid",
+      "title": "Superhero Kid",
+      "prompts": [
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        },
+        {
+          "key": "food1",
+          "label": "Food"
+        },
+        {
+          "key": "bodyPart1",
+          "label": "Body part"
+        },
+        {
+          "key": "verb1",
+          "label": "Verb"
+        },
+        {
+          "key": "pluralNoun1",
+          "label": "Plural noun"
+        }
+      ],
+      "template": "By day I am a normal kid, but by night I become The {adjective1} {food1}. Using the power of my mighty {bodyPart1}, I protect innocent {pluralNoun1} from villains who want to {verb1} everything.",
+      "tags": [
+        "superhero",
+        "kids"
+      ]
+    },
+    {
+      "id": "classroom-chaos",
+      "title": "Classroom Chaos",
+      "prompts": [
+        {
+          "key": "teacher1",
+          "label": "Teacher name"
+        },
+        {
+          "key": "animal1",
+          "label": "Animal"
+        },
+        {
+          "key": "verbPast1",
+          "label": "Past tense verb"
+        },
+        {
+          "key": "schoolSubject1",
+          "label": "School subject"
+        },
+        {
+          "key": "food1",
+          "label": "Food"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        }
+      ],
+      "template": "Everything was normal in {teacher1}'s {schoolSubject1} class until somebody accidentally brought a live {animal1} to school. The animal immediately {verbPast1} across the classroom, knocked over somebody's {food1}, and caused the entire class to become extremely {emotion1}.",
+      "tags": [
+        "school",
+        "classroom"
+      ]
+    },
+    {
+      "id": "camping-trip",
+      "title": "Camping Trip",
+      "prompts": [
+        {
+          "key": "location1",
+          "label": "Place"
+        },
+        {
+          "key": "adjective1",
+          "label": "Adjective"
+        },
+        {
+          "key": "food1",
+          "label": "Food"
+        },
+        {
+          "key": "animalPlural1",
+          "label": "Plural animals"
+        },
+        {
+          "key": "verbIng1",
+          "label": "Verb ending in -ing"
+        },
+        {
+          "key": "object1",
+          "label": "Object"
+        },
+        {
+          "key": "emotion1",
+          "label": "Emotion"
+        }
+      ],
+      "template": "Our camping trip to {location1} started off very {adjective1}. We made {food1} over the fire and spent the evening {verbIng1} under the stars. Unfortunately, a group of wild {animalPlural1} appeared during the night and stole our {object1}. Everyone became extremely {emotion1}, especially my dad, who claimed the animals were \"working together strategically.\"",
+      "tags": [
+        "camping",
+        "outdoors"
+      ]
+    }
+  ],
+  "rating": "kids"
+}

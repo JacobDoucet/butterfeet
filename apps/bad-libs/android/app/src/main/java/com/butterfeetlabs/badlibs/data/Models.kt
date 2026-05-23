@@ -7,6 +7,7 @@ data class StoryPack(
     val id: String,
     val title: String,
     val description: String,
+    val rating: String,
     val stories: List<Story>
 )
 
@@ -14,7 +15,7 @@ data class StoryPack(
 data class Story(
     val id: String,
     val title: String,
-    val rating: String,
+    val tags: List<String> = emptyList(),
     val prompts: List<Prompt>,
     val template: String
 )
