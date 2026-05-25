@@ -1450,6 +1450,10 @@ export function useReservationStatusDataGridColumn(options: ReservationStatusDat
                 label: options.getOptionLabel('Purchased'),
             },
             {
+                value: 'Received',
+                label: options.getOptionLabel('Received'),
+            },
+            {
                 value: 'Cancelled',
                 label: options.getOptionLabel('Cancelled'),
             },

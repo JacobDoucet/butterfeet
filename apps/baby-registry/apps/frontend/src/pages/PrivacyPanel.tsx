@@ -18,6 +18,10 @@ import {
   MenuItem,
   Select,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
@@ -26,6 +30,7 @@ import UndoIcon from '@mui/icons-material/Undo';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LinkIcon from '@mui/icons-material/Link';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   registries,
@@ -199,6 +204,10 @@ function ApprovedGuestsSection({ registryId }: { registryId: string }) {
   const [name, setName] = useState('');
   const [accessLevel, setAccessLevel] = useState<GuestAccessLevel>('ViewShippingAddress');
   const [err, setErr] = useState<string | null>(null);
+  const [confirmGuestAction, setConfirmGuestAction] = useState<
+    | { action: 'revoke' | 'block' | 'reactivate' | 'remove'; guest: ApprovedGuest }
+    | null
+  >(null);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['approvedGuests', registryId] });
 
@@ -225,6 +234,10 @@ function ApprovedGuestsSection({ registryId }: { registryId: string }) {
     mutationFn: (id: string) => approvedGuests.reactivate(id),
     onSuccess: invalidate,
   });
+  const removeM = useMutation({
+    mutationFn: (id: string) => approvedGuests.remove(id),
+    onSuccess: invalidate,
+  });
   const [issuedLink, setIssuedLink] = useState<{ email: string; url: string; expiresAt: string } | null>(null);
   const issueLinkM = useMutation({
     mutationFn: (g: ApprovedGuest) => approvedGuests.issueLink(g.id).then((r) => ({ g, r })),
@@ -236,6 +249,27 @@ function ApprovedGuestsSection({ registryId }: { registryId: string }) {
   });
 
   const guests: ApprovedGuest[] = guestsQ.data ?? [];
+
+  const confirmGuestActionText =
+    confirmGuestAction?.action === 'revoke'
+      ? 'Revoke this guest? They will lose active access until reactivated.'
+      : confirmGuestAction?.action === 'block'
+      ? 'Block this guest? This prevents access until manually reactivated.'
+      : confirmGuestAction?.action === 'reactivate'
+      ? 'Reactivate this guest? They will regain access immediately.'
+      : confirmGuestAction?.action === 'remove'
+      ? 'Remove this guest entry permanently?'
+      : '';
+
+  const runGuestAction = () => {
+    if (!confirmGuestAction) return;
+    const id = confirmGuestAction.guest.id;
+    if (confirmGuestAction.action === 'revoke') revokeM.mutate(id);
+    if (confirmGuestAction.action === 'block') blockM.mutate(id);
+    if (confirmGuestAction.action === 'reactivate') reactivateM.mutate(id);
+    if (confirmGuestAction.action === 'remove') removeM.mutate(id);
+    setConfirmGuestAction(null);
+  };
 
   return (
     <Box>
@@ -368,12 +402,12 @@ function ApprovedGuestsSection({ registryId }: { registryId: string }) {
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Revoke">
-                    <IconButton size="small" onClick={() => revokeM.mutate(g.id)}>
+                    <IconButton size="small" onClick={() => setConfirmGuestAction({ action: 'revoke', guest: g })}>
                       <UndoIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Block">
-                    <IconButton size="small" onClick={() => blockM.mutate(g.id)}>
+                    <IconButton size="small" onClick={() => setConfirmGuestAction({ action: 'block', guest: g })}>
                       <BlockIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
@@ -381,15 +415,42 @@ function ApprovedGuestsSection({ registryId }: { registryId: string }) {
               )}
               {g.status !== 'Active' && (
                 <Tooltip title="Reactivate">
-                  <IconButton size="small" onClick={() => reactivateM.mutate(g.id)}>
+                  <IconButton size="small" onClick={() => setConfirmGuestAction({ action: 'reactivate', guest: g })}>
                     <CheckCircleIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
               )}
+              <Tooltip title="Remove guest">
+                <IconButton size="small" color="error" onClick={() => setConfirmGuestAction({ action: 'remove', guest: g })}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Stack>
           ))}
         </Stack>
       )}
+
+      <Dialog open={!!confirmGuestAction} onClose={() => setConfirmGuestAction(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>Confirm action</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {confirmGuestActionText}
+          </Typography>
+          {confirmGuestAction?.guest && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+              {confirmGuestAction.guest.name
+                ? `${confirmGuestAction.guest.name} · ${confirmGuestAction.guest.email}`
+                : confirmGuestAction.guest.email}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmGuestAction(null)}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={runGuestAction}>
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
@@ -405,6 +466,10 @@ function AddressRequestsSection({ registryId }: { registryId: string }) {
     qc.invalidateQueries({ queryKey: ['approvedGuests', registryId] });
   };
   const [issuedLink, setIssuedLink] = useState<{ email: string; url: string; expiresAt: string } | null>(null);
+  const [confirmRequestAction, setConfirmRequestAction] = useState<
+    | { action: 'reject' | 'block'; req: AddressRequest }
+    | null
+  >(null);
   const approveM = useMutation({
     mutationFn: ({ id, permanent }: { id: string; permanent: boolean }) =>
       addressRequests.approve(id, { permanent }),
@@ -431,6 +496,13 @@ function AddressRequestsSection({ registryId }: { registryId: string }) {
   const requests: AddressRequest[] = reqsQ.data ?? [];
   const pending = requests.filter((r) => r.status === 'Pending');
   const decided = requests.filter((r) => r.status !== 'Pending');
+
+  const runRequestAction = () => {
+    if (!confirmRequestAction) return;
+    if (confirmRequestAction.action === 'reject') rejectM.mutate(confirmRequestAction.req.id);
+    if (confirmRequestAction.action === 'block') blockReqM.mutate(confirmRequestAction.req.id);
+    setConfirmRequestAction(null);
+  };
 
   return (
     <Box>
@@ -528,7 +600,7 @@ function AddressRequestsSection({ registryId }: { registryId: string }) {
                   <Button
                     size="small"
                     color="inherit"
-                    onClick={() => rejectM.mutate(req.id)}
+                    onClick={() => setConfirmRequestAction({ action: 'reject', req })}
                     disabled={rejectM.isPending}
                   >
                     Reject
@@ -536,7 +608,7 @@ function AddressRequestsSection({ registryId }: { registryId: string }) {
                   <Button
                     size="small"
                     color="error"
-                    onClick={() => blockReqM.mutate(req.id)}
+                    onClick={() => setConfirmRequestAction({ action: 'block', req })}
                     disabled={blockReqM.isPending}
                   >
                     Block
@@ -547,6 +619,30 @@ function AddressRequestsSection({ registryId }: { registryId: string }) {
           ))}
         </Stack>
       )}
+
+      <Dialog open={!!confirmRequestAction} onClose={() => setConfirmRequestAction(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>Confirm action</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {confirmRequestAction?.action === 'block'
+              ? 'Block this requester? They will not be able to access the shipping flow until manually reactivated.'
+              : 'Reject this request?'}
+          </Typography>
+          {confirmRequestAction?.req && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+              {confirmRequestAction.req.name
+                ? `${confirmRequestAction.req.name} · ${confirmRequestAction.req.email}`
+                : confirmRequestAction.req.email}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmRequestAction(null)}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={runRequestAction}>
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

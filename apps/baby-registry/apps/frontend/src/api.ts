@@ -134,7 +134,7 @@ export const items = {
   remove: (id: string) => api.del<void>(`/api/registry-items/delete/${id}`),
 };
 
-export type ReservationStatus = 'Reserved' | 'Purchased' | 'Cancelled';
+export type ReservationStatus = 'Reserved' | 'Purchased' | 'Received' | 'Cancelled';
 
 export interface Reservation {
   id: string;
@@ -159,6 +159,8 @@ export const reservations = {
         limit: 1000,
       },
     ).then(unwrapList<Reservation>('reservation')),
+  create: (body: Partial<Reservation>) =>
+    api.post<MutationResult<Reservation>>('/api/reservations/create', { data: body }).then((r) => r.data),
   setStatus: (id: string, status: ReservationStatus) =>
     api.patch<MutationResult<Reservation>>('/api/reservations/update', { data: { id, status } }).then((r) => r.data),
   remove: (id: string) => api.del<void>(`/api/reservations/delete/${id}`),

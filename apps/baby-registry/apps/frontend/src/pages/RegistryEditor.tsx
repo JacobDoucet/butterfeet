@@ -22,7 +22,7 @@ import {
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EditIcon from '@mui/icons-material/EditOutlined';
-import CheckCircleIcon from '@mui/icons-material/CheckCircleOutline';
+import Inventory2Icon from '@mui/icons-material/Inventory2Outlined';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Accordion,
@@ -35,6 +35,10 @@ import {
 } from '@mui/material';
 import { registries, items, scrape, reservations, type RegistryItem, type Registry, type Reservation, type ReservationStatus } from '../api';
 import PrivacyPanel from './PrivacyPanel';
+
+type DeleteTarget =
+  | { kind: 'item'; id: string; title: string }
+  | { kind: 'reservation'; id: string; title: string };
 
 export default function RegistryEditor() {
   const { slug = '' } = useParams();
@@ -78,13 +82,15 @@ export default function RegistryEditor() {
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [fulfillmentOpen, setFulfillmentOpen] = useState(false);
+  const [fulfillmentItemId, setFulfillmentItemId] = useState<string | null>(null);
+  const [fulfillmentStatus, setFulfillmentStatus] = useState<ReservationStatus>('Purchased');
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [url, setUrl] = useState('');
   const [scraping, setScraping] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
-  const [price, setPrice] = useState('');
-  const [currency, setCurrency] = useState('');
   const [source, setSource] = useState('');
   const [quantity, setQuantity] = useState('1');
   const [notes, setNotes] = useState('');
@@ -95,8 +101,6 @@ export default function RegistryEditor() {
     setTitle('');
     setDescription('');
     setImageUrl('');
-    setPrice('');
-    setCurrency('');
     setSource('');
     setQuantity('1');
     setNotes('');
@@ -110,8 +114,6 @@ export default function RegistryEditor() {
     setTitle(it.title || '');
     setDescription(it.description || '');
     setImageUrl(it.imageUrl || '');
-    setPrice(it.priceCents ? String((it.priceCents || 0) / 100) : '');
-    setCurrency(it.currency || '');
     setSource(it.source || '');
     setQuantity(String(it.quantity || 1));
     setNotes(it.notes || '');
@@ -126,8 +128,6 @@ export default function RegistryEditor() {
       const r = await scrape.url(url);
       setTitle(r.title || '');
       setImageUrl(r.imageUrl || '');
-      setPrice(r.price ? String(r.price) : '');
-      setCurrency(r.currency || '');
       setSource(r.source || 'Other');
     } catch (err) {
       setError((err as Error).message);
@@ -138,7 +138,6 @@ export default function RegistryEditor() {
 
   const createItemM = useMutation({
     mutationFn: async () => {
-      const priceCents = price ? Math.round(parseFloat(price) * 100) : 0;
       const qty = Math.max(1, parseInt(quantity || '1', 10) || 1);
       return items.create({
         registryId: reg!.id,
@@ -147,8 +146,6 @@ export default function RegistryEditor() {
         imageUrl,
         productUrl: url,
         source,
-        priceCents,
-        currency,
         quantity: qty,
         notes,
       });
@@ -166,19 +163,9 @@ export default function RegistryEditor() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', reg?.id] }),
   });
 
-  const setOwnerPurchasedM = useMutation({
-    mutationFn: ({ id, ownerPurchased }: { id: string; ownerPurchased: boolean }) =>
-      items.update(id, { ownerPurchased }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['items', reg?.id] });
-      qc.invalidateQueries({ queryKey: ['reservations', reg?.id] });
-    },
-  });
-
   const updateItemM = useMutation({
     mutationFn: async () => {
       if (!editingId) return;
-      const priceCents = price ? Math.round(parseFloat(price) * 100) : 0;
       const qty = Math.max(1, parseInt(quantity || '1', 10) || 1);
       return items.update(editingId, {
         title,
@@ -186,8 +173,6 @@ export default function RegistryEditor() {
         imageUrl,
         productUrl: url,
         source,
-        priceCents,
-        currency,
         quantity: qty,
         notes,
       });
@@ -201,14 +186,48 @@ export default function RegistryEditor() {
   });
 
   const markPurchasedM = useMutation({
-    mutationFn: async (reservationIds: string[]) => {
-      await Promise.all(reservationIds.map((id) => reservations.setStatus(id, 'Purchased')));
+    mutationFn: async ({
+      item,
+      activeReservations,
+      status,
+    }: {
+      item: RegistryItem;
+      activeReservations: Reservation[];
+      status: ReservationStatus;
+    }) => {
+      if (activeReservations.length > 0) {
+        await Promise.all(activeReservations.map((r) => reservations.setStatus(r.id, status)));
+        return;
+      }
+      await reservations.create({
+        itemId: item.id,
+        registryId: reg!.id,
+        reserverName: 'Owner',
+        isAnonymous: false,
+        message: 'Set by owner',
+        quantity: Math.max(1, item.quantity || 1),
+        status,
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['reservations', reg?.id] });
       qc.invalidateQueries({ queryKey: ['items', reg?.id] });
+      setFulfillmentOpen(false);
+      setFulfillmentItemId(null);
+      setFulfillmentStatus('Purchased');
     },
+    onError: (err) => setError((err as Error).message),
   });
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    if (deleteTarget.kind === 'item') {
+      deleteM.mutate(deleteTarget.id);
+    } else {
+      deleteReservationM.mutate(deleteTarget.id);
+    }
+    setDeleteTarget(null);
+  };
 
   if (regsQ.isLoading) return null;
   if (!reg) return (
@@ -223,6 +242,9 @@ export default function RegistryEditor() {
     (acc[r.itemId] ??= []).push(r);
     return acc;
   }, {});
+  const fulfillmentItem = list.find((it) => it.id === fulfillmentItemId) ?? null;
+  const fulfillmentActiveReservations = (fulfillmentItem ? reservationsByItem[fulfillmentItem.id] ?? [] : [])
+    .filter((r) => r.status !== 'Cancelled');
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -242,13 +264,11 @@ export default function RegistryEditor() {
         {list.map((it) => {
           const itemReservations = reservationsByItem[it.id] ?? [];
           const activeReservations = itemReservations.filter((r) => r.status !== 'Cancelled');
-          const canMarkPurchased = activeReservations.length > 0 && activeReservations.some((r) => r.status !== 'Purchased');
-          const ownerPurchased = !!it.ownerPurchased;
           const activeCount = itemReservations
             .filter((r) => r.status !== 'Cancelled')
             .reduce((sum, r) => sum + (r.quantity ?? 1), 0);
           const requested = it.quantity ?? 1;
-          const fulfilled = ownerPurchased || activeCount >= requested;
+          const fulfilled = activeCount >= requested;
           return (
             <Grid item xs={12} sm={6} md={4} key={it.id}>
               <Card>
@@ -271,17 +291,12 @@ export default function RegistryEditor() {
                   </Typography>
                   <Stack direction="row" spacing={1} sx={{ my: 1, flexWrap: 'wrap', rowGap: 1 }}>
                     {it.source && <Chip size="small" label={it.source} />}
-                    {it.priceCents ? (
-                      <Chip size="small" label={`${(it.priceCents / 100).toFixed(2)} ${it.currency || ''}`.trim()} variant="outlined" />
-                    ) : null}
                     <Chip
                       size="small"
                       color={fulfilled ? 'success' : activeCount > 0 ? 'warning' : 'default'}
                       variant={activeCount > 0 ? 'filled' : 'outlined'}
                       label={
-                        ownerPurchased
-                          ? 'Purchased (Owner)'
-                          : fulfilled
+                        fulfilled
                           ? 'Reserved'
                           : activeCount > 0
                           ? `${activeCount} / ${requested} reserved`
@@ -300,29 +315,24 @@ export default function RegistryEditor() {
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title={canMarkPurchased ? 'Mark all active reservations as purchased' : 'No active reservations to mark purchased'}>
-                      <span>
-                        <IconButton
-                          size="small"
-                          color="success"
-                          disabled={!canMarkPurchased || markPurchasedM.isPending}
-                          onClick={() => markPurchasedM.mutate(activeReservations.map((r) => r.id))}
-                          aria-label="mark purchased"
-                        >
-                          <CheckCircleIcon fontSize="small" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
                     <Button
                       size="small"
-                      variant={ownerPurchased ? 'outlined' : 'contained'}
-                      color={ownerPurchased ? 'inherit' : 'success'}
-                      onClick={() => setOwnerPurchasedM.mutate({ id: it.id, ownerPurchased: !ownerPurchased })}
-                      disabled={setOwnerPurchasedM.isPending}
+                      variant="outlined"
+                      startIcon={<Inventory2Icon />}
+                      onClick={() => {
+                        setFulfillmentItemId(it.id);
+                        setFulfillmentStatus('Purchased');
+                        setError(null);
+                        setFulfillmentOpen(true);
+                      }}
                     >
-                      {ownerPurchased ? 'Remove purchased' : 'Mark purchased'}
+                      Fulfillment
                     </Button>
-                    <IconButton size="small" onClick={() => deleteM.mutate(it.id)} aria-label="delete">
+                    <IconButton
+                      size="small"
+                      onClick={() => setDeleteTarget({ kind: 'item', id: it.id, title: it.title })}
+                      aria-label="delete"
+                    >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Stack>
@@ -348,7 +358,12 @@ export default function RegistryEditor() {
                               key={r.id}
                               reservation={r}
                               onSetStatus={(status) => setStatusM.mutate({ id: r.id, status })}
-                              onDelete={() => deleteReservationM.mutate(r.id)}
+                              onDelete={() => {
+                                const who = r.isAnonymous
+                                  ? 'Anonymous'
+                                  : r.reserverName?.trim() || r.contactEmail?.trim() || 'Someone';
+                                setDeleteTarget({ kind: 'reservation', id: r.id, title: who });
+                              }}
                             />
                           ))}
                         </Stack>
@@ -370,25 +385,52 @@ export default function RegistryEditor() {
       <Dialog open={open} onClose={() => { setOpen(false); reset(); }} fullWidth maxWidth="sm">
         <DialogTitle>Add item</DialogTitle>
         <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <Stack direction="row" spacing={1}>
-              <TextField label="Product URL" value={url} onChange={(e) => setUrl(e.target.value)} />
-              <Button variant="outlined" onClick={doScrape} disabled={!url || scraping}>
-                {scraping ? <CircularProgress size={20} /> : 'Fetch'}
-              </Button>
-            </Stack>
-            <TextField label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-            <TextField label="Description" value={description} onChange={(e) => setDescription(e.target.value)} multiline minRows={2} />
-            <TextField label="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
-            <Stack direction="row" spacing={2}>
-              <TextField label="Price" value={price} onChange={(e) => setPrice(e.target.value)} />
-              <TextField label="Currency" value={currency} onChange={(e) => setCurrency(e.target.value)} />
-            </Stack>
-            <TextField label="Quantity" type="number" inputProps={{ min: 1, step: 1 }} value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-            <TextField label="Source" value={source} onChange={(e) => setSource(e.target.value)} />
-            <TextField label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} />
-            {error && <Alert severity="error">{error}</Alert>}
-          </Stack>
+          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            <Grid item xs={12} md={5}>
+              <Stack spacing={1.25}>
+                <Card
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    bgcolor: '#f6efe6',
+                    minHeight: 220,
+                  }}
+                >
+                  {imageUrl ? (
+                    <CardMedia component="img" image={imageUrl} sx={{ aspectRatio: '1 / 1', objectFit: 'contain' }} />
+                  ) : (
+                    <Stack sx={{ aspectRatio: '1 / 1' }} alignItems="center" justifyContent="center" spacing={0.5}>
+                      <Inventory2Icon color="disabled" />
+                      <Typography variant="body2" color="text.secondary">
+                        Image preview
+                      </Typography>
+                    </Stack>
+                  )}
+                </Card>
+                <Typography variant="caption" color="text.secondary">
+                  Preview updates as you fetch or paste an image URL.
+                </Typography>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} md={7}>
+              <Stack spacing={2}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <TextField fullWidth label="Product URL" value={url} onChange={(e) => setUrl(e.target.value)} />
+                  <Button variant="outlined" onClick={doScrape} disabled={!url || scraping} sx={{ minWidth: 110 }}>
+                    {scraping ? <CircularProgress size={20} /> : 'Fetch'}
+                  </Button>
+                </Stack>
+                <TextField fullWidth label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <TextField fullWidth label="Description" value={description} onChange={(e) => setDescription(e.target.value)} multiline minRows={2} />
+                <TextField fullWidth label="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+                <TextField fullWidth label="Quantity" type="number" inputProps={{ min: 1, step: 1 }} value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+                <TextField fullWidth label="Source" value={source} onChange={(e) => setSource(e.target.value)} />
+                <TextField fullWidth label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} />
+                {error && <Alert severity="error">{error}</Alert>}
+              </Stack>
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => { setOpen(false); reset(); }}>Cancel</Button>
@@ -401,30 +443,136 @@ export default function RegistryEditor() {
       <Dialog open={editOpen} onClose={() => { setEditOpen(false); reset(); }} fullWidth maxWidth="sm">
         <DialogTitle>Edit item</DialogTitle>
         <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <Stack direction="row" spacing={1}>
-              <TextField label="Product URL" value={url} onChange={(e) => setUrl(e.target.value)} />
-              <Button variant="outlined" onClick={doScrape} disabled={!url || scraping}>
-                {scraping ? <CircularProgress size={20} /> : 'Fetch'}
-              </Button>
-            </Stack>
-            <TextField label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-            <TextField label="Description" value={description} onChange={(e) => setDescription(e.target.value)} multiline minRows={2} />
-            <TextField label="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
-            <Stack direction="row" spacing={2}>
-              <TextField label="Price" value={price} onChange={(e) => setPrice(e.target.value)} />
-              <TextField label="Currency" value={currency} onChange={(e) => setCurrency(e.target.value)} />
-            </Stack>
-            <TextField label="Quantity" type="number" inputProps={{ min: 1, step: 1 }} value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-            <TextField label="Source" value={source} onChange={(e) => setSource(e.target.value)} />
-            <TextField label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} />
-            {error && <Alert severity="error">{error}</Alert>}
-          </Stack>
+          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            <Grid item xs={12} md={5}>
+              <Stack spacing={1.25}>
+                <Card
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    bgcolor: '#f6efe6',
+                    minHeight: 220,
+                  }}
+                >
+                  {imageUrl ? (
+                    <CardMedia component="img" image={imageUrl} sx={{ aspectRatio: '1 / 1', objectFit: 'contain' }} />
+                  ) : (
+                    <Stack sx={{ aspectRatio: '1 / 1' }} alignItems="center" justifyContent="center" spacing={0.5}>
+                      <Inventory2Icon color="disabled" />
+                      <Typography variant="body2" color="text.secondary">
+                        Image preview
+                      </Typography>
+                    </Stack>
+                  )}
+                </Card>
+                <Typography variant="caption" color="text.secondary">
+                  Preview updates as you fetch or paste an image URL.
+                </Typography>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} md={7}>
+              <Stack spacing={2}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <TextField fullWidth label="Product URL" value={url} onChange={(e) => setUrl(e.target.value)} />
+                  <Button variant="outlined" onClick={doScrape} disabled={!url || scraping} sx={{ minWidth: 110 }}>
+                    {scraping ? <CircularProgress size={20} /> : 'Fetch'}
+                  </Button>
+                </Stack>
+                <TextField fullWidth label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <TextField fullWidth label="Description" value={description} onChange={(e) => setDescription(e.target.value)} multiline minRows={2} />
+                <TextField fullWidth label="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+                <TextField fullWidth label="Quantity" type="number" inputProps={{ min: 1, step: 1 }} value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+                <TextField fullWidth label="Source" value={source} onChange={(e) => setSource(e.target.value)} />
+                <TextField fullWidth label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} />
+                {error && <Alert severity="error">{error}</Alert>}
+              </Stack>
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => { setEditOpen(false); reset(); }}>Cancel</Button>
           <Button variant="contained" onClick={() => updateItemM.mutate()} disabled={!title || !editingId || updateItemM.isPending}>
             Save changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={fulfillmentOpen}
+        onClose={() => {
+          setFulfillmentOpen(false);
+          setFulfillmentItemId(null);
+          setFulfillmentStatus('Purchased');
+        }}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Update fulfillment status</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            {fulfillmentItem && (
+              <Typography variant="subtitle2" color="text.secondary">
+                {fulfillmentItem.title}
+              </Typography>
+            )}
+            <Alert severity="info">
+              {fulfillmentActiveReservations.length > 0
+                ? `This will update ${fulfillmentActiveReservations.length} active reservation${fulfillmentActiveReservations.length === 1 ? '' : 's'} for this item.`
+                : 'No active reservations found. Saving will create an owner reservation so status stays consistent.'}
+            </Alert>
+            <Select
+              value={fulfillmentStatus}
+              onChange={(e) => setFulfillmentStatus(e.target.value as ReservationStatus)}
+            >
+              <MenuItem value="Reserved">Reserved</MenuItem>
+              <MenuItem value="Purchased">Purchased</MenuItem>
+              <MenuItem value="Received">Received</MenuItem>
+              <MenuItem value="Cancelled">Cancelled</MenuItem>
+            </Select>
+            {error && <Alert severity="error">{error}</Alert>}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setFulfillmentOpen(false);
+              setFulfillmentItemId(null);
+              setFulfillmentStatus('Purchased');
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={!fulfillmentItem || markPurchasedM.isPending}
+            onClick={() => {
+              if (!fulfillmentItem) return;
+              markPurchasedM.mutate({
+                item: fulfillmentItem,
+                activeReservations: fulfillmentActiveReservations,
+                status: fulfillmentStatus,
+              });
+            }}
+          >
+            Save status
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>Confirm deletion</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {deleteTarget?.kind === 'item'
+              ? `Delete item "${deleteTarget.title}"? This cannot be undone.`
+              : `Delete reservation from "${deleteTarget?.title}"? This cannot be undone.`}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={confirmDelete}>
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
@@ -475,6 +623,7 @@ function ReservationRow({
       >
         <MenuItem value="Reserved">Reserved</MenuItem>
         <MenuItem value="Purchased">Purchased</MenuItem>
+        <MenuItem value="Received">Received</MenuItem>
         <MenuItem value="Cancelled">Cancelled</MenuItem>
       </Select>
       <Tooltip title="Delete reservation">

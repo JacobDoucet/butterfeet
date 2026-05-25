@@ -18,6 +18,15 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { registries, auth, type Registry, type Me } from '../api';
 
+function mapRegistryCreateError(err: unknown, slug: string): string {
+  const raw = (err as Error)?.message?.trim() || 'Could not create registry.';
+  const msg = raw.toLowerCase();
+  if (msg.includes('e11000') || msg.includes('duplicate key') || msg.includes('slug_unique')) {
+    return `That slug is already taken. Try a different one (for example: ${slug}-2).`;
+  }
+  return raw;
+}
+
 export default function OwnerDashboard() {
   const nav = useNavigate();
   const qc = useQueryClient();
@@ -58,9 +67,10 @@ export default function OwnerDashboard() {
     onSuccess: (reg) => {
       qc.invalidateQueries({ queryKey: ['registries'] });
       setOpen(false);
+      setError(null);
       nav(`/owner/r/${reg.slug}`);
     },
-    onError: (err) => setError((err as Error).message),
+    onError: (err) => setError(mapRegistryCreateError(err, slug.trim().toLowerCase() || 'my-registry')),
   });
 
   if (meQ.isLoading) return null;
@@ -113,7 +123,15 @@ export default function OwnerDashboard() {
         )}
       </Grid>
 
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+      <Dialog
+        open={open}
+        onClose={() => {
+          setOpen(false);
+          setError(null);
+        }}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle>New registry</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
@@ -129,7 +147,7 @@ export default function OwnerDashboard() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={() => { setOpen(false); setError(null); }}>Cancel</Button>
           <Button onClick={() => createM.mutate()} variant="contained" disabled={!slug || !title}>
             Create
           </Button>

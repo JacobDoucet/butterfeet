@@ -106,8 +106,7 @@ export default function PublicRegistry() {
         <Grid container spacing={3}>
           {reg.items.map((it) => {
             const remaining = Math.max(0, (it.quantity || 1) - (it.reserved || 0));
-            const ownerPurchased = !!it.ownerPurchased;
-            const claimed = ownerPurchased || remaining === 0;
+            const claimed = remaining === 0;
             return (
               <Grid item xs={12} sm={6} md={4} key={it.id}>
                 <Card sx={{ opacity: claimed ? 0.6 : 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -130,10 +129,7 @@ export default function PublicRegistry() {
                     </Typography>
                     <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
                       {it.source && <Chip size="small" label={it.source} />}
-                      {it.priceCents ? (
-                        <Chip size="small" label={`${((it.priceCents || 0) / 100).toFixed(2)} ${it.currency || ''}`.trim()} variant="outlined" />
-                      ) : null}
-                      {claimed && <Chip size="small" color="success" label={ownerPurchased ? 'Purchased' : 'Reserved'} />}
+                      {claimed && <Chip size="small" color="success" label="Reserved" />}
                     </Stack>
                     <Box sx={{ flexGrow: 1 }} />
                     <Stack direction="row" spacing={1}>
