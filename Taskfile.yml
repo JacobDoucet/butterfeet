@@ -307,3 +307,35 @@ tasks:
     dir: apps/bad-stories/evaluator
     cmds:
       - PORT={{.PORT}} go run .
+
+  "baby-registry:forge":
+    desc: "Regenerate forge code for the baby registry from YAML specs"
+    dir: apps/baby-registry
+    cmds:
+      - forge build
+
+  "baby-registry:up":
+    desc: "Start the baby registry stack via docker compose"
+    dir: apps/baby-registry
+    cmds:
+      - docker compose up --build
+
+  "baby-registry:down":
+    desc: "Stop the baby registry stack"
+    dir: apps/baby-registry
+    cmds:
+      - docker compose down
+
+  "baby-registry:logs":
+    desc: "Tail logs for the baby registry stack"
+    dir: apps/baby-registry
+    cmds:
+      - docker compose logs -f --tail=200
+
+  "baby-registry:build":
+    desc: "Verify the baby registry builds (forge + go + npm)"
+    dir: apps/baby-registry
+    cmds:
+      - forge build
+      - cd apps/backend && go build ./...
+      - cd apps/frontend && npm install && npm run build

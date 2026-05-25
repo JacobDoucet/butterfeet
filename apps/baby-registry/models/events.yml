@@ -1,0 +1,16 @@
+eventPermissions:
+  read:
+    - rbac: Owner
+  write:
+    - rbac: Owner
+
+events:
+  - RegistryCreated
+  - RegistryUpdated
+  - RegistryDeleted
+  - ItemAdded
+  - ItemUpdated
+  - ItemDeleted
+  - ItemReserved
+  - ReservationCancelled
+  - OwnerLoggedIn

@@ -1,0 +1,59 @@
+objects:
+  - name: Registry
+    fields:
+      - name: ownerId
+        type: Ref<OwnerUser>
+        required: true
+      - name: slug
+        type: string
+        required: true
+      - name: title
+        type: string
+        required: true
+      - name: parentNames
+        type: string
+      - name: dueDate
+        type: timestamp
+      - name: welcomeMessage
+        type: string
+      - name: themeColor
+        type: string
+      - name: coverImageUrl
+        type: string
+      - name: isPublic
+        type: bool
+
+    collection:
+      - type: mongo
+        name: registries
+
+    indexes:
+      - name: slug_unique
+        unique: true
+        fields:
+          - name: slug
+      - name: owner_idx
+        fields:
+          - name: ownerId
+
+    http:
+      endpoint: registries
+      methods:
+        - GET
+        - POST
+        - PATCH
+        - DELETE
+
+    abac:
+      - name: OwnerId
+        field: ownerId
+
+    permissions:
+      read:
+        - rbac: Owner
+          abac:
+            - OwnerId
+      write:
+        - rbac: Owner
+          abac:
+            - OwnerId

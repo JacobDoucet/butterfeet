@@ -1,0 +1,11 @@
+# Forge configuration for Baby Registry
+forgeVersion: v1.0.5
+
+specDir: ./models
+
+go:
+  outDir: ./apps/backend/generated
+  pkgRoot: github.com/butterfeetlabs/baby-registry/apps/backend/generated
+
+typescript:
+  outDir: ./apps/frontend/src/generated

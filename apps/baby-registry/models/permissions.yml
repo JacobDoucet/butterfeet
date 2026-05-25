@@ -1,0 +1,8 @@
+permissions:
+  rbac:
+    - name: Owner
+    - name: Public
+
+  abac:
+    - name: OwnerId
+      fieldType: Ref<OwnerUser>

@@ -1,0 +1,47 @@
+objects:
+  - name: Reservation
+    fields:
+      - name: itemId
+        type: ParentRef<RegistryItem>
+        required: true
+      - name: registryId
+        type: Ref<Registry>
+        required: true
+      - name: reserverName
+        type: string
+      - name: isAnonymous
+        type: bool
+      - name: message
+        type: string
+      - name: contactEmail
+        type: string
+      - name: quantity
+        type: int
+      - name: status
+        type: ReservationStatus
+        required: true
+
+    collection:
+      - type: mongo
+        name: reservations
+
+    indexes:
+      - name: item_idx
+        fields:
+          - name: itemId
+      - name: registry_idx
+        fields:
+          - name: registryId
+
+    http:
+      endpoint: reservations
+      methods:
+        - GET
+        - PATCH
+        - DELETE
+
+    permissions:
+      read:
+        - rbac: Owner
+      write:
+        - rbac: Owner

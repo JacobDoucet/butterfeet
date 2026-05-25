@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/theme.ts","./src/vite-env.d.ts","./src/pages/authcallback.tsx","./src/pages/landing.tsx","./src/pages/login.tsx","./src/pages/ownerdashboard.tsx","./src/pages/publicregistry.tsx","./src/pages/registryeditor.tsx"],"version":"5.9.3"}

@@ -1,0 +1,39 @@
+objects:
+  - name: OwnerUser
+    fields:
+      - name: email
+        type: string
+        required: true
+      - name: name
+        type: string
+
+    collection:
+      - type: mongo
+        name: owner_users
+
+    indexes:
+      - name: email_unique
+        unique: true
+        fields:
+          - name: email
+
+    http:
+      endpoint: owner-users
+      methods:
+        - GET
+        - PATCH
+
+    actor:
+      id: id
+      username: "{email}"
+      name: "{name}"
+
+    permissions:
+      read:
+        - rbac: Owner
+          abac:
+            - ActorId
+      write:
+        - rbac: Owner
+          abac:
+            - ActorId

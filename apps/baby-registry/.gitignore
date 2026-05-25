@@ -1,0 +1,7 @@
+# Build outputs
+apps/frontend/node_modules/
+apps/frontend/dist/
+apps/backend/server
+
+# Local env
+.env

@@ -1,0 +1,17 @@
+enums:
+  - name: ItemSource
+    type: string
+    values:
+      - Amazon
+      - MamasAndPapas
+      - Etsy
+      - JohnLewis
+      - IKEA
+      - Other
+
+  - name: ReservationStatus
+    type: string
+    values:
+      - Reserved
+      - Purchased
+      - Cancelled

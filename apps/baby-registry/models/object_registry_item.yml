@@ -1,0 +1,54 @@
+objects:
+  - name: RegistryItem
+    fields:
+      - name: registryId
+        type: ParentRef<Registry>
+        required: true
+      - name: title
+        type: string
+        required: true
+      - name: description
+        type: string
+      - name: imageUrl
+        type: string
+      - name: productUrl
+        type: string
+      - name: source
+        type: ItemSource
+      - name: priceCents
+        type: int
+      - name: currency
+        type: string
+      - name: quantity
+        type: int
+      - name: notes
+        type: string
+      - name: position
+        type: int
+
+    collection:
+      - type: mongo
+        name: registry_items
+
+    indexes:
+      - name: registry_idx
+        fields:
+          - name: registryId
+      - name: registry_position
+        fields:
+          - name: registryId
+          - name: position
+
+    http:
+      endpoint: registry-items
+      methods:
+        - GET
+        - POST
+        - PATCH
+        - DELETE
+
+    permissions:
+      read:
+        - rbac: Owner
+      write:
+        - rbac: Owner
