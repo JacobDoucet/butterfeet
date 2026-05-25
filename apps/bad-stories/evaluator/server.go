@@ -5,10 +5,11 @@
 // (gitignored).
 //
 // Endpoints:
-//   GET  /api/feedback           -> entire feedback store
-//   POST /api/feedback           -> {storyKey, text} append entry
-//   POST /api/feedback/resolve   -> {storyKey, entryId} mark resolved
-//   POST /api/feedback/delete    -> {storyKey, entryId} remove entry
+//
+//	GET  /api/feedback           -> entire feedback store
+//	POST /api/feedback           -> {storyKey, text} append entry
+//	POST /api/feedback/resolve   -> {storyKey, entryId} mark resolved
+//	POST /api/feedback/delete    -> {storyKey, entryId} remove entry
 package main
 
 import (
@@ -29,11 +30,11 @@ import (
 )
 
 type Entry struct {
-	ID          string `json:"id"`
-	TS          string `json:"ts"`
-	Text        string `json:"text"`
-	Status      string `json:"status"`
-	ResolvedTS  string `json:"resolved_ts,omitempty"`
+	ID         string `json:"id"`
+	TS         string `json:"ts"`
+	Text       string `json:"text"`
+	Status     string `json:"status"`
+	ResolvedTS string `json:"resolved_ts,omitempty"`
 }
 
 type Store struct {

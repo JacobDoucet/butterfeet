@@ -37,6 +37,7 @@ objects:
       endpoint: reservations
       methods:
         - GET
+        - POST
         - PATCH
         - DELETE
 

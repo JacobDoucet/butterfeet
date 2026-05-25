@@ -21,7 +21,10 @@ import { registries, auth, type Registry, type Me } from '../api';
 function mapRegistryCreateError(err: unknown, slug: string): string {
   const raw = (err as Error)?.message?.trim() || 'Could not create registry.';
   const msg = raw.toLowerCase();
-  if (msg.includes('e11000') || msg.includes('duplicate key') || msg.includes('slug_unique')) {
+  if (msg.includes('slug_taken') || msg.includes('e11000') || msg.includes('duplicate key') || msg.includes('slug_unique')) {
+    return `That slug is already taken. Try a different one (for example: ${slug}-2).`;
+  }
+  if (msg === 'unexpected' || msg.includes('unexpected')) {
     return `That slug is already taken. Try a different one (for example: ${slug}-2).`;
   }
   return raw;
@@ -56,8 +59,13 @@ export default function OwnerDashboard() {
 
   const createM = useMutation({
     mutationFn: async () => {
+      const normalizedSlug = slug.trim().toLowerCase();
+      const slugTaken = (listQ.data?.data ?? []).some((r) => r.slug === normalizedSlug);
+      if (slugTaken) {
+        throw new Error('slug_taken');
+      }
       return registries.create({
-        slug: slug.trim().toLowerCase(),
+        slug: normalizedSlug,
         title: title.trim(),
         parentNames: parentNames.trim(),
         isPublic: true,

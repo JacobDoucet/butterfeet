@@ -28,6 +28,12 @@ func RegisterRoutes(handlerProps HandlerProps) (*http.ServeMux, error) {
 	}
 	routes.HandleFunc("/id/{id}", selectByIdHandler)
 
+	createHandler, err := GetCreateHandler(handlerProps)
+	if err != nil {
+		return nil, err
+	}
+	routes.HandleFunc("/create", createHandler)
+
 	updateHandler, err := GetUpdateHandler(handlerProps)
 	if err != nil {
 		return nil, err

@@ -14,6 +14,7 @@ enums:
     values:
       - Reserved
       - Purchased
+      - Received
       - Cancelled
 
   - name: AddressAccessMode

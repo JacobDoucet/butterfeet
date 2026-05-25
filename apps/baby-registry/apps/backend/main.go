@@ -12,10 +12,18 @@ import (
 	"syscall"
 	"time"
 
+	addressaccesssessionmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session_mongo"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/api"
+	eventmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/event_mongo"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/http_server"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
+	ownerusermongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user_mongo"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
+	registryapprovedguestmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest_mongo"
+	registryitemmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item_mongo"
+	registrymongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_mongo"
+	reservationmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation_mongo"
+	shippingaddressrequestmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request_mongo"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/auth"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/buyer"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/public"
@@ -49,6 +57,9 @@ func main() {
 	log.Println("Connected to MongoDB")
 
 	db := mongoClient.Database(dbName)
+	if err := ensureIndexes(context.Background(), db); err != nil {
+		log.Fatalf("Failed to ensure Mongo indexes: %v", err)
+	}
 	apiClient := api.NewMongoBackedClient(db)
 
 	authSvc := auth.NewService(auth.Config{
@@ -194,3 +205,26 @@ func getEnv(key, fallback string) string {
 // downstream tooling tree-shakes; the auth package imports it directly,
 // but this keeps things explicit.
 var _ = owner_user.Model{}
+
+func ensureIndexes(ctx context.Context, db *mongo.Database) error {
+	createFns := []struct {
+		name string
+		fn   func(context.Context, *mongo.Database) error
+	}{
+		{name: "owner_user", fn: ownerusermongo.CreateIndexes},
+		{name: "registry", fn: registrymongo.CreateIndexes},
+		{name: "registry_item", fn: registryitemmongo.CreateIndexes},
+		{name: "reservation", fn: reservationmongo.CreateIndexes},
+		{name: "registry_approved_guest", fn: registryapprovedguestmongo.CreateIndexes},
+		{name: "shipping_address_request", fn: shippingaddressrequestmongo.CreateIndexes},
+		{name: "address_access_session", fn: addressaccesssessionmongo.CreateIndexes},
+		{name: "event", fn: eventmongo.CreateIndexes},
+	}
+
+	for _, c := range createFns {
+		if err := c.fn(ctx, db); err != nil {
+			return errors.New(c.name + " indexes: " + err.Error())
+		}
+	}
+	return nil
+}

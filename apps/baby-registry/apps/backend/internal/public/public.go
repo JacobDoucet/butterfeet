@@ -11,6 +11,7 @@ import (
 	addressaccesssessionapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_address_access_mode"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_guest_access_level"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_guest_status"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_item_source"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_reservation_status"
@@ -66,21 +67,28 @@ type publicItem struct {
 	PriceCents  int    `json:"priceCents"`
 	Currency    string `json:"currency"`
 	Quantity    int    `json:"quantity"`
-	OwnerPurchased bool `json:"ownerPurchased"`
 	Notes       string `json:"notes"`
 	Position    int    `json:"position"`
 	Reserved    int    `json:"reserved"`
 }
 
 type publicRegistry struct {
-	Id             string       `json:"id"`
-	Slug           string       `json:"slug"`
-	Title          string       `json:"title"`
-	ParentNames    string       `json:"parentNames"`
-	WelcomeMessage string       `json:"welcomeMessage"`
-	ThemeColor     string       `json:"themeColor"`
-	CoverImageUrl  string       `json:"coverImageUrl"`
-	Items          []publicItem `json:"items"`
+	Id                    string       `json:"id"`
+	Slug                  string       `json:"slug"`
+	Title                 string       `json:"title"`
+	ParentNames           string       `json:"parentNames"`
+	WelcomeMessage        string       `json:"welcomeMessage"`
+	ThemeColor            string       `json:"themeColor"`
+	CoverImageUrl         string       `json:"coverImageUrl"`
+	ShippingRecipientName string       `json:"shippingRecipientName,omitempty"`
+	ShippingLine1         string       `json:"shippingLine1,omitempty"`
+	ShippingLine2         string       `json:"shippingLine2,omitempty"`
+	ShippingCity          string       `json:"shippingCity,omitempty"`
+	ShippingRegion        string       `json:"shippingRegion,omitempty"`
+	ShippingPostalCode    string       `json:"shippingPostalCode,omitempty"`
+	ShippingCountry       string       `json:"shippingCountry,omitempty"`
+	ShippingDeliveryNotes string       `json:"shippingDeliveryNotes,omitempty"`
+	Items                 []publicItem `json:"items"`
 }
 
 func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
@@ -111,6 +119,7 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Gate: buyer must have verified their email for this registry.
+	canViewShippingAddress := false
 	if h.resolveBuyer != nil {
 		buyerEmail, err := h.resolveBuyer(r, slug)
 		if err != nil {
@@ -135,14 +144,15 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusForbidden)
 			_ = json.NewEncoder(w).Encode(map[string]any{
-				"error":                "approved guest access required",
+				"error":                 "approved guest access required",
 				"approvedGuestRequired": true,
-				"title":                reg.Title,
-				"parentNames":          reg.ParentNames,
-				"themeColor":           reg.ThemeColor,
+				"title":                 reg.Title,
+				"parentNames":           reg.ParentNames,
+				"themeColor":            reg.ThemeColor,
 			})
 			return
 		}
+		canViewShippingAddress = guest.AccessLevel == enum_guest_access_level.ViewShippingAddress
 	}
 
 	itemsResult, _, err := h.client.RegistryItem().Search(r.Context(), super, registry_item.WhereClause{
@@ -185,15 +195,13 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 			PriceCents:  it.PriceCents,
 			Currency:    it.Currency,
 			Quantity:    it.Quantity,
-			OwnerPurchased: it.OwnerPurchased,
 			Notes:       it.Notes,
 			Position:    it.Position,
 			Reserved:    reservedByItem[it.Id],
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(publicRegistry{
+	resp := publicRegistry{
 		Id:             reg.Id,
 		Slug:           reg.Slug,
 		Title:          reg.Title,
@@ -202,7 +210,20 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 		ThemeColor:     reg.ThemeColor,
 		CoverImageUrl:  reg.CoverImageUrl,
 		Items:          publicItems,
-	})
+	}
+	if canViewShippingAddress {
+		resp.ShippingRecipientName = reg.ShippingRecipientName
+		resp.ShippingLine1 = reg.ShippingLine1
+		resp.ShippingLine2 = reg.ShippingLine2
+		resp.ShippingCity = reg.ShippingCity
+		resp.ShippingRegion = reg.ShippingRegion
+		resp.ShippingPostalCode = reg.ShippingPostalCode
+		resp.ShippingCountry = reg.ShippingCountry
+		resp.ShippingDeliveryNotes = reg.ShippingDeliveryNotes
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 type reserveBody struct {
@@ -246,10 +267,6 @@ func (h *Handler) handleItemRoute(w http.ResponseWriter, r *http.Request) {
 	item, _, err := h.client.RegistryItem().SelectById(r.Context(), super, registry_item.SelectByIdQuery{Id: itemId}, registryitemapi.NewProjection(true))
 	if err != nil {
 		http.Error(w, "item not found", http.StatusNotFound)
-		return
-	}
-	if item.OwnerPurchased {
-		http.Error(w, "item already purchased", http.StatusConflict)
 		return
 	}
 

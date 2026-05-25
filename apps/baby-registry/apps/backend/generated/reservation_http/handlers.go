@@ -260,6 +260,96 @@ type SaveRequest struct {
 	Data reservation.HTTPRecord `json:"data"`
 }
 
+func GetCreateHandler(props HandlerProps) (http.HandlerFunc, error) {
+	if err := props.Validate(); err != nil {
+		return nil, err
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			props.onError("Create", errors.New("method not allowed"))
+			log.Debug().Msg("method not allowed")
+			http.Error(w, "METHOD_NOT_ALLOWED", http.StatusMethodNotAllowed)
+			return
+		}
+
+		ctx := r.Context()
+
+		actor, err := props.ResolveActor(r)
+		if err != nil {
+			props.onError("Create", err)
+			log.Debug().Err(err).Msg("failed to resolve actor")
+			http.Error(w, coded_error.ResolveErrorCodeAsString(err), http.StatusUnauthorized)
+			return
+		}
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			props.onError("Create", err)
+			log.Debug().Err(err).Msg("failed to read request body")
+			http.Error(w, "INVALID_REQUEST", http.StatusBadRequest)
+			return
+		}
+
+		projection := reservation.NewProjection(true)
+		projection.Id = false
+
+		var createRequest SaveRequest
+		err = json.Unmarshal(body, &createRequest)
+		if err != nil {
+			props.onError("Create", err)
+			log.Debug().Err(err).Msg("failed to unmarshal request body")
+			http.Error(w, "INVALID_REQUEST", http.StatusBadRequest)
+			return
+		}
+
+		create, err := createRequest.Data.ToModel()
+		if err != nil {
+			props.onError("Create", err)
+			log.Debug().Err(err).Msg("failed to convert request body to model")
+			http.Error(w, coded_error.ResolveErrorCodeAsString(err), http.StatusBadRequest)
+			return
+		}
+
+		createResult, projectionResult, err := props.Api.Create(ctx, actor, create, projection)
+		if err != nil {
+			props.onError("Create", err)
+			log.Debug().Err(err).Msg("failed to execute create query")
+			http.Error(w, coded_error.ResolveErrorCodeAsString(err), coded_error.ResolveHTTPStatus(err))
+			return
+		}
+
+		response, err := reservation_api.ToHTTPMutationResult(createResult, projectionResult)
+		if err != nil {
+			props.onError("Create", err)
+			log.Debug().Err(err).Msg("failed to convert create result to HTTP response")
+			http.Error(w, coded_error.ResolveErrorCodeAsString(err), coded_error.ResolveHTTPStatus(err))
+			return
+		}
+
+		for i, metadataHook := range props.MetadataHooks {
+			if metadataHook.OnCreate != nil {
+				metadata, err := metadataHook.OnCreate(ctx, actor, response)
+				if err != nil {
+					props.onError("Create", err)
+					log.Debug().Err(err).Int("idx", i).Msg("failed to execute metadata hook")
+					http.Error(w, coded_error.ResolveErrorCodeAsString(err), coded_error.ResolveHTTPStatus(err))
+					return
+				}
+				response.Metadata = metadata
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		err = json.NewEncoder(w).Encode(response)
+		if err != nil {
+			props.onError("Create", err)
+			http.Error(w, coded_error.ResolveErrorCodeAsString(err), coded_error.ResolveHTTPStatus(err))
+			return
+		}
+	}, nil
+}
+
 func GetUpdateHandler(props HandlerProps) (http.HandlerFunc, error) {
 	if err := props.Validate(); err != nil {
 		return nil, err
