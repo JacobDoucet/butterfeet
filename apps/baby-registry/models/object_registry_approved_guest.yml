@@ -1,0 +1,59 @@
+objects:
+  - name: RegistryApprovedGuest
+    fields:
+      - name: ownerId
+        type: Ref<OwnerUser>
+        required: true
+      - name: registryId
+        type: Ref<Registry>
+        required: true
+      - name: emailHash
+        type: string
+        required: true
+      - name: emailEnc
+        type: string
+        required: true
+      - name: name
+        type: string
+      - name: accessLevel
+        type: GuestAccessLevel
+        required: true
+      - name: status
+        type: GuestStatus
+        required: true
+
+    collection:
+      - type: mongo
+        name: registry_approved_guests
+
+    indexes:
+      - name: registry_email_unique
+        unique: true
+        fields:
+          - name: registryId
+          - name: emailHash
+      - name: owner_idx
+        fields:
+          - name: ownerId
+
+    http:
+      endpoint: registry-approved-guests
+      methods:
+        - GET
+        - POST
+        - PATCH
+        - DELETE
+
+    abac:
+      - name: OwnerId
+        field: ownerId
+
+    permissions:
+      read:
+        - rbac: Owner
+          abac:
+            - OwnerId
+      write:
+        - rbac: Owner
+          abac:
+            - OwnerId

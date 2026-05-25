@@ -3,22 +3,28 @@ package registry_mongo
 import (
 	"context"
 	"errors"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type LookupOptions struct {
-	Projection              registry.Projection
-	Sort                    registry.MongoSortParams
-	RegistryItemsProjection *registry_item.Projection
-	ReservationsProjection  *reservation.Projection
-	OwnerProjection         *owner_user.Projection
-	Limit                   int
-	Skip                    int
+	Projection                        registry.Projection
+	Sort                              registry.MongoSortParams
+	AddressAccessSessionsProjection   *address_access_session.Projection
+	RegistryApprovedGuestsProjection  *registry_approved_guest.Projection
+	RegistryItemsProjection           *registry_item.Projection
+	ReservationsProjection            *reservation.Projection
+	ShippingAddressRequestsProjection *shipping_address_request.Projection
+	OwnerProjection                   *owner_user.Projection
+	Limit                             int
+	Skip                              int
 }
 
 func (lo *LookupOptions) limit() int {
@@ -29,10 +35,13 @@ func (lo *LookupOptions) limit() int {
 }
 
 type WhereClause struct {
-	Registry      registry.MongoWhereClause
-	RegistryItems registry_item.MongoWhereClause
-	Reservations  reservation.MongoWhereClause
-	Owner         owner_user.MongoWhereClause
+	Registry                registry.MongoWhereClause
+	AddressAccessSessions   address_access_session.MongoWhereClause
+	RegistryApprovedGuests  registry_approved_guest.MongoWhereClause
+	RegistryItems           registry_item.MongoWhereClause
+	Reservations            reservation.MongoWhereClause
+	ShippingAddressRequests shipping_address_request.MongoWhereClause
+	Owner                   owner_user.MongoWhereClause
 }
 
 func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo.Collection, lookupOptions LookupOptions) (QueryResult, error) {
@@ -68,10 +77,19 @@ func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo
 		lookupOptions.Projection.OwnerId = true
 	}
 
+	if lookupOptions.AddressAccessSessionsProjection != nil {
+		lookupOptions.Projection.Id = true
+	}
+	if lookupOptions.RegistryApprovedGuestsProjection != nil {
+		lookupOptions.Projection.Id = true
+	}
 	if lookupOptions.RegistryItemsProjection != nil {
 		lookupOptions.Projection.Id = true
 	}
 	if lookupOptions.ReservationsProjection != nil {
+		lookupOptions.Projection.Id = true
+	}
+	if lookupOptions.ShippingAddressRequestsProjection != nil {
 		lookupOptions.Projection.Id = true
 	}
 
@@ -132,6 +150,54 @@ func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo
 			}},
 		})
 	}
+	// Add $lookup stage for AddressAccessSessions
+	if lookupOptions.AddressAccessSessionsProjection != nil {
+		// whereAddressAccessSessions, err := where.AddressAccessSessions.GetLookupQuery()
+		// if err != nil {
+		//     return QueryResult{}, err
+		// }
+		objectProject := bson.E{Key: "$project", Value: lookupOptions.AddressAccessSessionsProjection.ToBson()}
+		objectPipeline := bson.D{objectProject}
+		// if len(whereAddressAccessSessions) > 0 {
+		//     objectPipeline = bson.D{
+		//         {Key: "$match", Value: whereAddressAccessSessions},
+		//         objectProject,
+		//     }
+		// }
+		dataPipeline = append(dataPipeline, bson.D{
+			{Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "address_access_sessions"},
+				{Key: "localField", Value: "_id"},
+				{Key: "foreignField", Value: "registryId"},
+				{Key: "as", Value: "AddressAccessSessions"},
+				{Key: "pipeline", Value: bson.A{objectPipeline}},
+			}},
+		})
+	}
+	// Add $lookup stage for RegistryApprovedGuests
+	if lookupOptions.RegistryApprovedGuestsProjection != nil {
+		// whereRegistryApprovedGuests, err := where.RegistryApprovedGuests.GetLookupQuery()
+		// if err != nil {
+		//     return QueryResult{}, err
+		// }
+		objectProject := bson.E{Key: "$project", Value: lookupOptions.RegistryApprovedGuestsProjection.ToBson()}
+		objectPipeline := bson.D{objectProject}
+		// if len(whereRegistryApprovedGuests) > 0 {
+		//     objectPipeline = bson.D{
+		//         {Key: "$match", Value: whereRegistryApprovedGuests},
+		//         objectProject,
+		//     }
+		// }
+		dataPipeline = append(dataPipeline, bson.D{
+			{Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "registry_approved_guests"},
+				{Key: "localField", Value: "_id"},
+				{Key: "foreignField", Value: "registryId"},
+				{Key: "as", Value: "RegistryApprovedGuests"},
+				{Key: "pipeline", Value: bson.A{objectPipeline}},
+			}},
+		})
+	}
 	// Add $lookup stage for RegistryItems
 	if lookupOptions.RegistryItemsProjection != nil {
 		// whereRegistryItems, err := where.RegistryItems.GetLookupQuery()
@@ -176,6 +242,30 @@ func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo
 				{Key: "localField", Value: "_id"},
 				{Key: "foreignField", Value: "registryId"},
 				{Key: "as", Value: "Reservations"},
+				{Key: "pipeline", Value: bson.A{objectPipeline}},
+			}},
+		})
+	}
+	// Add $lookup stage for ShippingAddressRequests
+	if lookupOptions.ShippingAddressRequestsProjection != nil {
+		// whereShippingAddressRequests, err := where.ShippingAddressRequests.GetLookupQuery()
+		// if err != nil {
+		//     return QueryResult{}, err
+		// }
+		objectProject := bson.E{Key: "$project", Value: lookupOptions.ShippingAddressRequestsProjection.ToBson()}
+		objectPipeline := bson.D{objectProject}
+		// if len(whereShippingAddressRequests) > 0 {
+		//     objectPipeline = bson.D{
+		//         {Key: "$match", Value: whereShippingAddressRequests},
+		//         objectProject,
+		//     }
+		// }
+		dataPipeline = append(dataPipeline, bson.D{
+			{Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "shipping_address_requests"},
+				{Key: "localField", Value: "_id"},
+				{Key: "foreignField", Value: "registryId"},
+				{Key: "as", Value: "ShippingAddressRequests"},
 				{Key: "pipeline", Value: bson.A{objectPipeline}},
 			}},
 		})

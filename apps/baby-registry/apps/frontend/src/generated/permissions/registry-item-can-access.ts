@@ -13,6 +13,7 @@ type canAccessRegistryItem<T = RegistryItem> = ActorCanAccessFunc<T> & {
         description: ActorCanAccessFunc<RegistryItem>;
         imageUrl: ActorCanAccessFunc<RegistryItem>;
         notes: ActorCanAccessFunc<RegistryItem>;
+        ownerPurchased: ActorCanAccessFunc<RegistryItem>;
         position: ActorCanAccessFunc<RegistryItem>;
         priceCents: ActorCanAccessFunc<RegistryItem>;
         productUrl: ActorCanAccessFunc<RegistryItem>;
@@ -66,6 +67,7 @@ export function NewCanReadRegistryItem<T = RegistryItem>(canAccessObj: ActorCanA
                 description: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 imageUrl: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 notes: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
+                ownerPurchased: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 position: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 priceCents: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 productUrl: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
@@ -93,6 +95,7 @@ export function NewCanWriteRegistryItem<T = RegistryItem>(canAccessObj: ActorCan
                 description: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 imageUrl: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 notes: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
+                ownerPurchased: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 position: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 priceCents: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 productUrl: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,

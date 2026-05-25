@@ -2,23 +2,34 @@ package registry
 
 import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/actor_trace"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_address_access_mode"
 	"time"
 )
 
 type HTTPRecord struct {
-	Id                 *string                 `json:"id,omitempty"`
-	CoverImageUrl      *string                 `json:"coverImageUrl,omitempty"`
-	Created            *actor_trace.HTTPRecord `json:"created,omitempty"`
-	DueDate            *time.Time              `json:"dueDate,omitempty"`
-	IsPublic           *bool                   `json:"isPublic,omitempty"`
-	OwnerId            *string                 `json:"ownerId,omitempty"`
-	ParentNames        *string                 `json:"parentNames,omitempty"`
-	Slug               *string                 `json:"slug,omitempty"`
-	ThemeColor         *string                 `json:"themeColor,omitempty"`
-	Title              *string                 `json:"title,omitempty"`
-	Updated            *actor_trace.HTTPRecord `json:"updated,omitempty"`
-	UpdatedByOwnerUser *actor_trace.HTTPRecord `json:"updatedByOwnerUser,omitempty"`
-	WelcomeMessage     *string                 `json:"welcomeMessage,omitempty"`
+	Id                    *string                         `json:"id,omitempty"`
+	AddressAccessMode     *enum_address_access_mode.Value `json:"addressAccessMode,omitempty"`
+	CoverImageUrl         *string                         `json:"coverImageUrl,omitempty"`
+	Created               *actor_trace.HTTPRecord         `json:"created,omitempty"`
+	DueDate               *time.Time                      `json:"dueDate,omitempty"`
+	IsPublic              *bool                           `json:"isPublic,omitempty"`
+	OwnerId               *string                         `json:"ownerId,omitempty"`
+	ParentNames           *string                         `json:"parentNames,omitempty"`
+	ShippingCity          *string                         `json:"shippingCity,omitempty"`
+	ShippingCountry       *string                         `json:"shippingCountry,omitempty"`
+	ShippingDeliveryNotes *string                         `json:"shippingDeliveryNotes,omitempty"`
+	ShippingLine1         *string                         `json:"shippingLine1,omitempty"`
+	ShippingLine2         *string                         `json:"shippingLine2,omitempty"`
+	ShippingPolicyVersion *int                            `json:"shippingPolicyVersion,omitempty"`
+	ShippingPostalCode    *string                         `json:"shippingPostalCode,omitempty"`
+	ShippingRecipientName *string                         `json:"shippingRecipientName,omitempty"`
+	ShippingRegion        *string                         `json:"shippingRegion,omitempty"`
+	Slug                  *string                         `json:"slug,omitempty"`
+	ThemeColor            *string                         `json:"themeColor,omitempty"`
+	Title                 *string                         `json:"title,omitempty"`
+	Updated               *actor_trace.HTTPRecord         `json:"updated,omitempty"`
+	UpdatedByOwnerUser    *actor_trace.HTTPRecord         `json:"updatedByOwnerUser,omitempty"`
+	WelcomeMessage        *string                         `json:"welcomeMessage,omitempty"`
 }
 
 func (r *HTTPRecord) ToModel() (Model, error) {
@@ -26,6 +37,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 	if r.Id != nil {
 		elemid0 := r.Id
 		m.Id = *elemid0
+	}
+	if r.AddressAccessMode != nil {
+		elemaddressAccessMode0 := r.AddressAccessMode
+		m.AddressAccessMode = *elemaddressAccessMode0
 	}
 	if r.CoverImageUrl != nil {
 		elemcoverImageUrl0 := r.CoverImageUrl
@@ -53,6 +68,42 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 	if r.ParentNames != nil {
 		elemparentNames0 := r.ParentNames
 		m.ParentNames = *elemparentNames0
+	}
+	if r.ShippingCity != nil {
+		elemshippingCity0 := r.ShippingCity
+		m.ShippingCity = *elemshippingCity0
+	}
+	if r.ShippingCountry != nil {
+		elemshippingCountry0 := r.ShippingCountry
+		m.ShippingCountry = *elemshippingCountry0
+	}
+	if r.ShippingDeliveryNotes != nil {
+		elemshippingDeliveryNotes0 := r.ShippingDeliveryNotes
+		m.ShippingDeliveryNotes = *elemshippingDeliveryNotes0
+	}
+	if r.ShippingLine1 != nil {
+		elemshippingLine10 := r.ShippingLine1
+		m.ShippingLine1 = *elemshippingLine10
+	}
+	if r.ShippingLine2 != nil {
+		elemshippingLine20 := r.ShippingLine2
+		m.ShippingLine2 = *elemshippingLine20
+	}
+	if r.ShippingPolicyVersion != nil {
+		elemshippingPolicyVersion0 := r.ShippingPolicyVersion
+		m.ShippingPolicyVersion = *elemshippingPolicyVersion0
+	}
+	if r.ShippingPostalCode != nil {
+		elemshippingPostalCode0 := r.ShippingPostalCode
+		m.ShippingPostalCode = *elemshippingPostalCode0
+	}
+	if r.ShippingRecipientName != nil {
+		elemshippingRecipientName0 := r.ShippingRecipientName
+		m.ShippingRecipientName = *elemshippingRecipientName0
+	}
+	if r.ShippingRegion != nil {
+		elemshippingRegion0 := r.ShippingRegion
+		m.ShippingRegion = *elemshippingRegion0
 	}
 	if r.Slug != nil {
 		elemslug0 := r.Slug
@@ -92,6 +143,9 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	if r.Id != nil {
 		p.Id = true
 	}
+	if r.AddressAccessMode != nil {
+		p.AddressAccessMode = true
+	}
 	if r.CoverImageUrl != nil {
 		p.CoverImageUrl = true
 	}
@@ -110,6 +164,33 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	}
 	if r.ParentNames != nil {
 		p.ParentNames = true
+	}
+	if r.ShippingCity != nil {
+		p.ShippingCity = true
+	}
+	if r.ShippingCountry != nil {
+		p.ShippingCountry = true
+	}
+	if r.ShippingDeliveryNotes != nil {
+		p.ShippingDeliveryNotes = true
+	}
+	if r.ShippingLine1 != nil {
+		p.ShippingLine1 = true
+	}
+	if r.ShippingLine2 != nil {
+		p.ShippingLine2 = true
+	}
+	if r.ShippingPolicyVersion != nil {
+		p.ShippingPolicyVersion = true
+	}
+	if r.ShippingPostalCode != nil {
+		p.ShippingPostalCode = true
+	}
+	if r.ShippingRecipientName != nil {
+		p.ShippingRecipientName = true
+	}
+	if r.ShippingRegion != nil {
+		p.ShippingRegion = true
 	}
 	if r.Slug != nil {
 		p.Slug = true
@@ -147,6 +228,16 @@ type HTTPWhereClause struct {
 	IdIn     *[]string `json:"idIn,omitempty"`
 	IdNin    *[]string `json:"idNin,omitempty"`
 	IdExists *bool     `json:"idExists,omitempty"`
+	// addressAccessMode (AddressAccessMode) search options
+	AddressAccessModeEq     *enum_address_access_mode.Value   `json:"addressAccessModeEq,omitempty"`
+	AddressAccessModeNe     *enum_address_access_mode.Value   `json:"addressAccessModeNe,omitempty"`
+	AddressAccessModeGt     *enum_address_access_mode.Value   `json:"addressAccessModeGt,omitempty"`
+	AddressAccessModeGte    *enum_address_access_mode.Value   `json:"addressAccessModeGte,omitempty"`
+	AddressAccessModeLt     *enum_address_access_mode.Value   `json:"addressAccessModeLt,omitempty"`
+	AddressAccessModeLte    *enum_address_access_mode.Value   `json:"addressAccessModeLte,omitempty"`
+	AddressAccessModeIn     *[]enum_address_access_mode.Value `json:"addressAccessModeIn,omitempty"`
+	AddressAccessModeNin    *[]enum_address_access_mode.Value `json:"addressAccessModeNin,omitempty"`
+	AddressAccessModeExists *bool                             `json:"addressAccessModeExists,omitempty"`
 	// coverImageUrl (string) search options
 	CoverImageUrlEq     *string   `json:"coverImageUrlEq,omitempty"`
 	CoverImageUrlNe     *string   `json:"coverImageUrlNe,omitempty"`
@@ -198,6 +289,112 @@ type HTTPWhereClause struct {
 	ParentNamesExists *bool     `json:"parentNamesExists,omitempty"`
 	ParentNamesLike   *string   `json:"parentNamesLike,omitempty"`
 	ParentNamesNlike  *string   `json:"parentNamesNlike,omitempty"`
+	// shippingCity (string) search options
+	ShippingCityEq     *string   `json:"shippingCityEq,omitempty"`
+	ShippingCityNe     *string   `json:"shippingCityNe,omitempty"`
+	ShippingCityGt     *string   `json:"shippingCityGt,omitempty"`
+	ShippingCityGte    *string   `json:"shippingCityGte,omitempty"`
+	ShippingCityLt     *string   `json:"shippingCityLt,omitempty"`
+	ShippingCityLte    *string   `json:"shippingCityLte,omitempty"`
+	ShippingCityIn     *[]string `json:"shippingCityIn,omitempty"`
+	ShippingCityNin    *[]string `json:"shippingCityNin,omitempty"`
+	ShippingCityExists *bool     `json:"shippingCityExists,omitempty"`
+	ShippingCityLike   *string   `json:"shippingCityLike,omitempty"`
+	ShippingCityNlike  *string   `json:"shippingCityNlike,omitempty"`
+	// shippingCountry (string) search options
+	ShippingCountryEq     *string   `json:"shippingCountryEq,omitempty"`
+	ShippingCountryNe     *string   `json:"shippingCountryNe,omitempty"`
+	ShippingCountryGt     *string   `json:"shippingCountryGt,omitempty"`
+	ShippingCountryGte    *string   `json:"shippingCountryGte,omitempty"`
+	ShippingCountryLt     *string   `json:"shippingCountryLt,omitempty"`
+	ShippingCountryLte    *string   `json:"shippingCountryLte,omitempty"`
+	ShippingCountryIn     *[]string `json:"shippingCountryIn,omitempty"`
+	ShippingCountryNin    *[]string `json:"shippingCountryNin,omitempty"`
+	ShippingCountryExists *bool     `json:"shippingCountryExists,omitempty"`
+	ShippingCountryLike   *string   `json:"shippingCountryLike,omitempty"`
+	ShippingCountryNlike  *string   `json:"shippingCountryNlike,omitempty"`
+	// shippingDeliveryNotes (string) search options
+	ShippingDeliveryNotesEq     *string   `json:"shippingDeliveryNotesEq,omitempty"`
+	ShippingDeliveryNotesNe     *string   `json:"shippingDeliveryNotesNe,omitempty"`
+	ShippingDeliveryNotesGt     *string   `json:"shippingDeliveryNotesGt,omitempty"`
+	ShippingDeliveryNotesGte    *string   `json:"shippingDeliveryNotesGte,omitempty"`
+	ShippingDeliveryNotesLt     *string   `json:"shippingDeliveryNotesLt,omitempty"`
+	ShippingDeliveryNotesLte    *string   `json:"shippingDeliveryNotesLte,omitempty"`
+	ShippingDeliveryNotesIn     *[]string `json:"shippingDeliveryNotesIn,omitempty"`
+	ShippingDeliveryNotesNin    *[]string `json:"shippingDeliveryNotesNin,omitempty"`
+	ShippingDeliveryNotesExists *bool     `json:"shippingDeliveryNotesExists,omitempty"`
+	ShippingDeliveryNotesLike   *string   `json:"shippingDeliveryNotesLike,omitempty"`
+	ShippingDeliveryNotesNlike  *string   `json:"shippingDeliveryNotesNlike,omitempty"`
+	// shippingLine1 (string) search options
+	ShippingLine1Eq     *string   `json:"shippingLine1Eq,omitempty"`
+	ShippingLine1Ne     *string   `json:"shippingLine1Ne,omitempty"`
+	ShippingLine1Gt     *string   `json:"shippingLine1Gt,omitempty"`
+	ShippingLine1Gte    *string   `json:"shippingLine1Gte,omitempty"`
+	ShippingLine1Lt     *string   `json:"shippingLine1Lt,omitempty"`
+	ShippingLine1Lte    *string   `json:"shippingLine1Lte,omitempty"`
+	ShippingLine1In     *[]string `json:"shippingLine1In,omitempty"`
+	ShippingLine1Nin    *[]string `json:"shippingLine1Nin,omitempty"`
+	ShippingLine1Exists *bool     `json:"shippingLine1Exists,omitempty"`
+	ShippingLine1Like   *string   `json:"shippingLine1Like,omitempty"`
+	ShippingLine1Nlike  *string   `json:"shippingLine1Nlike,omitempty"`
+	// shippingLine2 (string) search options
+	ShippingLine2Eq     *string   `json:"shippingLine2Eq,omitempty"`
+	ShippingLine2Ne     *string   `json:"shippingLine2Ne,omitempty"`
+	ShippingLine2Gt     *string   `json:"shippingLine2Gt,omitempty"`
+	ShippingLine2Gte    *string   `json:"shippingLine2Gte,omitempty"`
+	ShippingLine2Lt     *string   `json:"shippingLine2Lt,omitempty"`
+	ShippingLine2Lte    *string   `json:"shippingLine2Lte,omitempty"`
+	ShippingLine2In     *[]string `json:"shippingLine2In,omitempty"`
+	ShippingLine2Nin    *[]string `json:"shippingLine2Nin,omitempty"`
+	ShippingLine2Exists *bool     `json:"shippingLine2Exists,omitempty"`
+	ShippingLine2Like   *string   `json:"shippingLine2Like,omitempty"`
+	ShippingLine2Nlike  *string   `json:"shippingLine2Nlike,omitempty"`
+	// shippingPolicyVersion (int) search options
+	ShippingPolicyVersionEq     *int   `json:"shippingPolicyVersionEq,omitempty"`
+	ShippingPolicyVersionNe     *int   `json:"shippingPolicyVersionNe,omitempty"`
+	ShippingPolicyVersionGt     *int   `json:"shippingPolicyVersionGt,omitempty"`
+	ShippingPolicyVersionGte    *int   `json:"shippingPolicyVersionGte,omitempty"`
+	ShippingPolicyVersionLt     *int   `json:"shippingPolicyVersionLt,omitempty"`
+	ShippingPolicyVersionLte    *int   `json:"shippingPolicyVersionLte,omitempty"`
+	ShippingPolicyVersionIn     *[]int `json:"shippingPolicyVersionIn,omitempty"`
+	ShippingPolicyVersionNin    *[]int `json:"shippingPolicyVersionNin,omitempty"`
+	ShippingPolicyVersionExists *bool  `json:"shippingPolicyVersionExists,omitempty"`
+	// shippingPostalCode (string) search options
+	ShippingPostalCodeEq     *string   `json:"shippingPostalCodeEq,omitempty"`
+	ShippingPostalCodeNe     *string   `json:"shippingPostalCodeNe,omitempty"`
+	ShippingPostalCodeGt     *string   `json:"shippingPostalCodeGt,omitempty"`
+	ShippingPostalCodeGte    *string   `json:"shippingPostalCodeGte,omitempty"`
+	ShippingPostalCodeLt     *string   `json:"shippingPostalCodeLt,omitempty"`
+	ShippingPostalCodeLte    *string   `json:"shippingPostalCodeLte,omitempty"`
+	ShippingPostalCodeIn     *[]string `json:"shippingPostalCodeIn,omitempty"`
+	ShippingPostalCodeNin    *[]string `json:"shippingPostalCodeNin,omitempty"`
+	ShippingPostalCodeExists *bool     `json:"shippingPostalCodeExists,omitempty"`
+	ShippingPostalCodeLike   *string   `json:"shippingPostalCodeLike,omitempty"`
+	ShippingPostalCodeNlike  *string   `json:"shippingPostalCodeNlike,omitempty"`
+	// shippingRecipientName (string) search options
+	ShippingRecipientNameEq     *string   `json:"shippingRecipientNameEq,omitempty"`
+	ShippingRecipientNameNe     *string   `json:"shippingRecipientNameNe,omitempty"`
+	ShippingRecipientNameGt     *string   `json:"shippingRecipientNameGt,omitempty"`
+	ShippingRecipientNameGte    *string   `json:"shippingRecipientNameGte,omitempty"`
+	ShippingRecipientNameLt     *string   `json:"shippingRecipientNameLt,omitempty"`
+	ShippingRecipientNameLte    *string   `json:"shippingRecipientNameLte,omitempty"`
+	ShippingRecipientNameIn     *[]string `json:"shippingRecipientNameIn,omitempty"`
+	ShippingRecipientNameNin    *[]string `json:"shippingRecipientNameNin,omitempty"`
+	ShippingRecipientNameExists *bool     `json:"shippingRecipientNameExists,omitempty"`
+	ShippingRecipientNameLike   *string   `json:"shippingRecipientNameLike,omitempty"`
+	ShippingRecipientNameNlike  *string   `json:"shippingRecipientNameNlike,omitempty"`
+	// shippingRegion (string) search options
+	ShippingRegionEq     *string   `json:"shippingRegionEq,omitempty"`
+	ShippingRegionNe     *string   `json:"shippingRegionNe,omitempty"`
+	ShippingRegionGt     *string   `json:"shippingRegionGt,omitempty"`
+	ShippingRegionGte    *string   `json:"shippingRegionGte,omitempty"`
+	ShippingRegionLt     *string   `json:"shippingRegionLt,omitempty"`
+	ShippingRegionLte    *string   `json:"shippingRegionLte,omitempty"`
+	ShippingRegionIn     *[]string `json:"shippingRegionIn,omitempty"`
+	ShippingRegionNin    *[]string `json:"shippingRegionNin,omitempty"`
+	ShippingRegionExists *bool     `json:"shippingRegionExists,omitempty"`
+	ShippingRegionLike   *string   `json:"shippingRegionLike,omitempty"`
+	ShippingRegionNlike  *string   `json:"shippingRegionNlike,omitempty"`
 	// slug (string) search options
 	SlugEq     *string   `json:"slugEq,omitempty"`
 	SlugNe     *string   `json:"slugNe,omitempty"`
@@ -290,6 +487,50 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 	if o.IdExists != nil {
 		elemidExists0 := o.IdExists
 		to.IdExists = elemidExists0
+	}
+	if o.AddressAccessModeEq != nil {
+		elemaddressAccessModeEq0 := o.AddressAccessModeEq
+		to.AddressAccessModeEq = elemaddressAccessModeEq0
+	}
+	if o.AddressAccessModeNe != nil {
+		elemaddressAccessModeNe0 := o.AddressAccessModeNe
+		to.AddressAccessModeNe = elemaddressAccessModeNe0
+	}
+	if o.AddressAccessModeGt != nil {
+		elemaddressAccessModeGt0 := o.AddressAccessModeGt
+		to.AddressAccessModeGt = elemaddressAccessModeGt0
+	}
+	if o.AddressAccessModeGte != nil {
+		elemaddressAccessModeGte0 := o.AddressAccessModeGte
+		to.AddressAccessModeGte = elemaddressAccessModeGte0
+	}
+	if o.AddressAccessModeLt != nil {
+		elemaddressAccessModeLt0 := o.AddressAccessModeLt
+		to.AddressAccessModeLt = elemaddressAccessModeLt0
+	}
+	if o.AddressAccessModeLte != nil {
+		elemaddressAccessModeLte0 := o.AddressAccessModeLte
+		to.AddressAccessModeLte = elemaddressAccessModeLte0
+	}
+	if o.AddressAccessModeIn != nil {
+		elemaddressAccessModeIn0 := make([]enum_address_access_mode.Value, 0)
+		for _, oaddressAccessModeIn0 := range *o.AddressAccessModeIn {
+			elemaddressAccessModeIn1 := oaddressAccessModeIn0
+			elemaddressAccessModeIn0 = append(elemaddressAccessModeIn0, elemaddressAccessModeIn1)
+		}
+		to.AddressAccessModeIn = &elemaddressAccessModeIn0
+	}
+	if o.AddressAccessModeNin != nil {
+		elemaddressAccessModeNin0 := make([]enum_address_access_mode.Value, 0)
+		for _, oaddressAccessModeNin0 := range *o.AddressAccessModeNin {
+			elemaddressAccessModeNin1 := oaddressAccessModeNin0
+			elemaddressAccessModeNin0 = append(elemaddressAccessModeNin0, elemaddressAccessModeNin1)
+		}
+		to.AddressAccessModeNin = &elemaddressAccessModeNin0
+	}
+	if o.AddressAccessModeExists != nil {
+		elemaddressAccessModeExists0 := o.AddressAccessModeExists
+		to.AddressAccessModeExists = elemaddressAccessModeExists0
 	}
 	if o.CoverImageUrlEq != nil {
 		elemcoverImageUrlEq0 := o.CoverImageUrlEq
@@ -513,6 +754,466 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 	if o.ParentNamesNlike != nil {
 		elemparentNamesNlike0 := o.ParentNamesNlike
 		to.ParentNamesNlike = elemparentNamesNlike0
+	}
+	if o.ShippingCityEq != nil {
+		elemshippingCityEq0 := o.ShippingCityEq
+		to.ShippingCityEq = elemshippingCityEq0
+	}
+	if o.ShippingCityNe != nil {
+		elemshippingCityNe0 := o.ShippingCityNe
+		to.ShippingCityNe = elemshippingCityNe0
+	}
+	if o.ShippingCityGt != nil {
+		elemshippingCityGt0 := o.ShippingCityGt
+		to.ShippingCityGt = elemshippingCityGt0
+	}
+	if o.ShippingCityGte != nil {
+		elemshippingCityGte0 := o.ShippingCityGte
+		to.ShippingCityGte = elemshippingCityGte0
+	}
+	if o.ShippingCityLt != nil {
+		elemshippingCityLt0 := o.ShippingCityLt
+		to.ShippingCityLt = elemshippingCityLt0
+	}
+	if o.ShippingCityLte != nil {
+		elemshippingCityLte0 := o.ShippingCityLte
+		to.ShippingCityLte = elemshippingCityLte0
+	}
+	if o.ShippingCityIn != nil {
+		elemshippingCityIn0 := make([]string, 0)
+		for _, oshippingCityIn0 := range *o.ShippingCityIn {
+			elemshippingCityIn1 := oshippingCityIn0
+			elemshippingCityIn0 = append(elemshippingCityIn0, elemshippingCityIn1)
+		}
+		to.ShippingCityIn = &elemshippingCityIn0
+	}
+	if o.ShippingCityNin != nil {
+		elemshippingCityNin0 := make([]string, 0)
+		for _, oshippingCityNin0 := range *o.ShippingCityNin {
+			elemshippingCityNin1 := oshippingCityNin0
+			elemshippingCityNin0 = append(elemshippingCityNin0, elemshippingCityNin1)
+		}
+		to.ShippingCityNin = &elemshippingCityNin0
+	}
+	if o.ShippingCityExists != nil {
+		elemshippingCityExists0 := o.ShippingCityExists
+		to.ShippingCityExists = elemshippingCityExists0
+	}
+	if o.ShippingCityLike != nil {
+		elemshippingCityLike0 := o.ShippingCityLike
+		to.ShippingCityLike = elemshippingCityLike0
+	}
+	if o.ShippingCityNlike != nil {
+		elemshippingCityNlike0 := o.ShippingCityNlike
+		to.ShippingCityNlike = elemshippingCityNlike0
+	}
+	if o.ShippingCountryEq != nil {
+		elemshippingCountryEq0 := o.ShippingCountryEq
+		to.ShippingCountryEq = elemshippingCountryEq0
+	}
+	if o.ShippingCountryNe != nil {
+		elemshippingCountryNe0 := o.ShippingCountryNe
+		to.ShippingCountryNe = elemshippingCountryNe0
+	}
+	if o.ShippingCountryGt != nil {
+		elemshippingCountryGt0 := o.ShippingCountryGt
+		to.ShippingCountryGt = elemshippingCountryGt0
+	}
+	if o.ShippingCountryGte != nil {
+		elemshippingCountryGte0 := o.ShippingCountryGte
+		to.ShippingCountryGte = elemshippingCountryGte0
+	}
+	if o.ShippingCountryLt != nil {
+		elemshippingCountryLt0 := o.ShippingCountryLt
+		to.ShippingCountryLt = elemshippingCountryLt0
+	}
+	if o.ShippingCountryLte != nil {
+		elemshippingCountryLte0 := o.ShippingCountryLte
+		to.ShippingCountryLte = elemshippingCountryLte0
+	}
+	if o.ShippingCountryIn != nil {
+		elemshippingCountryIn0 := make([]string, 0)
+		for _, oshippingCountryIn0 := range *o.ShippingCountryIn {
+			elemshippingCountryIn1 := oshippingCountryIn0
+			elemshippingCountryIn0 = append(elemshippingCountryIn0, elemshippingCountryIn1)
+		}
+		to.ShippingCountryIn = &elemshippingCountryIn0
+	}
+	if o.ShippingCountryNin != nil {
+		elemshippingCountryNin0 := make([]string, 0)
+		for _, oshippingCountryNin0 := range *o.ShippingCountryNin {
+			elemshippingCountryNin1 := oshippingCountryNin0
+			elemshippingCountryNin0 = append(elemshippingCountryNin0, elemshippingCountryNin1)
+		}
+		to.ShippingCountryNin = &elemshippingCountryNin0
+	}
+	if o.ShippingCountryExists != nil {
+		elemshippingCountryExists0 := o.ShippingCountryExists
+		to.ShippingCountryExists = elemshippingCountryExists0
+	}
+	if o.ShippingCountryLike != nil {
+		elemshippingCountryLike0 := o.ShippingCountryLike
+		to.ShippingCountryLike = elemshippingCountryLike0
+	}
+	if o.ShippingCountryNlike != nil {
+		elemshippingCountryNlike0 := o.ShippingCountryNlike
+		to.ShippingCountryNlike = elemshippingCountryNlike0
+	}
+	if o.ShippingDeliveryNotesEq != nil {
+		elemshippingDeliveryNotesEq0 := o.ShippingDeliveryNotesEq
+		to.ShippingDeliveryNotesEq = elemshippingDeliveryNotesEq0
+	}
+	if o.ShippingDeliveryNotesNe != nil {
+		elemshippingDeliveryNotesNe0 := o.ShippingDeliveryNotesNe
+		to.ShippingDeliveryNotesNe = elemshippingDeliveryNotesNe0
+	}
+	if o.ShippingDeliveryNotesGt != nil {
+		elemshippingDeliveryNotesGt0 := o.ShippingDeliveryNotesGt
+		to.ShippingDeliveryNotesGt = elemshippingDeliveryNotesGt0
+	}
+	if o.ShippingDeliveryNotesGte != nil {
+		elemshippingDeliveryNotesGte0 := o.ShippingDeliveryNotesGte
+		to.ShippingDeliveryNotesGte = elemshippingDeliveryNotesGte0
+	}
+	if o.ShippingDeliveryNotesLt != nil {
+		elemshippingDeliveryNotesLt0 := o.ShippingDeliveryNotesLt
+		to.ShippingDeliveryNotesLt = elemshippingDeliveryNotesLt0
+	}
+	if o.ShippingDeliveryNotesLte != nil {
+		elemshippingDeliveryNotesLte0 := o.ShippingDeliveryNotesLte
+		to.ShippingDeliveryNotesLte = elemshippingDeliveryNotesLte0
+	}
+	if o.ShippingDeliveryNotesIn != nil {
+		elemshippingDeliveryNotesIn0 := make([]string, 0)
+		for _, oshippingDeliveryNotesIn0 := range *o.ShippingDeliveryNotesIn {
+			elemshippingDeliveryNotesIn1 := oshippingDeliveryNotesIn0
+			elemshippingDeliveryNotesIn0 = append(elemshippingDeliveryNotesIn0, elemshippingDeliveryNotesIn1)
+		}
+		to.ShippingDeliveryNotesIn = &elemshippingDeliveryNotesIn0
+	}
+	if o.ShippingDeliveryNotesNin != nil {
+		elemshippingDeliveryNotesNin0 := make([]string, 0)
+		for _, oshippingDeliveryNotesNin0 := range *o.ShippingDeliveryNotesNin {
+			elemshippingDeliveryNotesNin1 := oshippingDeliveryNotesNin0
+			elemshippingDeliveryNotesNin0 = append(elemshippingDeliveryNotesNin0, elemshippingDeliveryNotesNin1)
+		}
+		to.ShippingDeliveryNotesNin = &elemshippingDeliveryNotesNin0
+	}
+	if o.ShippingDeliveryNotesExists != nil {
+		elemshippingDeliveryNotesExists0 := o.ShippingDeliveryNotesExists
+		to.ShippingDeliveryNotesExists = elemshippingDeliveryNotesExists0
+	}
+	if o.ShippingDeliveryNotesLike != nil {
+		elemshippingDeliveryNotesLike0 := o.ShippingDeliveryNotesLike
+		to.ShippingDeliveryNotesLike = elemshippingDeliveryNotesLike0
+	}
+	if o.ShippingDeliveryNotesNlike != nil {
+		elemshippingDeliveryNotesNlike0 := o.ShippingDeliveryNotesNlike
+		to.ShippingDeliveryNotesNlike = elemshippingDeliveryNotesNlike0
+	}
+	if o.ShippingLine1Eq != nil {
+		elemshippingLine1Eq0 := o.ShippingLine1Eq
+		to.ShippingLine1Eq = elemshippingLine1Eq0
+	}
+	if o.ShippingLine1Ne != nil {
+		elemshippingLine1Ne0 := o.ShippingLine1Ne
+		to.ShippingLine1Ne = elemshippingLine1Ne0
+	}
+	if o.ShippingLine1Gt != nil {
+		elemshippingLine1Gt0 := o.ShippingLine1Gt
+		to.ShippingLine1Gt = elemshippingLine1Gt0
+	}
+	if o.ShippingLine1Gte != nil {
+		elemshippingLine1Gte0 := o.ShippingLine1Gte
+		to.ShippingLine1Gte = elemshippingLine1Gte0
+	}
+	if o.ShippingLine1Lt != nil {
+		elemshippingLine1Lt0 := o.ShippingLine1Lt
+		to.ShippingLine1Lt = elemshippingLine1Lt0
+	}
+	if o.ShippingLine1Lte != nil {
+		elemshippingLine1Lte0 := o.ShippingLine1Lte
+		to.ShippingLine1Lte = elemshippingLine1Lte0
+	}
+	if o.ShippingLine1In != nil {
+		elemshippingLine1In0 := make([]string, 0)
+		for _, oshippingLine1In0 := range *o.ShippingLine1In {
+			elemshippingLine1In1 := oshippingLine1In0
+			elemshippingLine1In0 = append(elemshippingLine1In0, elemshippingLine1In1)
+		}
+		to.ShippingLine1In = &elemshippingLine1In0
+	}
+	if o.ShippingLine1Nin != nil {
+		elemshippingLine1Nin0 := make([]string, 0)
+		for _, oshippingLine1Nin0 := range *o.ShippingLine1Nin {
+			elemshippingLine1Nin1 := oshippingLine1Nin0
+			elemshippingLine1Nin0 = append(elemshippingLine1Nin0, elemshippingLine1Nin1)
+		}
+		to.ShippingLine1Nin = &elemshippingLine1Nin0
+	}
+	if o.ShippingLine1Exists != nil {
+		elemshippingLine1Exists0 := o.ShippingLine1Exists
+		to.ShippingLine1Exists = elemshippingLine1Exists0
+	}
+	if o.ShippingLine1Like != nil {
+		elemshippingLine1Like0 := o.ShippingLine1Like
+		to.ShippingLine1Like = elemshippingLine1Like0
+	}
+	if o.ShippingLine1Nlike != nil {
+		elemshippingLine1Nlike0 := o.ShippingLine1Nlike
+		to.ShippingLine1Nlike = elemshippingLine1Nlike0
+	}
+	if o.ShippingLine2Eq != nil {
+		elemshippingLine2Eq0 := o.ShippingLine2Eq
+		to.ShippingLine2Eq = elemshippingLine2Eq0
+	}
+	if o.ShippingLine2Ne != nil {
+		elemshippingLine2Ne0 := o.ShippingLine2Ne
+		to.ShippingLine2Ne = elemshippingLine2Ne0
+	}
+	if o.ShippingLine2Gt != nil {
+		elemshippingLine2Gt0 := o.ShippingLine2Gt
+		to.ShippingLine2Gt = elemshippingLine2Gt0
+	}
+	if o.ShippingLine2Gte != nil {
+		elemshippingLine2Gte0 := o.ShippingLine2Gte
+		to.ShippingLine2Gte = elemshippingLine2Gte0
+	}
+	if o.ShippingLine2Lt != nil {
+		elemshippingLine2Lt0 := o.ShippingLine2Lt
+		to.ShippingLine2Lt = elemshippingLine2Lt0
+	}
+	if o.ShippingLine2Lte != nil {
+		elemshippingLine2Lte0 := o.ShippingLine2Lte
+		to.ShippingLine2Lte = elemshippingLine2Lte0
+	}
+	if o.ShippingLine2In != nil {
+		elemshippingLine2In0 := make([]string, 0)
+		for _, oshippingLine2In0 := range *o.ShippingLine2In {
+			elemshippingLine2In1 := oshippingLine2In0
+			elemshippingLine2In0 = append(elemshippingLine2In0, elemshippingLine2In1)
+		}
+		to.ShippingLine2In = &elemshippingLine2In0
+	}
+	if o.ShippingLine2Nin != nil {
+		elemshippingLine2Nin0 := make([]string, 0)
+		for _, oshippingLine2Nin0 := range *o.ShippingLine2Nin {
+			elemshippingLine2Nin1 := oshippingLine2Nin0
+			elemshippingLine2Nin0 = append(elemshippingLine2Nin0, elemshippingLine2Nin1)
+		}
+		to.ShippingLine2Nin = &elemshippingLine2Nin0
+	}
+	if o.ShippingLine2Exists != nil {
+		elemshippingLine2Exists0 := o.ShippingLine2Exists
+		to.ShippingLine2Exists = elemshippingLine2Exists0
+	}
+	if o.ShippingLine2Like != nil {
+		elemshippingLine2Like0 := o.ShippingLine2Like
+		to.ShippingLine2Like = elemshippingLine2Like0
+	}
+	if o.ShippingLine2Nlike != nil {
+		elemshippingLine2Nlike0 := o.ShippingLine2Nlike
+		to.ShippingLine2Nlike = elemshippingLine2Nlike0
+	}
+	if o.ShippingPolicyVersionEq != nil {
+		elemshippingPolicyVersionEq0 := o.ShippingPolicyVersionEq
+		to.ShippingPolicyVersionEq = elemshippingPolicyVersionEq0
+	}
+	if o.ShippingPolicyVersionNe != nil {
+		elemshippingPolicyVersionNe0 := o.ShippingPolicyVersionNe
+		to.ShippingPolicyVersionNe = elemshippingPolicyVersionNe0
+	}
+	if o.ShippingPolicyVersionGt != nil {
+		elemshippingPolicyVersionGt0 := o.ShippingPolicyVersionGt
+		to.ShippingPolicyVersionGt = elemshippingPolicyVersionGt0
+	}
+	if o.ShippingPolicyVersionGte != nil {
+		elemshippingPolicyVersionGte0 := o.ShippingPolicyVersionGte
+		to.ShippingPolicyVersionGte = elemshippingPolicyVersionGte0
+	}
+	if o.ShippingPolicyVersionLt != nil {
+		elemshippingPolicyVersionLt0 := o.ShippingPolicyVersionLt
+		to.ShippingPolicyVersionLt = elemshippingPolicyVersionLt0
+	}
+	if o.ShippingPolicyVersionLte != nil {
+		elemshippingPolicyVersionLte0 := o.ShippingPolicyVersionLte
+		to.ShippingPolicyVersionLte = elemshippingPolicyVersionLte0
+	}
+	if o.ShippingPolicyVersionIn != nil {
+		elemshippingPolicyVersionIn0 := make([]int, 0)
+		for _, oshippingPolicyVersionIn0 := range *o.ShippingPolicyVersionIn {
+			elemshippingPolicyVersionIn1 := oshippingPolicyVersionIn0
+			elemshippingPolicyVersionIn0 = append(elemshippingPolicyVersionIn0, elemshippingPolicyVersionIn1)
+		}
+		to.ShippingPolicyVersionIn = &elemshippingPolicyVersionIn0
+	}
+	if o.ShippingPolicyVersionNin != nil {
+		elemshippingPolicyVersionNin0 := make([]int, 0)
+		for _, oshippingPolicyVersionNin0 := range *o.ShippingPolicyVersionNin {
+			elemshippingPolicyVersionNin1 := oshippingPolicyVersionNin0
+			elemshippingPolicyVersionNin0 = append(elemshippingPolicyVersionNin0, elemshippingPolicyVersionNin1)
+		}
+		to.ShippingPolicyVersionNin = &elemshippingPolicyVersionNin0
+	}
+	if o.ShippingPolicyVersionExists != nil {
+		elemshippingPolicyVersionExists0 := o.ShippingPolicyVersionExists
+		to.ShippingPolicyVersionExists = elemshippingPolicyVersionExists0
+	}
+	if o.ShippingPostalCodeEq != nil {
+		elemshippingPostalCodeEq0 := o.ShippingPostalCodeEq
+		to.ShippingPostalCodeEq = elemshippingPostalCodeEq0
+	}
+	if o.ShippingPostalCodeNe != nil {
+		elemshippingPostalCodeNe0 := o.ShippingPostalCodeNe
+		to.ShippingPostalCodeNe = elemshippingPostalCodeNe0
+	}
+	if o.ShippingPostalCodeGt != nil {
+		elemshippingPostalCodeGt0 := o.ShippingPostalCodeGt
+		to.ShippingPostalCodeGt = elemshippingPostalCodeGt0
+	}
+	if o.ShippingPostalCodeGte != nil {
+		elemshippingPostalCodeGte0 := o.ShippingPostalCodeGte
+		to.ShippingPostalCodeGte = elemshippingPostalCodeGte0
+	}
+	if o.ShippingPostalCodeLt != nil {
+		elemshippingPostalCodeLt0 := o.ShippingPostalCodeLt
+		to.ShippingPostalCodeLt = elemshippingPostalCodeLt0
+	}
+	if o.ShippingPostalCodeLte != nil {
+		elemshippingPostalCodeLte0 := o.ShippingPostalCodeLte
+		to.ShippingPostalCodeLte = elemshippingPostalCodeLte0
+	}
+	if o.ShippingPostalCodeIn != nil {
+		elemshippingPostalCodeIn0 := make([]string, 0)
+		for _, oshippingPostalCodeIn0 := range *o.ShippingPostalCodeIn {
+			elemshippingPostalCodeIn1 := oshippingPostalCodeIn0
+			elemshippingPostalCodeIn0 = append(elemshippingPostalCodeIn0, elemshippingPostalCodeIn1)
+		}
+		to.ShippingPostalCodeIn = &elemshippingPostalCodeIn0
+	}
+	if o.ShippingPostalCodeNin != nil {
+		elemshippingPostalCodeNin0 := make([]string, 0)
+		for _, oshippingPostalCodeNin0 := range *o.ShippingPostalCodeNin {
+			elemshippingPostalCodeNin1 := oshippingPostalCodeNin0
+			elemshippingPostalCodeNin0 = append(elemshippingPostalCodeNin0, elemshippingPostalCodeNin1)
+		}
+		to.ShippingPostalCodeNin = &elemshippingPostalCodeNin0
+	}
+	if o.ShippingPostalCodeExists != nil {
+		elemshippingPostalCodeExists0 := o.ShippingPostalCodeExists
+		to.ShippingPostalCodeExists = elemshippingPostalCodeExists0
+	}
+	if o.ShippingPostalCodeLike != nil {
+		elemshippingPostalCodeLike0 := o.ShippingPostalCodeLike
+		to.ShippingPostalCodeLike = elemshippingPostalCodeLike0
+	}
+	if o.ShippingPostalCodeNlike != nil {
+		elemshippingPostalCodeNlike0 := o.ShippingPostalCodeNlike
+		to.ShippingPostalCodeNlike = elemshippingPostalCodeNlike0
+	}
+	if o.ShippingRecipientNameEq != nil {
+		elemshippingRecipientNameEq0 := o.ShippingRecipientNameEq
+		to.ShippingRecipientNameEq = elemshippingRecipientNameEq0
+	}
+	if o.ShippingRecipientNameNe != nil {
+		elemshippingRecipientNameNe0 := o.ShippingRecipientNameNe
+		to.ShippingRecipientNameNe = elemshippingRecipientNameNe0
+	}
+	if o.ShippingRecipientNameGt != nil {
+		elemshippingRecipientNameGt0 := o.ShippingRecipientNameGt
+		to.ShippingRecipientNameGt = elemshippingRecipientNameGt0
+	}
+	if o.ShippingRecipientNameGte != nil {
+		elemshippingRecipientNameGte0 := o.ShippingRecipientNameGte
+		to.ShippingRecipientNameGte = elemshippingRecipientNameGte0
+	}
+	if o.ShippingRecipientNameLt != nil {
+		elemshippingRecipientNameLt0 := o.ShippingRecipientNameLt
+		to.ShippingRecipientNameLt = elemshippingRecipientNameLt0
+	}
+	if o.ShippingRecipientNameLte != nil {
+		elemshippingRecipientNameLte0 := o.ShippingRecipientNameLte
+		to.ShippingRecipientNameLte = elemshippingRecipientNameLte0
+	}
+	if o.ShippingRecipientNameIn != nil {
+		elemshippingRecipientNameIn0 := make([]string, 0)
+		for _, oshippingRecipientNameIn0 := range *o.ShippingRecipientNameIn {
+			elemshippingRecipientNameIn1 := oshippingRecipientNameIn0
+			elemshippingRecipientNameIn0 = append(elemshippingRecipientNameIn0, elemshippingRecipientNameIn1)
+		}
+		to.ShippingRecipientNameIn = &elemshippingRecipientNameIn0
+	}
+	if o.ShippingRecipientNameNin != nil {
+		elemshippingRecipientNameNin0 := make([]string, 0)
+		for _, oshippingRecipientNameNin0 := range *o.ShippingRecipientNameNin {
+			elemshippingRecipientNameNin1 := oshippingRecipientNameNin0
+			elemshippingRecipientNameNin0 = append(elemshippingRecipientNameNin0, elemshippingRecipientNameNin1)
+		}
+		to.ShippingRecipientNameNin = &elemshippingRecipientNameNin0
+	}
+	if o.ShippingRecipientNameExists != nil {
+		elemshippingRecipientNameExists0 := o.ShippingRecipientNameExists
+		to.ShippingRecipientNameExists = elemshippingRecipientNameExists0
+	}
+	if o.ShippingRecipientNameLike != nil {
+		elemshippingRecipientNameLike0 := o.ShippingRecipientNameLike
+		to.ShippingRecipientNameLike = elemshippingRecipientNameLike0
+	}
+	if o.ShippingRecipientNameNlike != nil {
+		elemshippingRecipientNameNlike0 := o.ShippingRecipientNameNlike
+		to.ShippingRecipientNameNlike = elemshippingRecipientNameNlike0
+	}
+	if o.ShippingRegionEq != nil {
+		elemshippingRegionEq0 := o.ShippingRegionEq
+		to.ShippingRegionEq = elemshippingRegionEq0
+	}
+	if o.ShippingRegionNe != nil {
+		elemshippingRegionNe0 := o.ShippingRegionNe
+		to.ShippingRegionNe = elemshippingRegionNe0
+	}
+	if o.ShippingRegionGt != nil {
+		elemshippingRegionGt0 := o.ShippingRegionGt
+		to.ShippingRegionGt = elemshippingRegionGt0
+	}
+	if o.ShippingRegionGte != nil {
+		elemshippingRegionGte0 := o.ShippingRegionGte
+		to.ShippingRegionGte = elemshippingRegionGte0
+	}
+	if o.ShippingRegionLt != nil {
+		elemshippingRegionLt0 := o.ShippingRegionLt
+		to.ShippingRegionLt = elemshippingRegionLt0
+	}
+	if o.ShippingRegionLte != nil {
+		elemshippingRegionLte0 := o.ShippingRegionLte
+		to.ShippingRegionLte = elemshippingRegionLte0
+	}
+	if o.ShippingRegionIn != nil {
+		elemshippingRegionIn0 := make([]string, 0)
+		for _, oshippingRegionIn0 := range *o.ShippingRegionIn {
+			elemshippingRegionIn1 := oshippingRegionIn0
+			elemshippingRegionIn0 = append(elemshippingRegionIn0, elemshippingRegionIn1)
+		}
+		to.ShippingRegionIn = &elemshippingRegionIn0
+	}
+	if o.ShippingRegionNin != nil {
+		elemshippingRegionNin0 := make([]string, 0)
+		for _, oshippingRegionNin0 := range *o.ShippingRegionNin {
+			elemshippingRegionNin1 := oshippingRegionNin0
+			elemshippingRegionNin0 = append(elemshippingRegionNin0, elemshippingRegionNin1)
+		}
+		to.ShippingRegionNin = &elemshippingRegionNin0
+	}
+	if o.ShippingRegionExists != nil {
+		elemshippingRegionExists0 := o.ShippingRegionExists
+		to.ShippingRegionExists = elemshippingRegionExists0
+	}
+	if o.ShippingRegionLike != nil {
+		elemshippingRegionLike0 := o.ShippingRegionLike
+		to.ShippingRegionLike = elemshippingRegionLike0
+	}
+	if o.ShippingRegionNlike != nil {
+		elemshippingRegionNlike0 := o.ShippingRegionNlike
+		to.ShippingRegionNlike = elemshippingRegionNlike0
 	}
 	if o.SlugEq != nil {
 		elemslugEq0 := o.SlugEq

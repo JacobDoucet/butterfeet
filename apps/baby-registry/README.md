@@ -72,7 +72,7 @@ MONGO_URI=mongodb://localhost:27017 \
 cd ../frontend
 npm install
 npm run dev
-# → http://localhost:5173 (Vite proxies /api to :8080)
+# → http://localhost:5173 (Vite proxies /api to :8088)
 ```
 
 ## Editing the data model

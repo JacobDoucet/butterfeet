@@ -10,6 +10,7 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/utils"
 	"github.com/rs/zerolog/log"
 	"io"
@@ -66,6 +67,7 @@ func (sr *SearchRequest) ResolveProjection() *registry_item_api.Projection {
 	}
 	projection := registry_item_api.NewProjection(true)
 	projection.Reservations = nil
+	projection.ShippingAddressRequests = nil
 
 	return &projection
 }
@@ -587,6 +589,15 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 					searchRequest.Query.NotesIn = utils.StringSliceToStringSlicePtr(values)
 					continue
 				}
+			case "ownerPurchased":
+				if len(values) == 1 {
+					searchRequest.Query.OwnerPurchasedEq = utils.StringSliceToBoolPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.OwnerPurchasedIn = utils.StringSliceToBoolSlicePtr(values)
+					continue
+				}
 			case "position":
 				if len(values) == 1 {
 					searchRequest.Query.PositionEq = utils.StringSliceToIntPtr(values)
@@ -648,29 +659,33 @@ type HTTPAggregateFieldSpec struct {
 }
 
 type AggregateRequest struct {
-	Query                  registry_item.HTTPWhereClause `json:"query"`
-	Fields                 []HTTPAggregateFieldSpec      `json:"fields"`
-	GroupBy                []string                      `json:"groupBy"`
-	ReservationsProjection *reservation.Projection       `json:"reservationsProjection,omitempty"`
-	RegistryProjection     *registry.Projection          `json:"registryProjection,omitempty"`
+	Query                             registry_item.HTTPWhereClause        `json:"query"`
+	Fields                            []HTTPAggregateFieldSpec             `json:"fields"`
+	GroupBy                           []string                             `json:"groupBy"`
+	ReservationsProjection            *reservation.Projection              `json:"reservationsProjection,omitempty"`
+	ShippingAddressRequestsProjection *shipping_address_request.Projection `json:"shippingAddressRequestsProjection,omitempty"`
+	RegistryProjection                *registry.Projection                 `json:"registryProjection,omitempty"`
 }
 
 // AggregateResultRowHTTP is the HTTP response type for a single aggregate result row
 type AggregateResultRowHTTP struct {
-	Currency    any `json:"currency,omitempty"`
-	Description any `json:"description,omitempty"`
-	ImageUrl    any `json:"imageUrl,omitempty"`
-	Notes       any `json:"notes,omitempty"`
-	Position    any `json:"position,omitempty"`
-	PriceCents  any `json:"priceCents,omitempty"`
-	ProductUrl  any `json:"productUrl,omitempty"`
-	Quantity    any `json:"quantity,omitempty"`
-	RegistryId  any `json:"registryId,omitempty"`
-	Title       any `json:"title,omitempty"`
+	Currency       any `json:"currency,omitempty"`
+	Description    any `json:"description,omitempty"`
+	ImageUrl       any `json:"imageUrl,omitempty"`
+	Notes          any `json:"notes,omitempty"`
+	OwnerPurchased any `json:"ownerPurchased,omitempty"`
+	Position       any `json:"position,omitempty"`
+	PriceCents     any `json:"priceCents,omitempty"`
+	ProductUrl     any `json:"productUrl,omitempty"`
+	Quantity       any `json:"quantity,omitempty"`
+	RegistryId     any `json:"registryId,omitempty"`
+	Title          any `json:"title,omitempty"`
 	// Ref field Registry
 	Registry any `json:"registry,omitempty"`
 	// Ref field Reservations
 	Reservations any `json:"reservations,omitempty"`
+	// Ref field ShippingAddressRequests
+	ShippingAddressRequests any `json:"shippingAddressRequests,omitempty"`
 	// Metadata
 	GroupKeys     []string `json:"__groupKeys"`
 	AggregateKeys []string `json:"__aggregateKeys"`
@@ -738,10 +753,11 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 		}
 
 		aggregateResult, err := props.Api.Aggregate(ctx, actor, searchQuery, registry_item_api.AggregateOptions{
-			Fields:                 apiFields,
-			GroupBy:                apiGroupBy,
-			ReservationsProjection: aggregateRequest.ReservationsProjection,
-			RegistryProjection:     aggregateRequest.RegistryProjection,
+			Fields:                            apiFields,
+			GroupBy:                           apiGroupBy,
+			ReservationsProjection:            aggregateRequest.ReservationsProjection,
+			ShippingAddressRequestsProjection: aggregateRequest.ShippingAddressRequestsProjection,
+			RegistryProjection:                aggregateRequest.RegistryProjection,
 		})
 		if err != nil {
 			props.onError("Aggregate", err)
@@ -762,6 +778,7 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 			httpRow.Description = row.Description
 			httpRow.ImageUrl = row.ImageUrl
 			httpRow.Notes = row.Notes
+			httpRow.OwnerPurchased = row.OwnerPurchased
 			httpRow.Position = row.Position
 			httpRow.PriceCents = row.PriceCents
 			httpRow.ProductUrl = row.ProductUrl
@@ -782,6 +799,14 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 					httpRecs[j] = httpRec
 				}
 				httpRow.Reservations = httpRecs
+			}
+			if row.ShippingAddressRequests != nil && aggregateRequest.ShippingAddressRequestsProjection != nil {
+				httpRecs := make([]any, len(row.ShippingAddressRequests))
+				for j, rec := range row.ShippingAddressRequests {
+					httpRec, _ := rec.ToHTTPRecord(*aggregateRequest.ShippingAddressRequestsProjection)
+					httpRecs[j] = httpRec
+				}
+				httpRow.ShippingAddressRequests = httpRecs
 			}
 			httpRows[i] = httpRow
 		}

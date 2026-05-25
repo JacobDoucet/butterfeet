@@ -10,6 +10,7 @@ export type RegistryItem = {
   description?: string;
   imageUrl?: string;
   notes?: string;
+  ownerPurchased?: boolean;
   position?: number;
   priceCents?: number;
   productUrl?: string;
@@ -29,6 +30,7 @@ export type RegistryItemProjection = {
     description?: boolean;
     imageUrl?: boolean;
     notes?: boolean;
+    ownerPurchased?: boolean;
     position?: boolean;
     priceCents?: boolean;
     productUrl?: boolean;

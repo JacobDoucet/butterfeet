@@ -1,0 +1,64 @@
+objects:
+  - name: ShippingAddressRequest
+    fields:
+      - name: ownerId
+        type: Ref<OwnerUser>
+        required: true
+      - name: registryId
+        type: Ref<Registry>
+        required: true
+      - name: registryItemId
+        type: Ref<RegistryItem>
+      - name: emailHash
+        type: string
+        required: true
+      - name: emailEnc
+        type: string
+        required: true
+      - name: name
+        type: string
+      - name: note
+        type: string
+      - name: status
+        type: AddressRequestStatus
+        required: true
+      - name: decisionReason
+        type: string
+      - name: policyVersion
+        type: int
+
+    collection:
+      - type: mongo
+        name: shipping_address_requests
+
+    indexes:
+      - name: registry_status_idx
+        fields:
+          - name: registryId
+          - name: status
+      - name: registry_email_idx
+        fields:
+          - name: registryId
+          - name: emailHash
+      - name: owner_idx
+        fields:
+          - name: ownerId
+
+    http:
+      endpoint: shipping-address-requests
+      methods:
+        - GET
+
+    abac:
+      - name: OwnerId
+        field: ownerId
+
+    permissions:
+      read:
+        - rbac: Owner
+          abac:
+            - OwnerId
+      write:
+        - rbac: Owner
+          abac:
+            - OwnerId

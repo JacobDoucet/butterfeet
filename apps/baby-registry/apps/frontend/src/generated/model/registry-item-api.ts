@@ -3,17 +3,20 @@
 import { RegistryItem, RegistryItemProjection } from './registry-item-model';
 import { Registry, RegistryProjection } from './registry-model';
 import { Reservation, ReservationProjection } from './reservation-model';
+import { ShippingAddressRequest, ShippingAddressRequestProjection } from './shipping-address-request-model';
 import { ActorTraceSearchQuery } from './actor-trace-api';
 import { ItemSource } from './item-source-enum';
 
 export type RegistryItemWithRefs = {
     registryItem: RegistryItem;
     reservations?: Reservation[];
+    shippingAddressRequests?: ShippingAddressRequest[];
     registry?: Registry;
 }
 
 export type RegistryItemWithRefsProjection = RegistryItemProjection & {
     Reservations?: ReservationProjection;
+    ShippingAddressRequests?: ShippingAddressRequestProjection;
     Registry?: RegistryProjection;
 }
 
@@ -77,6 +80,16 @@ export type RegistryItemSearchQuery = {
     notesExists?: boolean;
     notesLike?: string;
     notesNlike?: string;
+    // ownerPurchased (bool) search options
+    ownerPurchasedEq?: boolean;
+    ownerPurchasedNe?: boolean;
+    ownerPurchasedGt?: boolean;
+    ownerPurchasedGte?: boolean;
+    ownerPurchasedLt?: boolean;
+    ownerPurchasedLte?: boolean;
+    ownerPurchasedIn?: boolean[];
+    ownerPurchasedNin?: boolean[];
+    ownerPurchasedExists?: boolean;
     // position (int) search options
     positionEq?: number;
     positionNe?: number;

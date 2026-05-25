@@ -8,12 +8,22 @@ import { ActorCanAccessFunc } from './actor';
 type canAccessRegistry<T = Registry> = ActorCanAccessFunc<T> & {
     field: {
         id: ActorCanAccessFunc<Registry>;
+        addressAccessMode: ActorCanAccessFunc<Registry>;
         coverImageUrl: ActorCanAccessFunc<Registry>; 
         created: ReturnType<typeof NewCanReadActorTrace<Registry>>,
         dueDate: ActorCanAccessFunc<Registry>;
         isPublic: ActorCanAccessFunc<Registry>;
         ownerId: ActorCanAccessFunc<Registry>;
         parentNames: ActorCanAccessFunc<Registry>;
+        shippingCity: ActorCanAccessFunc<Registry>;
+        shippingCountry: ActorCanAccessFunc<Registry>;
+        shippingDeliveryNotes: ActorCanAccessFunc<Registry>;
+        shippingLine1: ActorCanAccessFunc<Registry>;
+        shippingLine2: ActorCanAccessFunc<Registry>;
+        shippingPolicyVersion: ActorCanAccessFunc<Registry>;
+        shippingPostalCode: ActorCanAccessFunc<Registry>;
+        shippingRecipientName: ActorCanAccessFunc<Registry>;
+        shippingRegion: ActorCanAccessFunc<Registry>;
         slug: ActorCanAccessFunc<Registry>;
         themeColor: ActorCanAccessFunc<Registry>;
         title: ActorCanAccessFunc<Registry>; 
@@ -73,12 +83,22 @@ export function NewCanReadRegistry<T = Registry>(canAccessObj: ActorCanAccessFun
         {
             field: {
                 id: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                addressAccessMode: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 coverImageUrl: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 created:  NewCanReadActorTrace( (_actorRoles: ActorRole[], _obj?: Registry) =>  true),
                 dueDate: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 isPublic: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 ownerId: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 parentNames: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingCity: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingCountry: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingDeliveryNotes: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingLine1: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingLine2: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingPolicyVersion: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingPostalCode: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingRecipientName: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingRegion: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 slug: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 themeColor: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 title: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
@@ -98,12 +118,22 @@ export function NewCanWriteRegistry<T = Registry>(canAccessObj: ActorCanAccessFu
         {
             field: {
                 id: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                addressAccessMode: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 coverImageUrl: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 created:  NewCanWriteActorTrace( (_actorRoles: ActorRole[], _obj?: Registry) =>  true),
                 dueDate: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 isPublic: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 ownerId: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 parentNames: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingCity: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingCountry: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingDeliveryNotes: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingLine1: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingLine2: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingPolicyVersion: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingPostalCode: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingRecipientName: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                shippingRegion: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 slug: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 themeColor: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 title: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,

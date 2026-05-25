@@ -3,12 +3,15 @@ package registry_api
 import (
 	"context"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/actor_trace"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/coded_error"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"strings"
 )
 
@@ -72,6 +75,14 @@ func (c *clientWithPermissions) Search(ctx context.Context, actor permissions.Ac
 	if err != nil {
 		return QueryResult{}, Projection{}, err
 	}
+	whereAddressAccessSession, err := address_access_session.ApplyActorReadPermissionsToWhereClause(actor, address_access_session.WhereClause{})
+	if err != nil {
+		projection.AddressAccessSessions = nil
+	}
+	whereRegistryApprovedGuest, err := registry_approved_guest.ApplyActorReadPermissionsToWhereClause(actor, registry_approved_guest.WhereClause{})
+	if err != nil {
+		projection.RegistryApprovedGuests = nil
+	}
 	whereRegistryItem, err := registry_item.ApplyActorReadPermissionsToWhereClause(actor, registry_item.WhereClause{})
 	if err != nil {
 		projection.RegistryItems = nil
@@ -80,6 +91,10 @@ func (c *clientWithPermissions) Search(ctx context.Context, actor permissions.Ac
 	if err != nil {
 		projection.Reservations = nil
 	}
+	whereShippingAddressRequest, err := shipping_address_request.ApplyActorReadPermissionsToWhereClause(actor, shipping_address_request.WhereClause{})
+	if err != nil {
+		projection.ShippingAddressRequests = nil
+	}
 	whereOwnerUser, err := owner_user.ApplyActorReadPermissionsToWhereClause(actor, owner_user.WhereClause{})
 	if err != nil {
 		projection.Owner = nil
@@ -87,10 +102,13 @@ func (c *clientWithPermissions) Search(ctx context.Context, actor permissions.Ac
 
 	options.Projection = &projection
 	result, err := c.client.Search(ctx, WhereClause{
-		Registry:      where,
-		RegistryItems: whereRegistryItem,
-		Reservations:  whereReservation,
-		Owner:         whereOwnerUser,
+		Registry:                where,
+		AddressAccessSessions:   whereAddressAccessSession,
+		RegistryApprovedGuests:  whereRegistryApprovedGuest,
+		RegistryItems:           whereRegistryItem,
+		Reservations:            whereReservation,
+		ShippingAddressRequests: whereShippingAddressRequest,
+		Owner:                   whereOwnerUser,
 	}, options)
 
 	for _, hook := range c.hooks {
@@ -401,4 +419,21 @@ func (c *clientWithPermissions) PaginateAll(ctx context.Context, actor permissio
 	}()
 
 	return modelCh, errCh
+}
+
+func (c *clientWithPermissions) Aggregate(ctx context.Context, actor permissions.Actor, query registry.WhereClause, options AggregateOptions) (AggregateResult, error) {
+	// Apply read permissions to the where clause
+	where, err := registry.ApplyActorReadPermissionsToWhereClause(actor, query)
+	if err != nil {
+		return AggregateResult{}, err
+	}
+
+	result, err := c.client.Aggregate(ctx, WhereClause{
+		Registry: where,
+	}, options)
+	if err != nil {
+		return AggregateResult{}, err
+	}
+
+	return result, nil
 }

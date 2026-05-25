@@ -4,10 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/coded_error"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/utils"
 	"github.com/rs/zerolog/log"
 	"io"
@@ -63,8 +69,11 @@ func (sr *SearchRequest) ResolveProjection() *registry_api.Projection {
 		return sr.Projection
 	}
 	projection := registry_api.NewProjection(true)
+	projection.AddressAccessSessions = nil
+	projection.RegistryApprovedGuests = nil
 	projection.RegistryItems = nil
 	projection.Reservations = nil
+	projection.ShippingAddressRequests = nil
 
 	return &projection
 }
@@ -665,6 +674,87 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 					searchRequest.Query.ParentNamesIn = utils.StringSliceToStringSlicePtr(values)
 					continue
 				}
+			case "shippingCity":
+				if len(values) == 1 {
+					searchRequest.Query.ShippingCityEq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.ShippingCityIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
+			case "shippingCountry":
+				if len(values) == 1 {
+					searchRequest.Query.ShippingCountryEq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.ShippingCountryIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
+			case "shippingDeliveryNotes":
+				if len(values) == 1 {
+					searchRequest.Query.ShippingDeliveryNotesEq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.ShippingDeliveryNotesIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
+			case "shippingLine1":
+				if len(values) == 1 {
+					searchRequest.Query.ShippingLine1Eq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.ShippingLine1In = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
+			case "shippingLine2":
+				if len(values) == 1 {
+					searchRequest.Query.ShippingLine2Eq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.ShippingLine2In = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
+			case "shippingPolicyVersion":
+				if len(values) == 1 {
+					searchRequest.Query.ShippingPolicyVersionEq = utils.StringSliceToIntPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.ShippingPolicyVersionIn = utils.StringSliceToIntSlicePtr(values)
+					continue
+				}
+			case "shippingPostalCode":
+				if len(values) == 1 {
+					searchRequest.Query.ShippingPostalCodeEq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.ShippingPostalCodeIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
+			case "shippingRecipientName":
+				if len(values) == 1 {
+					searchRequest.Query.ShippingRecipientNameEq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.ShippingRecipientNameIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
+			case "shippingRegion":
+				if len(values) == 1 {
+					searchRequest.Query.ShippingRegionEq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.ShippingRegionIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
 			case "slug":
 				if len(values) == 1 {
 					searchRequest.Query.SlugEq = utils.StringSliceToStringPtr(values)
@@ -707,4 +797,231 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 	default:
 		return SearchRequest{}, coded_error.NewMethodNotAllowedError(r.Method)
 	}
+}
+
+// HTTPAggregateFieldSpec is the JSON representation of an aggregate field spec
+type HTTPAggregateFieldSpec struct {
+	Field  string `json:"field"`
+	Method string `json:"method"`
+	Alias  string `json:"alias,omitempty"`
+}
+
+type AggregateRequest struct {
+	Query                             registry.HTTPWhereClause             `json:"query"`
+	Fields                            []HTTPAggregateFieldSpec             `json:"fields"`
+	GroupBy                           []string                             `json:"groupBy"`
+	AddressAccessSessionsProjection   *address_access_session.Projection   `json:"addressAccessSessionsProjection,omitempty"`
+	RegistryApprovedGuestsProjection  *registry_approved_guest.Projection  `json:"registryApprovedGuestsProjection,omitempty"`
+	RegistryItemsProjection           *registry_item.Projection            `json:"registryItemsProjection,omitempty"`
+	ReservationsProjection            *reservation.Projection              `json:"reservationsProjection,omitempty"`
+	ShippingAddressRequestsProjection *shipping_address_request.Projection `json:"shippingAddressRequestsProjection,omitempty"`
+	OwnerProjection                   *owner_user.Projection               `json:"ownerProjection,omitempty"`
+}
+
+// AggregateResultRowHTTP is the HTTP response type for a single aggregate result row
+type AggregateResultRowHTTP struct {
+	CoverImageUrl         any `json:"coverImageUrl,omitempty"`
+	DueDate               any `json:"dueDate,omitempty"`
+	IsPublic              any `json:"isPublic,omitempty"`
+	OwnerId               any `json:"ownerId,omitempty"`
+	ParentNames           any `json:"parentNames,omitempty"`
+	ShippingCity          any `json:"shippingCity,omitempty"`
+	ShippingCountry       any `json:"shippingCountry,omitempty"`
+	ShippingDeliveryNotes any `json:"shippingDeliveryNotes,omitempty"`
+	ShippingLine1         any `json:"shippingLine1,omitempty"`
+	ShippingLine2         any `json:"shippingLine2,omitempty"`
+	ShippingPolicyVersion any `json:"shippingPolicyVersion,omitempty"`
+	ShippingPostalCode    any `json:"shippingPostalCode,omitempty"`
+	ShippingRecipientName any `json:"shippingRecipientName,omitempty"`
+	ShippingRegion        any `json:"shippingRegion,omitempty"`
+	Slug                  any `json:"slug,omitempty"`
+	ThemeColor            any `json:"themeColor,omitempty"`
+	Title                 any `json:"title,omitempty"`
+	WelcomeMessage        any `json:"welcomeMessage,omitempty"`
+	// Ref field Owner
+	Owner any `json:"owner,omitempty"`
+	// Ref field AddressAccessSessions
+	AddressAccessSessions any `json:"addressAccessSessions,omitempty"`
+	// Ref field RegistryApprovedGuests
+	RegistryApprovedGuests any `json:"registryApprovedGuests,omitempty"`
+	// Ref field RegistryItems
+	RegistryItems any `json:"registryItems,omitempty"`
+	// Ref field Reservations
+	Reservations any `json:"reservations,omitempty"`
+	// Ref field ShippingAddressRequests
+	ShippingAddressRequests any `json:"shippingAddressRequests,omitempty"`
+	// Metadata
+	GroupKeys     []string `json:"__groupKeys"`
+	AggregateKeys []string `json:"__aggregateKeys"`
+}
+
+// AggregateResponseHTTP is the HTTP response type for aggregate results
+type AggregateResponseHTTP struct {
+	Data  []AggregateResultRowHTTP `json:"data"`
+	Total int                      `json:"total"`
+}
+
+func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
+	if err := props.Validate(); err != nil {
+		return nil, err
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			props.onError("Aggregate", errors.New("method not allowed"))
+			log.Debug().Msg("method not allowed")
+			http.Error(w, "METHOD_NOT_ALLOWED", http.StatusMethodNotAllowed)
+			return
+		}
+
+		ctx := r.Context()
+
+		actor, err := props.ResolveActor(r)
+		if err != nil {
+			props.onError("Aggregate", err)
+			log.Debug().Err(err).Msg("failed to resolve actor")
+			http.Error(w, coded_error.ResolveErrorCodeAsString(err), http.StatusUnauthorized)
+			return
+		}
+
+		var aggregateRequest AggregateRequest
+		err = json.NewDecoder(r.Body).Decode(&aggregateRequest)
+		if err != nil {
+			props.onError("Aggregate", err)
+			log.Debug().Err(err).Msg("failed to decode request body")
+			http.Error(w, "INVALID_REQUEST", http.StatusBadRequest)
+			return
+		}
+
+		searchQuery, err := aggregateRequest.Query.ToWhereClause()
+		if err != nil {
+			props.onError("Aggregate", err)
+			log.Debug().Err(err).Msg("failed to resolve aggregate query")
+			http.Error(w, coded_error.ResolveErrorCodeAsString(err), coded_error.ResolveHTTPStatus(err))
+			return
+		}
+
+		// Convert HTTP request fields to typed API fields
+		apiFields := make([]registry_api.AggregateFieldSpec, len(aggregateRequest.Fields))
+		for i, f := range aggregateRequest.Fields {
+			apiFields[i] = registry_api.AggregateFieldSpec{
+				Field:  registry_api.AggregateField(f.Field),
+				Method: registry_api.AggregateMethod(f.Method),
+				Alias:  f.Alias,
+			}
+		}
+
+		// Convert HTTP request group-by fields to typed API fields
+		apiGroupBy := make([]registry_api.GroupByField, len(aggregateRequest.GroupBy))
+		for i, g := range aggregateRequest.GroupBy {
+			apiGroupBy[i] = registry_api.GroupByField(g)
+		}
+
+		aggregateResult, err := props.Api.Aggregate(ctx, actor, searchQuery, registry_api.AggregateOptions{
+			Fields:                            apiFields,
+			GroupBy:                           apiGroupBy,
+			AddressAccessSessionsProjection:   aggregateRequest.AddressAccessSessionsProjection,
+			RegistryApprovedGuestsProjection:  aggregateRequest.RegistryApprovedGuestsProjection,
+			RegistryItemsProjection:           aggregateRequest.RegistryItemsProjection,
+			ReservationsProjection:            aggregateRequest.ReservationsProjection,
+			ShippingAddressRequestsProjection: aggregateRequest.ShippingAddressRequestsProjection,
+			OwnerProjection:                   aggregateRequest.OwnerProjection,
+		})
+		if err != nil {
+			props.onError("Aggregate", err)
+			log.Debug().Err(err).Msg("failed to execute aggregate query")
+			http.Error(w, coded_error.ResolveErrorCodeAsString(err), coded_error.ResolveHTTPStatus(err))
+			return
+		}
+
+		// Convert API result to HTTP response
+		httpRows := make([]AggregateResultRowHTTP, len(aggregateResult.Data))
+		for i, row := range aggregateResult.Data {
+			httpRow := AggregateResultRowHTTP{
+				GroupKeys:     row.GroupKeys,
+				AggregateKeys: row.AggregateKeys,
+			}
+			// Copy group-by fields
+			httpRow.CoverImageUrl = row.CoverImageUrl
+			httpRow.DueDate = row.DueDate
+			httpRow.IsPublic = row.IsPublic
+			httpRow.OwnerId = row.OwnerId
+			httpRow.ParentNames = row.ParentNames
+			httpRow.ShippingCity = row.ShippingCity
+			httpRow.ShippingCountry = row.ShippingCountry
+			httpRow.ShippingDeliveryNotes = row.ShippingDeliveryNotes
+			httpRow.ShippingLine1 = row.ShippingLine1
+			httpRow.ShippingLine2 = row.ShippingLine2
+			httpRow.ShippingPolicyVersion = row.ShippingPolicyVersion
+			httpRow.ShippingPostalCode = row.ShippingPostalCode
+			httpRow.ShippingRecipientName = row.ShippingRecipientName
+			httpRow.ShippingRegion = row.ShippingRegion
+			httpRow.Slug = row.Slug
+			httpRow.ThemeColor = row.ThemeColor
+			httpRow.Title = row.Title
+			httpRow.WelcomeMessage = row.WelcomeMessage
+			// Convert ref fields to HTTP records
+			if row.Owner != nil {
+				if aggregateRequest.OwnerProjection != nil {
+					httpRec, _ := row.Owner.ToHTTPRecord(*aggregateRequest.OwnerProjection)
+					httpRow.Owner = httpRec
+				}
+			}
+			if row.AddressAccessSessions != nil && aggregateRequest.AddressAccessSessionsProjection != nil {
+				httpRecs := make([]any, len(row.AddressAccessSessions))
+				for j, rec := range row.AddressAccessSessions {
+					httpRec, _ := rec.ToHTTPRecord(*aggregateRequest.AddressAccessSessionsProjection)
+					httpRecs[j] = httpRec
+				}
+				httpRow.AddressAccessSessions = httpRecs
+			}
+			if row.RegistryApprovedGuests != nil && aggregateRequest.RegistryApprovedGuestsProjection != nil {
+				httpRecs := make([]any, len(row.RegistryApprovedGuests))
+				for j, rec := range row.RegistryApprovedGuests {
+					httpRec, _ := rec.ToHTTPRecord(*aggregateRequest.RegistryApprovedGuestsProjection)
+					httpRecs[j] = httpRec
+				}
+				httpRow.RegistryApprovedGuests = httpRecs
+			}
+			if row.RegistryItems != nil && aggregateRequest.RegistryItemsProjection != nil {
+				httpRecs := make([]any, len(row.RegistryItems))
+				for j, rec := range row.RegistryItems {
+					httpRec, _ := rec.ToHTTPRecord(*aggregateRequest.RegistryItemsProjection)
+					httpRecs[j] = httpRec
+				}
+				httpRow.RegistryItems = httpRecs
+			}
+			if row.Reservations != nil && aggregateRequest.ReservationsProjection != nil {
+				httpRecs := make([]any, len(row.Reservations))
+				for j, rec := range row.Reservations {
+					httpRec, _ := rec.ToHTTPRecord(*aggregateRequest.ReservationsProjection)
+					httpRecs[j] = httpRec
+				}
+				httpRow.Reservations = httpRecs
+			}
+			if row.ShippingAddressRequests != nil && aggregateRequest.ShippingAddressRequestsProjection != nil {
+				httpRecs := make([]any, len(row.ShippingAddressRequests))
+				for j, rec := range row.ShippingAddressRequests {
+					httpRec, _ := rec.ToHTTPRecord(*aggregateRequest.ShippingAddressRequestsProjection)
+					httpRecs[j] = httpRec
+				}
+				httpRow.ShippingAddressRequests = httpRecs
+			}
+			httpRows[i] = httpRow
+		}
+
+		httpResponse := AggregateResponseHTTP{
+			Data:  httpRows,
+			Total: aggregateResult.Total,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		err = json.NewEncoder(w).Encode(httpResponse)
+		if err != nil {
+			props.onError("Aggregate", err)
+			log.Debug().Err(err).Msg("failed to encode response")
+			http.Error(w, coded_error.ResolveErrorCodeAsString(err), http.StatusInternalServerError)
+			return
+		}
+	}, nil
 }

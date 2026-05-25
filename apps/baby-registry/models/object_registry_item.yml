@@ -21,6 +21,8 @@ objects:
         type: string
       - name: quantity
         type: int
+      - name: ownerPurchased
+        type: bool
       - name: notes
         type: string
       - name: position

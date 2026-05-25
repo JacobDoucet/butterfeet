@@ -743,6 +743,135 @@ export function useRegistryItemMuiDataGridFilterModel(options: FilterOptions = {
                             },
                         };
                 }
+            case "ownerPurchased":
+                switch(gridFilterModel?.items?.[0]?.operator) { 
+                    case "equals":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                ownerPurchasedEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "is":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                ownerPurchasedEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notEquals":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                ownerPurchasedNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThan":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                ownerPurchasedGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "after":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                ownerPurchasedGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                ownerPurchasedGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrAfter":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                ownerPurchasedGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThan":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                ownerPurchasedLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "before":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                ownerPurchasedLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                ownerPurchasedLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrBefore":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                ownerPurchasedLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "in":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                ownerPurchasedIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notIn":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                ownerPurchasedNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "isEmpty":
+                        return { 
+                            searchQuery: { 
+                                ownerPurchasedExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                ownerPurchasedExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                }
             case "position":
                 switch(gridFilterModel?.items?.[0]?.operator) { 
                     case "equals":
@@ -1825,6 +1954,40 @@ export function useRegistryItemNotesDataGridColumn(options: RegistryItemNotesDat
     ]);
 }
 
+type RegistryItemOwnerPurchasedDataGridColumnOptions = {
+    headerName?: string;
+    width?: number;
+    sortable?: boolean;
+    hideable?: boolean;
+    getValue?: (obj: RegistryItemWithRefs | undefined) => boolean;
+    renderCell?: GridColDef<RegistryItemWithRefs>['renderCell'];
+};
+
+export const RegistryItemOwnerPurchasedDataGridColumnKey = 'ownerPurchased' as const;
+
+export function useRegistryItemOwnerPurchasedDataGridColumn(options: RegistryItemOwnerPurchasedDataGridColumnOptions) {
+
+    return useMemo<GridColDef<RegistryItemWithRefs>>(() => ({
+        headerName: options.headerName ?? RegistryItemOwnerPurchasedDataGridColumnKey,
+        width: options.width,
+        sortable: options.sortable,
+        hideable: options.hideable,
+        field: RegistryItemOwnerPurchasedDataGridColumnKey,
+        valueGetter: (_, row) => { 
+            return options.getValue ? options.getValue(row) : row.registryItem.ownerPurchased;
+        },
+        type: "boolean",
+        renderCell: options.renderCell,
+    }), [
+        options.headerName, 
+        options.width, 
+        options.sortable,
+        options.hideable,
+        options.getValue,
+        options.renderCell,
+    ]);
+}
+
 type RegistryItemPositionDataGridColumnOptions = {
     headerName?: string;
     width?: number;
@@ -2180,6 +2343,7 @@ export function getRegistryItemColumnVisibilityModel(
         description: projection.description ?? false,
         imageUrl: projection.imageUrl ?? false,
         notes: projection.notes ?? false,
+        ownerPurchased: projection.ownerPurchased ?? false,
         position: projection.position ?? false,
         priceCents: projection.priceCents ?? false,
         productUrl: projection.productUrl ?? false,

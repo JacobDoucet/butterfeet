@@ -11,7 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/actor_role"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_role"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	owneruserapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
@@ -21,10 +23,10 @@ import (
 )
 
 const (
-	cookieName       = "br_session"
-	tokenTTL         = 15 * time.Minute
-	sessionTTL       = 30 * 24 * time.Hour
-	magicCollection  = "magic_link_tokens"
+	cookieName      = "br_session"
+	tokenTTL        = 15 * time.Minute
+	sessionTTL      = 30 * 24 * time.Hour
+	magicCollection = "magic_link_tokens"
 )
 
 type Config struct {
@@ -126,10 +128,10 @@ func (s *Service) handleVerify(w http.ResponseWriter, r *http.Request) {
 
 	coll := s.cfg.DB.Collection(magicCollection)
 	var doc struct {
-		Email     string    `bson:"email"`
-		Name      string    `bson:"name"`
-		Token     string    `bson:"token"`
-		ExpiresAt time.Time `bson:"expiresAt"`
+		Email     string     `bson:"email"`
+		Name      string     `bson:"name"`
+		Token     string     `bson:"token"`
+		ExpiresAt time.Time  `bson:"expiresAt"`
 		UsedAt    *time.Time `bson:"usedAt"`
 	}
 	err := coll.FindOne(r.Context(), bson.M{"token": body.Token}).Decode(&doc)
@@ -227,6 +229,23 @@ func (s *Service) handleLogout(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
+
+	// Also clear any buyer verification cookies so "Sign out" fully revokes
+	// registry-access sessions in this browser.
+	for _, c := range r.Cookies() {
+		if strings.HasPrefix(c.Name, "br_buyer_") {
+			http.SetCookie(w, &http.Cookie{
+				Name:     c.Name,
+				Value:    "",
+				Path:     "/",
+				Expires:  time.Unix(0, 0),
+				MaxAge:   -1,
+				HttpOnly: true,
+				SameSite: http.SameSiteLaxMode,
+			})
+		}
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -260,6 +279,10 @@ func (s *Service) ResolveOwnerFromRequest(r *http.Request) (permissions.Actor, e
 	if err != nil {
 		return nil, err
 	}
+	user.Model.ActorRoles = []actor_role.Model{{
+		Role:    enum_role.Owner,
+		OwnerId: user.Model.Id,
+	}}
 	return &user.Model, nil
 }
 

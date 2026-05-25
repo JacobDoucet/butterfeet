@@ -11,6 +11,7 @@ import {
     selectRegistryById, SelectRegistryByIdParams,
     selectRegistryBySlugUnique, SelectRegistryBySlugUniqueParams,
     createRegistry, updateRegistry, deleteRegistry,
+    aggregateRegistrys, AggregateRegistryParams, RegistryAggregateResponse,
 } from '../../api/registry-endpoints';
 import { ApiError } from '../../api/errors';
 
@@ -141,5 +142,44 @@ export function useDeleteRegistry(options: RegistryMutationOptions = {}) {
             await options.onAfterCommit();
         }
         return res;
+    });
+}
+
+type UseAggregateRegistrysProps = Omit<AggregateRegistryParams, 'baseUrl'> & {
+    queryName?: string;
+    queryKey?: any[];
+}
+
+type RegistryAggregateQueryOptions = Omit<UseQueryOptions<
+    RegistryAggregateResponse,
+    ApiError,
+    RegistryAggregateResponse,
+    any[]
+>, 'initialData'>;
+
+export function useAggregateRegistrys(
+    { queryKey, queryName, ...params }: UseAggregateRegistrysProps,
+    queryOptions?: RegistryAggregateQueryOptions,
+) {
+    const baseUrl = useApiBaseUrl();
+
+    const memoizedQueryKey = useMemo(() => {
+        if (queryKey) {
+            return queryKey;
+        }
+        const queryKeys = Object.keys(params.query);
+        queryKeys.sort();
+        const searchKey = queryKeys.map((key) =>
+            `${key}=${JSON.stringify(params.query[key as keyof AggregateRegistryParams['query']])}`
+        );
+        const fieldKeys = params.fields.map((f) => `${f.field}_${f.method}`);
+        const groupByKeys = params.groupBy.join(',');
+        return ['aggregateRegistrys', queryName, ...searchKey, ...fieldKeys, groupByKeys];
+    }, [queryName, queryKey, params.query, params.fields, params.groupBy]);
+
+    return useQuery({
+        ...queryOptions,
+        queryKey: memoizedQueryKey,
+        queryFn: () => aggregateRegistrys({ baseUrl, ...params }),
     });
 }

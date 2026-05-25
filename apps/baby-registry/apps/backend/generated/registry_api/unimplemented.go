@@ -23,3 +23,7 @@ func (c *UnimplementedClient) Update(ctx context.Context, obj registry.Model, wh
 func (c *UnimplementedClient) Delete(ctx context.Context, id string) error {
 	return errors.New("delete is not implemented")
 }
+
+func (c *UnimplementedClient) Aggregate(ctx context.Context, query WhereClause, options AggregateOptions) (AggregateResult, error) {
+	return AggregateResult{}, errors.New("aggregate is not implemented")
+}

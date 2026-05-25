@@ -14,6 +14,7 @@ type Model struct {
 	Description        string
 	ImageUrl           string
 	Notes              string
+	OwnerPurchased     bool
 	Position           int
 	PriceCents         int
 	ProductUrl         string
@@ -56,6 +57,10 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 	if projection.Notes {
 		elemnotes0 := m.Notes
 		r.Notes = &elemnotes0
+	}
+	if projection.OwnerPurchased {
+		elemownerPurchased0 := m.OwnerPurchased
+		r.OwnerPurchased = &elemownerPurchased0
 	}
 	if projection.Position {
 		elemposition0 := m.Position
@@ -133,6 +138,10 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 	if projection.Notes {
 		elemnotes0 := m.Notes
 		r.Notes = &elemnotes0
+	}
+	if projection.OwnerPurchased {
+		elemownerPurchased0 := m.OwnerPurchased
+		r.OwnerPurchased = &elemownerPurchased0
 	}
 	if projection.Position {
 		elemposition0 := m.Position
@@ -239,6 +248,16 @@ type WhereClause struct {
 	NotesExists *bool
 	NotesLike   *string
 	NotesNlike  *string
+	// ownerPurchased (bool) search options
+	OwnerPurchasedEq     *bool
+	OwnerPurchasedNe     *bool
+	OwnerPurchasedGt     *bool
+	OwnerPurchasedGte    *bool
+	OwnerPurchasedLt     *bool
+	OwnerPurchasedLte    *bool
+	OwnerPurchasedIn     *[]bool
+	OwnerPurchasedNin    *[]bool
+	OwnerPurchasedExists *bool
 	// position (int) search options
 	PositionEq     *int
 	PositionNe     *int
@@ -573,6 +592,50 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 	if o.NotesNlike != nil {
 		elemnotesNlike0 := o.NotesNlike
 		to.NotesNlike = elemnotesNlike0
+	}
+	if o.OwnerPurchasedEq != nil {
+		elemownerPurchasedEq0 := o.OwnerPurchasedEq
+		to.OwnerPurchasedEq = elemownerPurchasedEq0
+	}
+	if o.OwnerPurchasedNe != nil {
+		elemownerPurchasedNe0 := o.OwnerPurchasedNe
+		to.OwnerPurchasedNe = elemownerPurchasedNe0
+	}
+	if o.OwnerPurchasedGt != nil {
+		elemownerPurchasedGt0 := o.OwnerPurchasedGt
+		to.OwnerPurchasedGt = elemownerPurchasedGt0
+	}
+	if o.OwnerPurchasedGte != nil {
+		elemownerPurchasedGte0 := o.OwnerPurchasedGte
+		to.OwnerPurchasedGte = elemownerPurchasedGte0
+	}
+	if o.OwnerPurchasedLt != nil {
+		elemownerPurchasedLt0 := o.OwnerPurchasedLt
+		to.OwnerPurchasedLt = elemownerPurchasedLt0
+	}
+	if o.OwnerPurchasedLte != nil {
+		elemownerPurchasedLte0 := o.OwnerPurchasedLte
+		to.OwnerPurchasedLte = elemownerPurchasedLte0
+	}
+	if o.OwnerPurchasedIn != nil {
+		elemownerPurchasedIn0 := make([]bool, 0)
+		for _, oownerPurchasedIn0 := range *o.OwnerPurchasedIn {
+			elemownerPurchasedIn1 := oownerPurchasedIn0
+			elemownerPurchasedIn0 = append(elemownerPurchasedIn0, elemownerPurchasedIn1)
+		}
+		to.OwnerPurchasedIn = &elemownerPurchasedIn0
+	}
+	if o.OwnerPurchasedNin != nil {
+		elemownerPurchasedNin0 := make([]bool, 0)
+		for _, oownerPurchasedNin0 := range *o.OwnerPurchasedNin {
+			elemownerPurchasedNin1 := oownerPurchasedNin0
+			elemownerPurchasedNin0 = append(elemownerPurchasedNin0, elemownerPurchasedNin1)
+		}
+		to.OwnerPurchasedNin = &elemownerPurchasedNin0
+	}
+	if o.OwnerPurchasedExists != nil {
+		elemownerPurchasedExists0 := o.OwnerPurchasedExists
+		to.OwnerPurchasedExists = elemownerPurchasedExists0
 	}
 	if o.PositionEq != nil {
 		elempositionEq0 := o.PositionEq

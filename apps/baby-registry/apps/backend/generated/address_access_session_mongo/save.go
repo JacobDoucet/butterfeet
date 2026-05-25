@@ -1,0 +1,63 @@
+package address_access_session_mongo
+
+import (
+	"context"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+func Create(ctx context.Context, db *mongo.Database, m address_access_session.MongoRecord) (primitive.ObjectID, error) {
+	coll := db.Collection(CollectionName)
+	result, err := coll.InsertOne(ctx, m)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+	return result.InsertedID.(primitive.ObjectID), nil
+}
+
+func CreateBulk(ctx context.Context, db *mongo.Database, m []address_access_session.MongoRecord) ([]primitive.ObjectID, error) {
+	coll := db.Collection(CollectionName)
+	var docs []interface{}
+	for _, v := range m {
+		docs = append(docs, v)
+	}
+	result, err := coll.InsertMany(ctx, docs)
+	if err != nil {
+		return nil, err
+	}
+	var ids []primitive.ObjectID
+	for _, id := range result.InsertedIDs {
+		ids = append(ids, id.(primitive.ObjectID))
+	}
+	return ids, nil
+}
+
+func Update(ctx context.Context, db *mongo.Database, m address_access_session.MongoRecord, where address_access_session.MongoWhereClause) error {
+	filter, err := where.GetLookupQuery()
+	if err != nil {
+		return err
+	}
+	m.Id = nil
+
+	if where.OwnerIdIn != nil {
+		in := bson.M{"$in": []primitive.ObjectID{}}
+		for _, v := range *where.OwnerIdIn {
+			in["$in"] = append(in["$in"].([]primitive.ObjectID), v)
+		}
+		filter["ownerId"] = in
+	}
+
+	coll := db.Collection(CollectionName)
+	_, err = coll.UpdateOne(ctx, filter, bson.M{"$set": m})
+	return err
+}
+
+func UpdateMany(ctx context.Context, db *mongo.Database, m address_access_session.MongoRecord, ids []primitive.ObjectID) error {
+	coll := db.Collection(CollectionName)
+	filter := bson.M{"_id": bson.M{"$in": ids}}
+	m.Id = nil
+	_, err := coll.UpdateMany(ctx, filter, bson.M{"$set": m})
+	return err
+}

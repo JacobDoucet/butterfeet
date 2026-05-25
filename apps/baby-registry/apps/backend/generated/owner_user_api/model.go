@@ -2,9 +2,12 @@ package owner_user_api
 
 import (
 	"context"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 )
 
 type Client interface {
@@ -32,12 +35,18 @@ type QueryResult struct {
 
 type Model struct {
 	owner_user.Model
-	Registrys *[]registry.Model
+	AddressAccessSessions   *[]address_access_session.Model
+	RegistryApprovedGuests  *[]registry_approved_guest.Model
+	Registrys               *[]registry.Model
+	ShippingAddressRequests *[]shipping_address_request.Model
 }
 
 type WhereClause struct {
-	OwnerUser owner_user.WhereClause
-	Registrys registry.WhereClause
+	OwnerUser               owner_user.WhereClause
+	AddressAccessSessions   address_access_session.WhereClause
+	RegistryApprovedGuests  registry_approved_guest.WhereClause
+	Registrys               registry.WhereClause
+	ShippingAddressRequests shipping_address_request.WhereClause
 }
 
 type QueryOptions struct {
@@ -68,31 +77,70 @@ func (qo *PaginationOptions) GetProjection() Projection {
 }
 
 type Projection struct {
-	owner_user.Projection `json:",inline"`
-	Registrys             *registry.Projection `json:"Registrys,omitempty"`
+	owner_user.Projection   `json:",inline"`
+	AddressAccessSessions   *address_access_session.Projection   `json:"AddressAccessSessions,omitempty"`
+	RegistryApprovedGuests  *registry_approved_guest.Projection  `json:"RegistryApprovedGuests,omitempty"`
+	Registrys               *registry.Projection                 `json:"Registrys,omitempty"`
+	ShippingAddressRequests *shipping_address_request.Projection `json:"ShippingAddressRequests,omitempty"`
 }
 
 func NewProjection(defaultVal bool) Projection {
+	addressAccessSessionsProjection := address_access_session.NewProjection(defaultVal)
+	registryApprovedGuestsProjection := registry_approved_guest.NewProjection(defaultVal)
 	registrysProjection := registry.NewProjection(defaultVal)
+	shippingAddressRequestsProjection := shipping_address_request.NewProjection(defaultVal)
 	return Projection{
-		Projection: owner_user.NewProjection(defaultVal),
-		Registrys:  &registrysProjection,
+		Projection:              owner_user.NewProjection(defaultVal),
+		AddressAccessSessions:   &addressAccessSessionsProjection,
+		RegistryApprovedGuests:  &registryApprovedGuestsProjection,
+		Registrys:               &registrysProjection,
+		ShippingAddressRequests: &shippingAddressRequestsProjection,
 	}
 }
 
 func projectReadPermissions(actor permissions.Actor, projection Projection) Projection {
 	projection.Projection = owner_user.ProjectReadPermissions(projection.Projection, actor)
+	if projection.AddressAccessSessions != nil {
+		addressAccessSessionsProjection := address_access_session.ProjectReadPermissions(*projection.AddressAccessSessions, actor)
+		projection.AddressAccessSessions = &addressAccessSessionsProjection
+	}
+	if projection.RegistryApprovedGuests != nil {
+		registryApprovedGuestsProjection := registry_approved_guest.ProjectReadPermissions(*projection.RegistryApprovedGuests, actor)
+		projection.RegistryApprovedGuests = &registryApprovedGuestsProjection
+	}
 	if projection.Registrys != nil {
 		registrysProjection := registry.ProjectReadPermissions(*projection.Registrys, actor)
 		projection.Registrys = &registrysProjection
+	}
+	if projection.ShippingAddressRequests != nil {
+		shippingAddressRequestsProjection := shipping_address_request.ProjectReadPermissions(*projection.ShippingAddressRequests, actor)
+		projection.ShippingAddressRequests = &shippingAddressRequestsProjection
 	}
 
 	return projection
 }
 
+func (m *Model) GetAddressAccessSessions() []address_access_session.Model {
+	if m.AddressAccessSessions == nil {
+		return []address_access_session.Model{}
+	}
+	return *m.AddressAccessSessions
+}
+func (m *Model) GetRegistryApprovedGuests() []registry_approved_guest.Model {
+	if m.RegistryApprovedGuests == nil {
+		return []registry_approved_guest.Model{}
+	}
+	return *m.RegistryApprovedGuests
+}
 func (m *Model) GetRegistrys() []registry.Model {
 	if m.Registrys == nil {
 		return []registry.Model{}
 	}
 	return *m.Registrys
+}
+func (m *Model) GetShippingAddressRequests() []shipping_address_request.Model {
+	if m.ShippingAddressRequests == nil {
+		return []shipping_address_request.Model{}
+	}
+	return *m.ShippingAddressRequests
 }

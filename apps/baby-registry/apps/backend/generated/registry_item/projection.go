@@ -13,6 +13,7 @@ type Projection struct {
 	Description              bool                   `json:"description"`
 	ImageUrl                 bool                   `json:"imageUrl"`
 	Notes                    bool                   `json:"notes"`
+	OwnerPurchased           bool                   `json:"ownerPurchased"`
 	Position                 bool                   `json:"position"`
 	PriceCents               bool                   `json:"priceCents"`
 	ProductUrl               bool                   `json:"productUrl"`
@@ -35,6 +36,7 @@ func NewProjection(defaultVal bool) Projection {
 		Description:              defaultVal,
 		ImageUrl:                 defaultVal,
 		Notes:                    defaultVal,
+		OwnerPurchased:           defaultVal,
 		Position:                 defaultVal,
 		PriceCents:               defaultVal,
 		ProductUrl:               defaultVal,
@@ -77,6 +79,9 @@ func (p Projection) ToBson() bson.M {
 	}
 	if p.Notes {
 		projection["notes"] = 1
+	}
+	if p.OwnerPurchased {
+		projection["ownerPurchased"] = 1
 	}
 	if p.Position {
 		projection["position"] = 1

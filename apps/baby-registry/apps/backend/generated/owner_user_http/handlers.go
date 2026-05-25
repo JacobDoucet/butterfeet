@@ -63,7 +63,10 @@ func (sr *SearchRequest) ResolveProjection() *owner_user_api.Projection {
 		return sr.Projection
 	}
 	projection := owner_user_api.NewProjection(true)
+	projection.AddressAccessSessions = nil
+	projection.RegistryApprovedGuests = nil
 	projection.Registrys = nil
+	projection.ShippingAddressRequests = nil
 
 	return &projection
 }

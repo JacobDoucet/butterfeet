@@ -8,6 +8,7 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"strings"
 )
 
@@ -71,6 +72,10 @@ func (c *clientWithPermissions) Search(ctx context.Context, actor permissions.Ac
 	if err != nil {
 		projection.Reservations = nil
 	}
+	whereShippingAddressRequest, err := shipping_address_request.ApplyActorReadPermissionsToWhereClause(actor, shipping_address_request.WhereClause{})
+	if err != nil {
+		projection.ShippingAddressRequests = nil
+	}
 	whereRegistry, err := registry.ApplyActorReadPermissionsToWhereClause(actor, registry.WhereClause{})
 	if err != nil {
 		projection.Registry = nil
@@ -78,9 +83,10 @@ func (c *clientWithPermissions) Search(ctx context.Context, actor permissions.Ac
 
 	options.Projection = &projection
 	result, err := c.client.Search(ctx, WhereClause{
-		RegistryItem: where,
-		Reservations: whereReservation,
-		Registry:     whereRegistry,
+		RegistryItem:            where,
+		Reservations:            whereReservation,
+		ShippingAddressRequests: whereShippingAddressRequest,
+		Registry:                whereRegistry,
 	}, options)
 
 	for _, hook := range c.hooks {

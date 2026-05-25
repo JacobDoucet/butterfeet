@@ -6,6 +6,7 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item_mongo"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -28,6 +29,10 @@ func (m *mongoClient) Search(ctx context.Context, where WhereClause, options Que
 	if err != nil {
 		return QueryResult{}, err
 	}
+	mongoWhereClauseShippingAddressRequests, err := where.ShippingAddressRequests.ToMongoWhereClause()
+	if err != nil {
+		return QueryResult{}, err
+	}
 	mongoWhereClauseRegistry, err := where.Registry.ToMongoWhereClause()
 	if err != nil {
 		return QueryResult{}, err
@@ -37,17 +42,19 @@ func (m *mongoClient) Search(ctx context.Context, where WhereClause, options Que
 		ctx,
 		m.db,
 		registry_item_mongo.WhereClause{
-			RegistryItem: mongoWhereClause,
-			Reservations: mongoWhereClauseReservations,
-			Registry:     mongoWhereClauseRegistry,
+			RegistryItem:            mongoWhereClause,
+			Reservations:            mongoWhereClauseReservations,
+			ShippingAddressRequests: mongoWhereClauseShippingAddressRequests,
+			Registry:                mongoWhereClauseRegistry,
 		},
 		registry_item_mongo.LookupOptions{
-			Projection:             projection.Projection,
-			Sort:                   options.Sort.ToMongoSortParams(),
-			ReservationsProjection: projection.Reservations,
-			RegistryProjection:     projection.Registry,
-			Limit:                  options.Limit,
-			Skip:                   options.Skip,
+			Projection:                        projection.Projection,
+			Sort:                              options.Sort.ToMongoSortParams(),
+			ReservationsProjection:            projection.Reservations,
+			ShippingAddressRequestsProjection: projection.ShippingAddressRequests,
+			RegistryProjection:                projection.Registry,
+			Limit:                             options.Limit,
+			Skip:                              options.Skip,
 		},
 	)
 	if err != nil {
@@ -128,6 +135,18 @@ func FromMongoQueryResultData(r registry_item_mongo.Model) (Model, error) {
 		}
 		m.Reservations = &val
 	}
+	if r.ShippingAddressRequests != nil {
+		val := make([]shipping_address_request.Model, 0)
+		var err error
+		for _, rr := range *r.ShippingAddressRequests {
+			nextVal, nextErr := rr.ToModel()
+			if nextErr != nil {
+				err = errors.Join(err, nextErr)
+			}
+			val = append(val, nextVal)
+		}
+		m.ShippingAddressRequests = &val
+	}
 	if r.Registry != nil {
 		val, toModelErr := r.Registry.ToModel()
 		if toModelErr != nil {
@@ -174,10 +193,11 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 	}
 
 	mongoAggOptions := registry_item_mongo.AggregateOptions{
-		Fields:                 mongoAggFields,
-		GroupBy:                mongoGroupBy,
-		ReservationsProjection: options.ReservationsProjection,
-		RegistryProjection:     options.RegistryProjection,
+		Fields:                            mongoAggFields,
+		GroupBy:                           mongoGroupBy,
+		ReservationsProjection:            options.ReservationsProjection,
+		ShippingAddressRequestsProjection: options.ShippingAddressRequestsProjection,
+		RegistryProjection:                options.RegistryProjection,
 	}
 
 	result, err := registry_item_mongo.Aggregate(
@@ -205,6 +225,7 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 		row.Description = r.Description
 		row.ImageUrl = r.ImageUrl
 		row.Notes = r.Notes
+		row.OwnerPurchased = r.OwnerPurchased
 		row.Position = r.Position
 		row.PriceCents = r.PriceCents
 		row.ProductUrl = r.ProductUrl
@@ -234,6 +255,18 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 				val = append(val, nextVal)
 			}
 			row.Reservations = val
+		}
+		// Copy ref field ShippingAddressRequests
+		if r.ShippingAddressRequests != nil {
+			val := make([]shipping_address_request.Model, 0)
+			for _, rr := range r.ShippingAddressRequests {
+				nextVal, nextErr := rr.ToModel()
+				if nextErr != nil {
+					err = errors.Join(err, nextErr)
+				}
+				val = append(val, nextVal)
+			}
+			row.ShippingAddressRequests = val
 		}
 		apiResults[i] = row
 	}

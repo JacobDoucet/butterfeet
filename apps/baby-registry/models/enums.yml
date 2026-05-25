@@ -15,3 +15,32 @@ enums:
       - Reserved
       - Purchased
       - Cancelled
+
+  - name: AddressAccessMode
+    type: string
+    values:
+      - RequestApproval
+      - ApprovedGuestsOnly
+      - Disabled
+
+  - name: GuestAccessLevel
+    type: string
+    values:
+      - ViewShippingAddress
+      - ReserveOnly
+
+  - name: GuestStatus
+    type: string
+    values:
+      - Active
+      - Revoked
+      - Blocked
+
+  - name: AddressRequestStatus
+    type: string
+    values:
+      - Pending
+      - Approved
+      - AutoApproved
+      - Rejected
+      - Blocked

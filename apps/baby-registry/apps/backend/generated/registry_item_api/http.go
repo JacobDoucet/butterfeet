@@ -5,6 +5,7 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 )
 
 type HTTPQueryResult struct {
@@ -51,8 +52,9 @@ func ToHTTPDeleteResult(id string) HTTPDeleteResult {
 
 type HTTPModel struct {
 	registry_item.HTTPRecord `json:"registryItem"`
-	Reservations             *[]reservation.HTTPRecord `json:"reservations,omitempty"`
-	Registry                 *registry.HTTPRecord      `json:"registry,omitempty"`
+	Reservations             *[]reservation.HTTPRecord              `json:"reservations,omitempty"`
+	ShippingAddressRequests  *[]shipping_address_request.HTTPRecord `json:"shippingAddressRequests,omitempty"`
+	Registry                 *registry.HTTPRecord                   `json:"registry,omitempty"`
 }
 
 type HTTPModelList []HTTPModel
@@ -72,6 +74,18 @@ func (r *HTTPModel) ToDomainModel() (Model, error) {
 			val = append(val, nextVal)
 		}
 		m.Reservations = &val
+	}
+	if r.ShippingAddressRequests != nil {
+		val := make([]shipping_address_request.Model, 0)
+		var err error
+		for _, rr := range *r.ShippingAddressRequests {
+			nextVal, nextErr := rr.ToModel()
+			if nextErr != nil {
+				err = errors.Join(err, nextErr)
+			}
+			val = append(val, nextVal)
+		}
+		m.ShippingAddressRequests = &val
 	}
 	if r.Registry != nil {
 		val, toModelErr := r.Registry.ToModel()
@@ -111,6 +125,18 @@ func ToHTTPModel(r Model, projection Projection) (HTTPModel, error) {
 			val = append(val, nextVal)
 		}
 		m.Reservations = &val
+	}
+	if r.ShippingAddressRequests != nil && projection.ShippingAddressRequests != nil {
+		refProjection := *projection.ShippingAddressRequests
+		val := make([]shipping_address_request.HTTPRecord, 0)
+		for _, rr := range *r.ShippingAddressRequests {
+			nextVal, nextErr := rr.ToHTTPRecord(refProjection)
+			if nextErr != nil {
+				err = errors.Join(err, nextErr)
+			}
+			val = append(val, nextVal)
+		}
+		m.ShippingAddressRequests = &val
 	}
 	if r.Registry != nil && projection.Registry != nil {
 		refProjection := *projection.Registry

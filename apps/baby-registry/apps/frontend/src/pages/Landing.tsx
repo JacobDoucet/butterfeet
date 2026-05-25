@@ -1,9 +1,13 @@
 import { Box, Container, Typography, Button, Stack } from '@mui/material';
 import { Link } from 'react-router-dom';
+import BrandLogo from '../components/BrandLogo';
 
 export default function Landing() {
   return (
     <Container maxWidth="md" sx={{ py: { xs: 6, md: 12 }, textAlign: 'center' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+        <BrandLogo variant="lockup" height={56} />
+      </Box>
       <Typography variant="h2" gutterBottom>
         A gentle, beautiful baby registry.
       </Typography>

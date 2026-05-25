@@ -1,11 +1,14 @@
 services:
   mongo:
-    image: mongo:7
+    image: mongo:8
     restart: unless-stopped
     volumes:
       - mongo_data:/data/db
-    ports:
-      - "27017:27017"
+    # Mongo is reachable on the compose network as `mongo:27017`.
+    # Uncomment to expose on the host (pick a non-default port to avoid
+    # clashes with other local mongo containers):
+    # ports:
+    #   - "27117:27017"
 
   backend:
     build:

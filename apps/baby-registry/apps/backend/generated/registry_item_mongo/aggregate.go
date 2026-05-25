@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -65,6 +66,8 @@ type AggregateOptions struct {
 	GroupBy []string
 	// Projection for Reservations ref field
 	ReservationsProjection *reservation.Projection
+	// Projection for ShippingAddressRequests ref field
+	ShippingAddressRequestsProjection *shipping_address_request.Projection
 	// Projection for Registry ref field
 	RegistryProjection *registry.Projection
 }
@@ -72,21 +75,24 @@ type AggregateOptions struct {
 // AggregateResultRow holds a single aggregation result row with flat structure
 type AggregateResultRow struct {
 	// Group-by fields (original types)
-	Currency    *string             `bson:"currency" json:"currency,omitempty"`
-	Description *string             `bson:"description" json:"description,omitempty"`
-	ImageUrl    *string             `bson:"imageUrl" json:"imageUrl,omitempty"`
-	Notes       *string             `bson:"notes" json:"notes,omitempty"`
-	Position    *int                `bson:"position" json:"position,omitempty"`
-	PriceCents  *int                `bson:"priceCents" json:"priceCents,omitempty"`
-	ProductUrl  *string             `bson:"productUrl" json:"productUrl,omitempty"`
-	Quantity    *int                `bson:"quantity" json:"quantity,omitempty"`
-	RegistryId  *primitive.ObjectID `bson:"registryId" json:"registryId,omitempty"`
-	Title       *string             `bson:"title" json:"title,omitempty"`
+	Currency       *string             `bson:"currency" json:"currency,omitempty"`
+	Description    *string             `bson:"description" json:"description,omitempty"`
+	ImageUrl       *string             `bson:"imageUrl" json:"imageUrl,omitempty"`
+	Notes          *string             `bson:"notes" json:"notes,omitempty"`
+	OwnerPurchased *bool               `bson:"ownerPurchased" json:"ownerPurchased,omitempty"`
+	Position       *int                `bson:"position" json:"position,omitempty"`
+	PriceCents     *int                `bson:"priceCents" json:"priceCents,omitempty"`
+	ProductUrl     *string             `bson:"productUrl" json:"productUrl,omitempty"`
+	Quantity       *int                `bson:"quantity" json:"quantity,omitempty"`
+	RegistryId     *primitive.ObjectID `bson:"registryId" json:"registryId,omitempty"`
+	Title          *string             `bson:"title" json:"title,omitempty"`
 	// Aggregate fields - always float64 since they're results of sum/avg/etc
 	// Ref field Registry
 	Registry *registry.MongoRecord `bson:"registry,omitempty" json:"registry,omitempty"`
 	// Ref field Reservations
 	Reservations []reservation.MongoRecord `bson:"reservations,omitempty" json:"reservations,omitempty"`
+	// Ref field ShippingAddressRequests
+	ShippingAddressRequests []shipping_address_request.MongoRecord `bson:"shippingAddressRequests,omitempty" json:"shippingAddressRequests,omitempty"`
 	// Metadata
 	GroupKeys     []string `bson:"-" json:"__groupKeys"`
 	AggregateKeys []string `bson:"-" json:"__aggregateKeys"`
@@ -208,6 +214,21 @@ func executeAggregation(ctx context.Context, where WhereClause, collection *mong
 				{Key: "localField", Value: "_id"},
 				{Key: "foreignField", Value: "registryItemId"},
 				{Key: "as", Value: "reservations"},
+				{Key: "pipeline", Value: bson.A{objectPipeline}},
+			}},
+		})
+	}
+	// Add $lookup stage for ShippingAddressRequests if projection is specified
+	if options.ShippingAddressRequestsProjection != nil {
+		objectProject := bson.E{Key: "$project", Value: options.ShippingAddressRequestsProjection.ToBson()}
+		objectPipeline := bson.D{objectProject}
+
+		pipeline = append(pipeline, bson.D{
+			{Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "shipping_address_requests"},
+				{Key: "localField", Value: "_id"},
+				{Key: "foreignField", Value: "registryItemId"},
+				{Key: "as", Value: "shippingAddressRequests"},
 				{Key: "pipeline", Value: bson.A{objectPipeline}},
 			}},
 		})

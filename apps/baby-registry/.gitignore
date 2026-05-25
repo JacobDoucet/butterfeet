@@ -5,3 +5,8 @@ apps/backend/server
 
 # Local env
 .env
+
+# Temporary files
+*.log
+*.tmp
+temp/

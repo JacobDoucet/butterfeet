@@ -14,6 +14,7 @@ type MongoRecord struct {
 	Description        *string                  `bson:"description,omitempty"`
 	ImageUrl           *string                  `bson:"imageUrl,omitempty"`
 	Notes              *string                  `bson:"notes,omitempty"`
+	OwnerPurchased     *bool                    `bson:"ownerPurchased,omitempty"`
 	Position           *int                     `bson:"position,omitempty"`
 	PriceCents         *int                     `bson:"priceCents,omitempty"`
 	ProductUrl         *string                  `bson:"productUrl,omitempty"`
@@ -57,6 +58,10 @@ func (r *MongoRecord) ToModel() (Model, error) {
 	if r.Notes != nil {
 		elemnotes0 := r.Notes
 		m.Notes = *elemnotes0
+	}
+	if r.OwnerPurchased != nil {
+		elemownerPurchased0 := r.OwnerPurchased
+		m.OwnerPurchased = *elemownerPurchased0
 	}
 	if r.Position != nil {
 		elemposition0 := r.Position
@@ -163,6 +168,16 @@ type MongoWhereClause struct {
 	NotesExists *bool
 	NotesLike   *string
 	NotesNlike  *string
+	// ownerPurchased (bool) search options
+	OwnerPurchasedEq     *bool
+	OwnerPurchasedNe     *bool
+	OwnerPurchasedGt     *bool
+	OwnerPurchasedGte    *bool
+	OwnerPurchasedLt     *bool
+	OwnerPurchasedLte    *bool
+	OwnerPurchasedIn     *[]bool
+	OwnerPurchasedNin    *[]bool
+	OwnerPurchasedExists *bool
 	// position (int) search options
 	PositionEq     *int
 	PositionNe     *int
@@ -512,6 +527,51 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 	if o.NotesNlike != nil {
 		query := bson.M{}
 		query["notes"] = bson.M{"$not": bson.M{"$regex": o.NotesNlike, "$options": "i"}}
+		and = append(and, query)
+	}
+	if o.OwnerPurchasedEq != nil {
+		query := bson.M{}
+		query["ownerPurchased"] = o.OwnerPurchasedEq
+		and = append(and, query)
+	}
+	if o.OwnerPurchasedNe != nil {
+		query := bson.M{}
+		query["ownerPurchased"] = bson.M{"$ne": o.OwnerPurchasedNe}
+		and = append(and, query)
+	}
+	if o.OwnerPurchasedGt != nil {
+		query := bson.M{}
+		query["ownerPurchased"] = bson.M{"$gt": o.OwnerPurchasedGt}
+		and = append(and, query)
+	}
+	if o.OwnerPurchasedGte != nil {
+		query := bson.M{}
+		query["ownerPurchased"] = bson.M{"$gte": o.OwnerPurchasedGte}
+		and = append(and, query)
+	}
+	if o.OwnerPurchasedLt != nil {
+		query := bson.M{}
+		query["ownerPurchased"] = bson.M{"$lt": o.OwnerPurchasedLt}
+		and = append(and, query)
+	}
+	if o.OwnerPurchasedLte != nil {
+		query := bson.M{}
+		query["ownerPurchased"] = bson.M{"$lte": o.OwnerPurchasedLte}
+		and = append(and, query)
+	}
+	if o.OwnerPurchasedIn != nil {
+		query := bson.M{}
+		query["ownerPurchased"] = bson.M{"$in": o.OwnerPurchasedIn}
+		and = append(and, query)
+	}
+	if o.OwnerPurchasedNin != nil {
+		query := bson.M{}
+		query["ownerPurchased"] = bson.M{"$nin": o.OwnerPurchasedNin}
+		and = append(and, query)
+	}
+	if o.OwnerPurchasedExists != nil {
+		query := bson.M{}
+		query["ownerPurchased"] = bson.M{"$exists": *o.OwnerPurchasedExists}
 		and = append(and, query)
 	}
 	if o.PositionEq != nil {

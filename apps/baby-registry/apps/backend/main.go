@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
@@ -16,8 +17,10 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/auth"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/buyer"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/public"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/scrape"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/shipping"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -25,9 +28,10 @@ import (
 func main() {
 	mongoURI := getEnv("MONGO_URI", "mongodb://localhost:27017")
 	dbName := getEnv("DB_NAME", "baby_registry")
-	port := getEnv("PORT", "8080")
+	port := getEnv("PORT", "8088")
 	jwtSecret := getEnv("JWT_SECRET", "dev-insecure-secret-change-me")
 	appBaseURL := getEnv("APP_BASE_URL", "http://localhost:5173")
+	allowedOrigins := parseAllowedOrigins(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3035,http://localhost:5173"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -80,7 +84,16 @@ func main() {
 	root.Handle("/api/scrape", scrapeHandler)
 
 	publicHandler := public.NewHandler(apiClient)
+	buyerSvc := buyer.NewService(buyer.Config{
+		DB:        db,
+		JWTSecret: []byte(jwtSecret),
+	})
+	publicHandler.SetBuyerResolver(buyerSvc.ResolveBuyer)
+	buyerSvc.Register(publicHandler.Mux())
 	root.Handle("/api/public/", http.StripPrefix("/api/public", publicHandler))
+
+	shippingHandler := shipping.NewHandler(apiClient, shipping.ActorResolver(resolveActor))
+	root.Handle("/api/shipping/", http.StripPrefix("/api/shipping", shippingHandler))
 
 	// Mount forge mux behind /api (owner-authenticated CRUD).
 	root.Handle("/api/", http.StripPrefix("/api", forgeAuthWrapper(forgeMux, authSvc)))
@@ -90,7 +103,7 @@ func main() {
 		_, _ = w.Write([]byte("ok"))
 	})
 
-	handler := corsMiddleware(root)
+	handler := corsMiddleware(root, allowedOrigins)
 
 	server := &http.Server{
 		Addr:         ":" + port,
@@ -132,23 +145,42 @@ func forgeAuthWrapper(next http.Handler, authSvc *auth.Service) http.Handler {
 	})
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
+func corsMiddleware(next http.Handler, allowedOrigins []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
-		if origin == "" {
-			origin = "*"
+		if origin != "" {
+			if !slices.Contains(allowedOrigins, origin) {
+				if r.Method == http.MethodOptions {
+					http.Error(w, "origin not allowed", http.StatusForbidden)
+					return
+				}
+				next.ServeHTTP(w, r)
+				return
+			}
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 		}
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		w.Header().Set("Vary", "Origin")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func parseAllowedOrigins(raw string) []string {
+	parts := strings.Split(raw, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }
 
 func getEnv(key, fallback string) string {

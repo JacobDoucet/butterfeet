@@ -6,6 +6,7 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 )
 
 type Client interface {
@@ -34,14 +35,16 @@ type QueryResult struct {
 
 type Model struct {
 	registry_item.Model
-	Reservations *[]reservation.Model
-	Registry     *registry.Model
+	Reservations            *[]reservation.Model
+	ShippingAddressRequests *[]shipping_address_request.Model
+	Registry                *registry.Model
 }
 
 type WhereClause struct {
-	RegistryItem registry_item.WhereClause
-	Reservations reservation.WhereClause
-	Registry     registry.WhereClause
+	RegistryItem            registry_item.WhereClause
+	Reservations            reservation.WhereClause
+	ShippingAddressRequests shipping_address_request.WhereClause
+	Registry                registry.WhereClause
 }
 
 type QueryOptions struct {
@@ -73,17 +76,20 @@ func (qo *PaginationOptions) GetProjection() Projection {
 
 type Projection struct {
 	registry_item.Projection `json:",inline"`
-	Reservations             *reservation.Projection `json:"Reservations,omitempty"`
-	Registry                 *registry.Projection    `json:"Registry,omitempty"`
+	Reservations             *reservation.Projection              `json:"Reservations,omitempty"`
+	ShippingAddressRequests  *shipping_address_request.Projection `json:"ShippingAddressRequests,omitempty"`
+	Registry                 *registry.Projection                 `json:"Registry,omitempty"`
 }
 
 func NewProjection(defaultVal bool) Projection {
 	reservationsProjection := reservation.NewProjection(defaultVal)
+	shippingAddressRequestsProjection := shipping_address_request.NewProjection(defaultVal)
 	registryProjection := registry.NewProjection(defaultVal)
 	return Projection{
-		Projection:   registry_item.NewProjection(defaultVal),
-		Reservations: &reservationsProjection,
-		Registry:     &registryProjection,
+		Projection:              registry_item.NewProjection(defaultVal),
+		Reservations:            &reservationsProjection,
+		ShippingAddressRequests: &shippingAddressRequestsProjection,
+		Registry:                &registryProjection,
 	}
 }
 
@@ -92,6 +98,10 @@ func projectReadPermissions(actor permissions.Actor, projection Projection) Proj
 	if projection.Reservations != nil {
 		reservationsProjection := reservation.ProjectReadPermissions(*projection.Reservations, actor)
 		projection.Reservations = &reservationsProjection
+	}
+	if projection.ShippingAddressRequests != nil {
+		shippingAddressRequestsProjection := shipping_address_request.ProjectReadPermissions(*projection.ShippingAddressRequests, actor)
+		projection.ShippingAddressRequests = &shippingAddressRequestsProjection
 	}
 	if projection.Registry != nil {
 		registryProjection := registry.ProjectReadPermissions(*projection.Registry, actor)
@@ -106,6 +116,12 @@ func (m *Model) GetReservations() []reservation.Model {
 		return []reservation.Model{}
 	}
 	return *m.Reservations
+}
+func (m *Model) GetShippingAddressRequests() []shipping_address_request.Model {
+	if m.ShippingAddressRequests == nil {
+		return []shipping_address_request.Model{}
+	}
+	return *m.ShippingAddressRequests
 }
 func (m *Model) GetRegistry() registry.Model {
 	if m.Registry == nil {
@@ -151,16 +167,17 @@ type GroupByField string
 
 // Valid group-by fields for RegistryItem
 const (
-	GroupByFieldCurrency    GroupByField = "currency"
-	GroupByFieldDescription GroupByField = "description"
-	GroupByFieldImageUrl    GroupByField = "imageUrl"
-	GroupByFieldNotes       GroupByField = "notes"
-	GroupByFieldPosition    GroupByField = "position"
-	GroupByFieldPriceCents  GroupByField = "priceCents"
-	GroupByFieldProductUrl  GroupByField = "productUrl"
-	GroupByFieldQuantity    GroupByField = "quantity"
-	GroupByFieldRegistryId  GroupByField = "registryId"
-	GroupByFieldTitle       GroupByField = "title"
+	GroupByFieldCurrency       GroupByField = "currency"
+	GroupByFieldDescription    GroupByField = "description"
+	GroupByFieldImageUrl       GroupByField = "imageUrl"
+	GroupByFieldNotes          GroupByField = "notes"
+	GroupByFieldOwnerPurchased GroupByField = "ownerPurchased"
+	GroupByFieldPosition       GroupByField = "position"
+	GroupByFieldPriceCents     GroupByField = "priceCents"
+	GroupByFieldProductUrl     GroupByField = "productUrl"
+	GroupByFieldQuantity       GroupByField = "quantity"
+	GroupByFieldRegistryId     GroupByField = "registryId"
+	GroupByFieldTitle          GroupByField = "title"
 )
 
 // ValidGroupByFields returns all valid group-by fields
@@ -170,6 +187,7 @@ func ValidGroupByFields() []GroupByField {
 		GroupByFieldDescription,
 		GroupByFieldImageUrl,
 		GroupByFieldNotes,
+		GroupByFieldOwnerPurchased,
 		GroupByFieldPosition,
 		GroupByFieldPriceCents,
 		GroupByFieldProductUrl,
@@ -235,6 +253,8 @@ type AggregateOptions struct {
 	GroupBy []GroupByField `json:"groupBy"`
 	// Projection for Reservations ref field
 	ReservationsProjection *reservation.Projection `json:"reservationsProjection,omitempty"`
+	// Projection for ShippingAddressRequests ref field
+	ShippingAddressRequestsProjection *shipping_address_request.Projection `json:"shippingAddressRequestsProjection,omitempty"`
 	// Projection for Registry ref field
 	RegistryProjection *registry.Projection `json:"registryProjection,omitempty"`
 }
@@ -242,21 +262,24 @@ type AggregateOptions struct {
 // AggregateResultRow holds a single aggregation result row with a partial model structure
 type AggregateResultRow struct {
 	// Group-by fields (original types)
-	Currency    *string `json:"currency,omitempty"`
-	Description *string `json:"description,omitempty"`
-	ImageUrl    *string `json:"imageUrl,omitempty"`
-	Notes       *string `json:"notes,omitempty"`
-	Position    *int    `json:"position,omitempty"`
-	PriceCents  *int    `json:"priceCents,omitempty"`
-	ProductUrl  *string `json:"productUrl,omitempty"`
-	Quantity    *int    `json:"quantity,omitempty"`
-	RegistryId  *string `json:"registryId,omitempty"`
-	Title       *string `json:"title,omitempty"`
+	Currency       *string `json:"currency,omitempty"`
+	Description    *string `json:"description,omitempty"`
+	ImageUrl       *string `json:"imageUrl,omitempty"`
+	Notes          *string `json:"notes,omitempty"`
+	OwnerPurchased *bool   `json:"ownerPurchased,omitempty"`
+	Position       *int    `json:"position,omitempty"`
+	PriceCents     *int    `json:"priceCents,omitempty"`
+	ProductUrl     *string `json:"productUrl,omitempty"`
+	Quantity       *int    `json:"quantity,omitempty"`
+	RegistryId     *string `json:"registryId,omitempty"`
+	Title          *string `json:"title,omitempty"`
 	// Aggregate fields - always float64 since they're results of sum/avg/etc
 	// Ref field Registry
 	Registry *registry.Model `json:"registry,omitempty"`
 	// Ref field Reservations
 	Reservations []reservation.Model `json:"reservations,omitempty"`
+	// Ref field ShippingAddressRequests
+	ShippingAddressRequests []shipping_address_request.Model `json:"shippingAddressRequests,omitempty"`
 	// Metadata fields indicating which fields are populated
 	GroupKeys     []string `json:"__groupKeys"`
 	AggregateKeys []string `json:"__aggregateKeys"`

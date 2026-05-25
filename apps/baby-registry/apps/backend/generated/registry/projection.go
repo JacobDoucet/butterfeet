@@ -7,6 +7,7 @@ import (
 
 type Projection struct {
 	Id                       bool                   `json:"id"`
+	AddressAccessMode        bool                   `json:"addressAccessMode"`
 	CoverImageUrl            bool                   `json:"coverImageUrl"`
 	Created                  bool                   `json:"created"`
 	CreatedFields            actor_trace.Projection `json:"createdFields,omitempty"`
@@ -14,6 +15,15 @@ type Projection struct {
 	IsPublic                 bool                   `json:"isPublic"`
 	OwnerId                  bool
 	ParentNames              bool                   `json:"parentNames"`
+	ShippingCity             bool                   `json:"shippingCity"`
+	ShippingCountry          bool                   `json:"shippingCountry"`
+	ShippingDeliveryNotes    bool                   `json:"shippingDeliveryNotes"`
+	ShippingLine1            bool                   `json:"shippingLine1"`
+	ShippingLine2            bool                   `json:"shippingLine2"`
+	ShippingPolicyVersion    bool                   `json:"shippingPolicyVersion"`
+	ShippingPostalCode       bool                   `json:"shippingPostalCode"`
+	ShippingRecipientName    bool                   `json:"shippingRecipientName"`
+	ShippingRegion           bool                   `json:"shippingRegion"`
 	Slug                     bool                   `json:"slug"`
 	ThemeColor               bool                   `json:"themeColor"`
 	Title                    bool                   `json:"title"`
@@ -27,6 +37,7 @@ type Projection struct {
 func NewProjection(defaultVal bool) Projection {
 	return Projection{
 		Id:                       defaultVal,
+		AddressAccessMode:        defaultVal,
 		CoverImageUrl:            defaultVal,
 		Created:                  defaultVal,
 		CreatedFields:            actor_trace.NewProjection(defaultVal),
@@ -34,6 +45,15 @@ func NewProjection(defaultVal bool) Projection {
 		IsPublic:                 defaultVal,
 		OwnerId:                  defaultVal,
 		ParentNames:              defaultVal,
+		ShippingCity:             defaultVal,
+		ShippingCountry:          defaultVal,
+		ShippingDeliveryNotes:    defaultVal,
+		ShippingLine1:            defaultVal,
+		ShippingLine2:            defaultVal,
+		ShippingPolicyVersion:    defaultVal,
+		ShippingPostalCode:       defaultVal,
+		ShippingRecipientName:    defaultVal,
+		ShippingRegion:           defaultVal,
 		Slug:                     defaultVal,
 		ThemeColor:               defaultVal,
 		Title:                    defaultVal,
@@ -48,6 +68,9 @@ func NewProjection(defaultVal bool) Projection {
 func (p Projection) ToBson() bson.M {
 	projection := bson.M{}
 	projection["_id"] = 1
+	if p.AddressAccessMode {
+		projection["addressAccessMode"] = 1
+	}
 	if p.CoverImageUrl {
 		projection["coverImageUrl"] = 1
 	}
@@ -76,6 +99,33 @@ func (p Projection) ToBson() bson.M {
 	}
 	if p.ParentNames {
 		projection["parentNames"] = 1
+	}
+	if p.ShippingCity {
+		projection["shippingCity"] = 1
+	}
+	if p.ShippingCountry {
+		projection["shippingCountry"] = 1
+	}
+	if p.ShippingDeliveryNotes {
+		projection["shippingDeliveryNotes"] = 1
+	}
+	if p.ShippingLine1 {
+		projection["shippingLine1"] = 1
+	}
+	if p.ShippingLine2 {
+		projection["shippingLine2"] = 1
+	}
+	if p.ShippingPolicyVersion {
+		projection["shippingPolicyVersion"] = 1
+	}
+	if p.ShippingPostalCode {
+		projection["shippingPostalCode"] = 1
+	}
+	if p.ShippingRecipientName {
+		projection["shippingRecipientName"] = 1
+	}
+	if p.ShippingRegion {
+		projection["shippingRegion"] = 1
 	}
 	if p.Slug {
 		projection["slug"] = 1

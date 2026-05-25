@@ -52,5 +52,11 @@ func RegisterRoutes(handlerProps HandlerProps) (*http.ServeMux, error) {
 	}
 	routes.HandleFunc("/delete/{id}", deleteHandler)
 
+	aggregateHandler, err := GetAggregateHandler(handlerProps)
+	if err != nil {
+		return nil, err
+	}
+	routes.HandleFunc("/aggregate", aggregateHandler)
+
 	return routes, nil
 }

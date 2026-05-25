@@ -1,0 +1,58 @@
+objects:
+  - name: AddressAccessSession
+    fields:
+      - name: ownerId
+        type: Ref<OwnerUser>
+        required: true
+      - name: registryId
+        type: Ref<Registry>
+        required: true
+      - name: approvedGuestId
+        type: Ref<RegistryApprovedGuest>
+      - name: emailHash
+        type: string
+        required: true
+      - name: tokenHash
+        type: string
+        required: true
+      - name: expiresAt
+        type: timestamp
+        required: true
+      - name: policyVersionAtIssue
+        type: int
+
+    collection:
+      - type: mongo
+        name: address_access_sessions
+
+    indexes:
+      - name: token_unique
+        unique: true
+        fields:
+          - name: tokenHash
+      - name: registry_email_idx
+        fields:
+          - name: registryId
+          - name: emailHash
+      - name: owner_idx
+        fields:
+          - name: ownerId
+
+    http:
+      endpoint: address-access-sessions
+      methods:
+        - GET
+
+    abac:
+      - name: OwnerId
+        field: ownerId
+
+    permissions:
+      read:
+        - rbac: Owner
+          abac:
+            - OwnerId
+      write:
+        - rbac: Owner
+          abac:
+            - OwnerId

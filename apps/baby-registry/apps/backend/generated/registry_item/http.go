@@ -12,6 +12,7 @@ type HTTPRecord struct {
 	Description        *string                 `json:"description,omitempty"`
 	ImageUrl           *string                 `json:"imageUrl,omitempty"`
 	Notes              *string                 `json:"notes,omitempty"`
+	OwnerPurchased     *bool                   `json:"ownerPurchased,omitempty"`
 	Position           *int                    `json:"position,omitempty"`
 	PriceCents         *int                    `json:"priceCents,omitempty"`
 	ProductUrl         *string                 `json:"productUrl,omitempty"`
@@ -51,6 +52,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 	if r.Notes != nil {
 		elemnotes0 := r.Notes
 		m.Notes = *elemnotes0
+	}
+	if r.OwnerPurchased != nil {
+		elemownerPurchased0 := r.OwnerPurchased
+		m.OwnerPurchased = *elemownerPurchased0
 	}
 	if r.Position != nil {
 		elemposition0 := r.Position
@@ -117,6 +122,9 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	}
 	if r.Notes != nil {
 		p.Notes = true
+	}
+	if r.OwnerPurchased != nil {
+		p.OwnerPurchased = true
 	}
 	if r.Position != nil {
 		p.Position = true
@@ -210,6 +218,16 @@ type HTTPWhereClause struct {
 	NotesExists *bool     `json:"notesExists,omitempty"`
 	NotesLike   *string   `json:"notesLike,omitempty"`
 	NotesNlike  *string   `json:"notesNlike,omitempty"`
+	// ownerPurchased (bool) search options
+	OwnerPurchasedEq     *bool   `json:"ownerPurchasedEq,omitempty"`
+	OwnerPurchasedNe     *bool   `json:"ownerPurchasedNe,omitempty"`
+	OwnerPurchasedGt     *bool   `json:"ownerPurchasedGt,omitempty"`
+	OwnerPurchasedGte    *bool   `json:"ownerPurchasedGte,omitempty"`
+	OwnerPurchasedLt     *bool   `json:"ownerPurchasedLt,omitempty"`
+	OwnerPurchasedLte    *bool   `json:"ownerPurchasedLte,omitempty"`
+	OwnerPurchasedIn     *[]bool `json:"ownerPurchasedIn,omitempty"`
+	OwnerPurchasedNin    *[]bool `json:"ownerPurchasedNin,omitempty"`
+	OwnerPurchasedExists *bool   `json:"ownerPurchasedExists,omitempty"`
 	// position (int) search options
 	PositionEq     *int   `json:"positionEq,omitempty"`
 	PositionNe     *int   `json:"positionNe,omitempty"`
@@ -532,6 +550,50 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 	if o.NotesNlike != nil {
 		elemnotesNlike0 := o.NotesNlike
 		to.NotesNlike = elemnotesNlike0
+	}
+	if o.OwnerPurchasedEq != nil {
+		elemownerPurchasedEq0 := o.OwnerPurchasedEq
+		to.OwnerPurchasedEq = elemownerPurchasedEq0
+	}
+	if o.OwnerPurchasedNe != nil {
+		elemownerPurchasedNe0 := o.OwnerPurchasedNe
+		to.OwnerPurchasedNe = elemownerPurchasedNe0
+	}
+	if o.OwnerPurchasedGt != nil {
+		elemownerPurchasedGt0 := o.OwnerPurchasedGt
+		to.OwnerPurchasedGt = elemownerPurchasedGt0
+	}
+	if o.OwnerPurchasedGte != nil {
+		elemownerPurchasedGte0 := o.OwnerPurchasedGte
+		to.OwnerPurchasedGte = elemownerPurchasedGte0
+	}
+	if o.OwnerPurchasedLt != nil {
+		elemownerPurchasedLt0 := o.OwnerPurchasedLt
+		to.OwnerPurchasedLt = elemownerPurchasedLt0
+	}
+	if o.OwnerPurchasedLte != nil {
+		elemownerPurchasedLte0 := o.OwnerPurchasedLte
+		to.OwnerPurchasedLte = elemownerPurchasedLte0
+	}
+	if o.OwnerPurchasedIn != nil {
+		elemownerPurchasedIn0 := make([]bool, 0)
+		for _, oownerPurchasedIn0 := range *o.OwnerPurchasedIn {
+			elemownerPurchasedIn1 := oownerPurchasedIn0
+			elemownerPurchasedIn0 = append(elemownerPurchasedIn0, elemownerPurchasedIn1)
+		}
+		to.OwnerPurchasedIn = &elemownerPurchasedIn0
+	}
+	if o.OwnerPurchasedNin != nil {
+		elemownerPurchasedNin0 := make([]bool, 0)
+		for _, oownerPurchasedNin0 := range *o.OwnerPurchasedNin {
+			elemownerPurchasedNin1 := oownerPurchasedNin0
+			elemownerPurchasedNin0 = append(elemownerPurchasedNin0, elemownerPurchasedNin1)
+		}
+		to.OwnerPurchasedNin = &elemownerPurchasedNin0
+	}
+	if o.OwnerPurchasedExists != nil {
+		elemownerPurchasedExists0 := o.OwnerPurchasedExists
+		to.OwnerPurchasedExists = elemownerPurchasedExists0
 	}
 	if o.PositionEq != nil {
 		elempositionEq0 := o.PositionEq

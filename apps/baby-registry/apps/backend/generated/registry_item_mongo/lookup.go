@@ -6,17 +6,19 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type LookupOptions struct {
-	Projection             registry_item.Projection
-	Sort                   registry_item.MongoSortParams
-	ReservationsProjection *reservation.Projection
-	RegistryProjection     *registry.Projection
-	Limit                  int
-	Skip                   int
+	Projection                        registry_item.Projection
+	Sort                              registry_item.MongoSortParams
+	ReservationsProjection            *reservation.Projection
+	ShippingAddressRequestsProjection *shipping_address_request.Projection
+	RegistryProjection                *registry.Projection
+	Limit                             int
+	Skip                              int
 }
 
 func (lo *LookupOptions) limit() int {
@@ -27,9 +29,10 @@ func (lo *LookupOptions) limit() int {
 }
 
 type WhereClause struct {
-	RegistryItem registry_item.MongoWhereClause
-	Reservations reservation.MongoWhereClause
-	Registry     registry.MongoWhereClause
+	RegistryItem            registry_item.MongoWhereClause
+	Reservations            reservation.MongoWhereClause
+	ShippingAddressRequests shipping_address_request.MongoWhereClause
+	Registry                registry.MongoWhereClause
 }
 
 func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo.Collection, lookupOptions LookupOptions) (QueryResult, error) {
@@ -66,6 +69,9 @@ func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo
 	}
 
 	if lookupOptions.ReservationsProjection != nil {
+		lookupOptions.Projection.Id = true
+	}
+	if lookupOptions.ShippingAddressRequestsProjection != nil {
 		lookupOptions.Projection.Id = true
 	}
 
@@ -146,6 +152,30 @@ func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo
 				{Key: "localField", Value: "_id"},
 				{Key: "foreignField", Value: "registryItemId"},
 				{Key: "as", Value: "Reservations"},
+				{Key: "pipeline", Value: bson.A{objectPipeline}},
+			}},
+		})
+	}
+	// Add $lookup stage for ShippingAddressRequests
+	if lookupOptions.ShippingAddressRequestsProjection != nil {
+		// whereShippingAddressRequests, err := where.ShippingAddressRequests.GetLookupQuery()
+		// if err != nil {
+		//     return QueryResult{}, err
+		// }
+		objectProject := bson.E{Key: "$project", Value: lookupOptions.ShippingAddressRequestsProjection.ToBson()}
+		objectPipeline := bson.D{objectProject}
+		// if len(whereShippingAddressRequests) > 0 {
+		//     objectPipeline = bson.D{
+		//         {Key: "$match", Value: whereShippingAddressRequests},
+		//         objectProject,
+		//     }
+		// }
+		dataPipeline = append(dataPipeline, bson.D{
+			{Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "shipping_address_requests"},
+				{Key: "localField", Value: "_id"},
+				{Key: "foreignField", Value: "registryItemId"},
+				{Key: "as", Value: "ShippingAddressRequests"},
 				{Key: "pipeline", Value: bson.A{objectPipeline}},
 			}},
 		})

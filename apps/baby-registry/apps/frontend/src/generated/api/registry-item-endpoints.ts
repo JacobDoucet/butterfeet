@@ -6,6 +6,7 @@ import { ApiError } from './errors';
 import { RegistryItem, RegistryItemSortParams } from '../model/registry-item-model';
 import { Registry, RegistryProjection } from '../model/registry-model';
 import { Reservation, ReservationProjection } from '../model/reservation-model';
+import { ShippingAddressRequest, ShippingAddressRequestProjection } from '../model/shipping-address-request-model';
 
 export type SearchRegistryItemsParams = {
     baseUrl: string;
@@ -142,6 +143,7 @@ export const RegistryItemGroupByFields = {
     Description: 'description',
     ImageUrl: 'imageUrl',
     Notes: 'notes',
+    OwnerPurchased: 'ownerPurchased',
     Position: 'position',
     PriceCents: 'priceCents',
     ProductUrl: 'productUrl',
@@ -165,6 +167,7 @@ export type RegistryItemAggregateResultRow = {
     description?: string | null;
     imageUrl?: string | null;
     notes?: string | null;
+    ownerPurchased?: boolean | null;
     position?: number | null;
     priceCents?: number | null;
     productUrl?: string | null;
@@ -176,6 +179,8 @@ export type RegistryItemAggregateResultRow = {
     registry?: Registry | null;
     // Ref field reservations
     reservations?: Reservation[] | null;
+    // Ref field shippingAddressRequests
+    shippingAddressRequests?: ShippingAddressRequest[] | null;
     // Metadata indicating which fields are populated
     __groupKeys: RegistryItemGroupByField[];
     __aggregateKeys: string[];
@@ -192,6 +197,7 @@ export type AggregateRegistryItemParams = {
     fields: AggregateFieldSpec[];
     groupBy: RegistryItemGroupByField[];
     reservationsProjection?: ReservationProjection;
+    shippingAddressRequestsProjection?: ShippingAddressRequestProjection;
     registryProjection?: RegistryProjection;
 }
 
@@ -206,6 +212,7 @@ export function aggregateRegistryItems(params: AggregateRegistryItemParams): Pro
             fields: params.fields,
             groupBy: params.groupBy,
             reservationsProjection: params.reservationsProjection,
+            shippingAddressRequestsProjection: params.shippingAddressRequestsProjection,
             registryProjection: params.registryProjection,
         }),
     }).then(async (response) => {

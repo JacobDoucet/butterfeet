@@ -6,8 +6,10 @@ import AuthCallbackPage from './pages/AuthCallback';
 import OwnerDashboardPage from './pages/OwnerDashboard';
 import RegistryEditorPage from './pages/RegistryEditor';
 import PublicRegistryPage from './pages/PublicRegistry';
+import ShipPage from './pages/Ship';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { auth, type Me } from './api';
+import BrandLogo from './components/BrandLogo';
 
 function Shell({ children }: { children: React.ReactNode }) {
   const nav = useNavigate();
@@ -37,9 +39,9 @@ function Shell({ children }: { children: React.ReactNode }) {
             component={Link}
             to="/"
             variant="h6"
-            sx={{ textDecoration: 'none', color: 'inherit', fontWeight: 700 }}
+            sx={{ textDecoration: 'none', color: 'inherit', fontWeight: 700, display: 'flex', alignItems: 'center' }}
           >
-            🌿 little nest
+            <BrandLogo variant="lockup" height={34} />
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
           {me ? (
@@ -78,6 +80,7 @@ export default function App() {
         <Route path="/owner" element={<OwnerDashboardPage />} />
         <Route path="/owner/r/:slug" element={<RegistryEditorPage />} />
         <Route path="/r/:slug" element={<PublicRegistryPage />} />
+        <Route path="/ship" element={<ShipPage />} />
       </Routes>
     </Shell>
   );

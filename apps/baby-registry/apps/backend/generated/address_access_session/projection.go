@@ -1,0 +1,111 @@
+package address_access_session
+
+import (
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/actor_trace"
+	"go.mongodb.org/mongo-driver/bson"
+)
+
+type Projection struct {
+	Id                       bool `json:"id"`
+	ApprovedGuestId          bool
+	Created                  bool                   `json:"created"`
+	CreatedFields            actor_trace.Projection `json:"createdFields,omitempty"`
+	EmailHash                bool                   `json:"emailHash"`
+	ExpiresAt                bool                   `json:"expiresAt"`
+	OwnerId                  bool
+	PolicyVersionAtIssue     bool `json:"policyVersionAtIssue"`
+	RegistryId               bool
+	TokenHash                bool                   `json:"tokenHash"`
+	Updated                  bool                   `json:"updated"`
+	UpdatedFields            actor_trace.Projection `json:"updatedFields,omitempty"`
+	UpdatedByOwnerUser       bool                   `json:"updatedByOwnerUser"`
+	UpdatedByOwnerUserFields actor_trace.Projection `json:"updatedByOwnerUserFields,omitempty"`
+}
+
+func NewProjection(defaultVal bool) Projection {
+	return Projection{
+		Id:                       defaultVal,
+		ApprovedGuestId:          defaultVal,
+		Created:                  defaultVal,
+		CreatedFields:            actor_trace.NewProjection(defaultVal),
+		EmailHash:                defaultVal,
+		ExpiresAt:                defaultVal,
+		OwnerId:                  defaultVal,
+		PolicyVersionAtIssue:     defaultVal,
+		RegistryId:               defaultVal,
+		TokenHash:                defaultVal,
+		Updated:                  defaultVal,
+		UpdatedFields:            actor_trace.NewProjection(defaultVal),
+		UpdatedByOwnerUser:       defaultVal,
+		UpdatedByOwnerUserFields: actor_trace.NewProjection(defaultVal),
+	}
+}
+
+func (p Projection) ToBson() bson.M {
+	projection := bson.M{}
+	projection["_id"] = 1
+	if p.ApprovedGuestId {
+		projection["approvedGuestId"] = 1
+	}
+	if p.Created {
+		if p.CreatedFields.ActorId {
+			projection["created.actorId"] = 1
+		}
+		if p.CreatedFields.ActorName {
+			projection["created.actorName"] = 1
+		}
+		if p.CreatedFields.ActorType {
+			projection["created.actorType"] = 1
+		}
+		if p.CreatedFields.At {
+			projection["created.at"] = 1
+		}
+	}
+	if p.EmailHash {
+		projection["emailHash"] = 1
+	}
+	if p.ExpiresAt {
+		projection["expiresAt"] = 1
+	}
+	if p.OwnerId {
+		projection["ownerId"] = 1
+	}
+	if p.PolicyVersionAtIssue {
+		projection["policyVersionAtIssue"] = 1
+	}
+	if p.RegistryId {
+		projection["registryId"] = 1
+	}
+	if p.TokenHash {
+		projection["tokenHash"] = 1
+	}
+	if p.Updated {
+		if p.UpdatedFields.ActorId {
+			projection["updated.actorId"] = 1
+		}
+		if p.UpdatedFields.ActorName {
+			projection["updated.actorName"] = 1
+		}
+		if p.UpdatedFields.ActorType {
+			projection["updated.actorType"] = 1
+		}
+		if p.UpdatedFields.At {
+			projection["updated.at"] = 1
+		}
+	}
+	if p.UpdatedByOwnerUser {
+		if p.UpdatedByOwnerUserFields.ActorId {
+			projection["updatedByOwnerUser.actorId"] = 1
+		}
+		if p.UpdatedByOwnerUserFields.ActorName {
+			projection["updatedByOwnerUser.actorName"] = 1
+		}
+		if p.UpdatedByOwnerUserFields.ActorType {
+			projection["updatedByOwnerUser.actorType"] = 1
+		}
+		if p.UpdatedByOwnerUserFields.At {
+			projection["updatedByOwnerUser.at"] = 1
+		}
+	}
+	return projection
+}

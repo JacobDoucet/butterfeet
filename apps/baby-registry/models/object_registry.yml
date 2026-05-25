@@ -22,6 +22,26 @@ objects:
         type: string
       - name: isPublic
         type: bool
+      - name: addressAccessMode
+        type: AddressAccessMode
+      - name: shippingPolicyVersion
+        type: int
+      - name: shippingRecipientName
+        type: string
+      - name: shippingLine1
+        type: string
+      - name: shippingLine2
+        type: string
+      - name: shippingCity
+        type: string
+      - name: shippingRegion
+        type: string
+      - name: shippingPostalCode
+        type: string
+      - name: shippingCountry
+        type: string
+      - name: shippingDeliveryNotes
+        type: string
 
     collection:
       - type: mongo

@@ -1,17 +1,26 @@
 // This file is auto-generated. DO NOT EDIT.
 
 import { OwnerUser, OwnerUserProjection } from './owner-user-model';
+import { AddressAccessSession, AddressAccessSessionProjection } from './address-access-session-model';
 import { Registry, RegistryProjection } from './registry-model';
+import { RegistryApprovedGuest, RegistryApprovedGuestProjection } from './registry-approved-guest-model';
+import { ShippingAddressRequest, ShippingAddressRequestProjection } from './shipping-address-request-model';
 import { ActorRoleSearchQuery } from './actor-role-api';
 import { ActorTraceSearchQuery } from './actor-trace-api';
 
 export type OwnerUserWithRefs = {
     ownerUser: OwnerUser;
+    addressAccessSessions?: AddressAccessSession[];
+    registryApprovedGuests?: RegistryApprovedGuest[];
     registrys?: Registry[];
+    shippingAddressRequests?: ShippingAddressRequest[];
 }
 
 export type OwnerUserWithRefsProjection = OwnerUserProjection & {
+    AddressAccessSessions?: AddressAccessSessionProjection;
+    RegistryApprovedGuests?: RegistryApprovedGuestProjection;
     Registrys?: RegistryProjection;
+    ShippingAddressRequests?: ShippingAddressRequestProjection;
 }
 
 export type SelectOwnerUserByIdQuery = {

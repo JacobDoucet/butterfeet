@@ -1,25 +1,35 @@
 package public
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
+	addressaccesssessionapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_address_access_mode"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_guest_status"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_item_source"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_reservation_status"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	registryapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
+	registryapprovedguestapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	registryitemapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
 	reservationapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation_api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/shipping"
 )
 
 type Handler struct {
-	mux    *http.ServeMux
-	client api.Client
+	mux          *http.ServeMux
+	client       api.Client
+	resolveBuyer func(r *http.Request, slug string) (string, error)
 }
 
 func NewHandler(client api.Client) *Handler {
@@ -27,8 +37,19 @@ func NewHandler(client api.Client) *Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/r/", h.handleRegistryBySlug)
 	mux.HandleFunc("/items/", h.handleItemRoute) // /items/:id/reserve
+	mux.HandleFunc("/shipping/resolve", h.handleShippingResolve)
 	h.mux = mux
 	return h
+}
+
+// Mux exposes the internal mux so other modules (e.g. buyer auth) can register
+// additional public routes under the same /api/public/ prefix.
+func (h *Handler) Mux() *http.ServeMux { return h.mux }
+
+// SetBuyerResolver wires the buyer-auth resolver so the public handler can
+// gate access by verified-email cookie.
+func (h *Handler) SetBuyerResolver(f func(r *http.Request, slug string) (string, error)) {
+	h.resolveBuyer = f
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -36,18 +57,19 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type publicItem struct {
-	Id         string  `json:"id"`
-	Title      string  `json:"title"`
+	Id          string `json:"id"`
+	Title       string `json:"title"`
 	Description string `json:"description"`
-	ImageUrl   string  `json:"imageUrl"`
-	ProductUrl string  `json:"productUrl"`
-	Source     string  `json:"source"`
-	PriceCents int     `json:"priceCents"`
-	Currency   string  `json:"currency"`
-	Quantity   int     `json:"quantity"`
-	Notes      string  `json:"notes"`
-	Position   int     `json:"position"`
-	Reserved   int     `json:"reserved"`
+	ImageUrl    string `json:"imageUrl"`
+	ProductUrl  string `json:"productUrl"`
+	Source      string `json:"source"`
+	PriceCents  int    `json:"priceCents"`
+	Currency    string `json:"currency"`
+	Quantity    int    `json:"quantity"`
+	OwnerPurchased bool `json:"ownerPurchased"`
+	Notes       string `json:"notes"`
+	Position    int    `json:"position"`
+	Reserved    int    `json:"reserved"`
 }
 
 type publicRegistry struct {
@@ -86,6 +108,41 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 	if !reg.IsPublic {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
+	}
+
+	// Gate: buyer must have verified their email for this registry.
+	if h.resolveBuyer != nil {
+		buyerEmail, err := h.resolveBuyer(r, slug)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"error":                "verification required",
+				"verificationRequired": true,
+				"title":                reg.Title,
+				"parentNames":          reg.ParentNames,
+				"themeColor":           reg.ThemeColor,
+			})
+			return
+		}
+
+		guest, gErr := h.resolveApprovedGuest(r.Context(), super, reg.Id, buyerEmail)
+		if gErr != nil {
+			http.Error(w, "lookup error", http.StatusInternalServerError)
+			return
+		}
+		if guest == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"error":                "approved guest access required",
+				"approvedGuestRequired": true,
+				"title":                reg.Title,
+				"parentNames":          reg.ParentNames,
+				"themeColor":           reg.ThemeColor,
+			})
+			return
+		}
 	}
 
 	itemsResult, _, err := h.client.RegistryItem().Search(r.Context(), super, registry_item.WhereClause{
@@ -128,6 +185,7 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 			PriceCents:  it.PriceCents,
 			Currency:    it.Currency,
 			Quantity:    it.Quantity,
+			OwnerPurchased: it.OwnerPurchased,
 			Notes:       it.Notes,
 			Position:    it.Position,
 			Reserved:    reservedByItem[it.Id],
@@ -190,6 +248,40 @@ func (h *Handler) handleItemRoute(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "item not found", http.StatusNotFound)
 		return
 	}
+	if item.OwnerPurchased {
+		http.Error(w, "item already purchased", http.StatusConflict)
+		return
+	}
+
+	// Gate: reserver must be email-verified for this registry.
+	var buyerEmail string
+	if h.resolveBuyer != nil {
+		reg, _, regErr := h.client.Registry().SelectById(r.Context(), super,
+			registry.SelectByIdQuery{Id: item.RegistryId}, registryapi.NewProjection(true))
+		if regErr != nil {
+			http.Error(w, "registry not found", http.StatusNotFound)
+			return
+		}
+		email, err := h.resolveBuyer(r, reg.Slug)
+		if err != nil {
+			http.Error(w, "verification required", http.StatusUnauthorized)
+			return
+		}
+		buyerEmail = email
+
+		guest, gErr := h.resolveApprovedGuest(r.Context(), super, item.RegistryId, buyerEmail)
+		if gErr != nil {
+			http.Error(w, "lookup error", http.StatusInternalServerError)
+			return
+		}
+		if guest == nil {
+			http.Error(w, "approved guest access required", http.StatusForbidden)
+			return
+		}
+	}
+	if buyerEmail == "" {
+		buyerEmail = strings.TrimSpace(body.ContactEmail)
+	}
 
 	_, _, err = h.client.Reservation().Create(r.Context(), super, reservation.Model{
 		ItemId:       item.Id,
@@ -197,7 +289,7 @@ func (h *Handler) handleItemRoute(w http.ResponseWriter, r *http.Request) {
 		ReserverName: name,
 		IsAnonymous:  body.IsAnonymous,
 		Message:      strings.TrimSpace(body.Message),
-		ContactEmail: strings.TrimSpace(body.ContactEmail),
+		ContactEmail: buyerEmail,
 		Quantity:     body.Quantity,
 		Status:       enum_reservation_status.Reserved,
 	}, reservation.NewProjection(true))
@@ -210,5 +302,114 @@ func (h *Handler) handleItemRoute(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
 }
 
+func (h *Handler) resolveApprovedGuest(ctx context.Context, super permissions.Actor, registryId, email string) (*registryapprovedguestapi.Model, error) {
+	hash := shipping.HashEmail(email)
+	res, _, err := h.client.RegistryApprovedGuest().Search(ctx, super,
+		registry_approved_guest.WhereClause{RegistryIdEq: &registryId, EmailHashEq: &hash},
+		registryapprovedguestapi.QueryOptions{Limit: 1},
+	)
+	if err != nil {
+		return nil, err
+	}
+	if len(res.Data) == 0 {
+		return nil, nil
+	}
+	guest := res.Data[0]
+	if guest.Status != enum_guest_status.Active {
+		return nil, nil
+	}
+	return &guest, nil
+}
+
 // Unused import suppression for items that may not be referenced in some builds.
 var _ = enum_item_source.Other
+
+type resolveBody struct {
+	Token string `json:"token"`
+}
+
+func (h *Handler) handleShippingResolve(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var body resolveBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || strings.TrimSpace(body.Token) == "" {
+		writeResolveError(w, http.StatusBadRequest, "invalid token")
+		return
+	}
+
+	super := permissions.NewSuperActor()
+	hash := shipping.HashToken(strings.TrimSpace(body.Token))
+
+	res, _, err := h.client.AddressAccessSession().Search(r.Context(), super,
+		address_access_session.WhereClause{TokenHashEq: &hash},
+		addressaccesssessionapi.QueryOptions{Limit: 1},
+	)
+	if err != nil || len(res.Data) == 0 {
+		writeResolveError(w, http.StatusNotFound, "link is invalid or expired")
+		return
+	}
+	sess := res.Data[0]
+	if sess.ExpiresAt.Before(time.Now()) {
+		writeResolveError(w, http.StatusGone, "link has expired")
+		return
+	}
+
+	reg, _, err := h.client.Registry().SelectById(r.Context(), super,
+		registry.SelectByIdQuery{Id: sess.RegistryId}, registryapi.NewProjection(true))
+	if err != nil {
+		writeResolveError(w, http.StatusNotFound, "registry not found")
+		return
+	}
+	if reg.AddressAccessMode == enum_address_access_mode.Disabled {
+		writeResolveError(w, http.StatusForbidden, "the owner has disabled address sharing")
+		return
+	}
+	if sess.PolicyVersionAtIssue != reg.ShippingPolicyVersion {
+		writeResolveError(w, http.StatusForbidden, "the owner's privacy settings have changed; ask for a new link")
+		return
+	}
+
+	// If the session traces back to an approved guest row, that row must be Active.
+	if sess.ApprovedGuestId != "" {
+		guest, _, err := h.client.RegistryApprovedGuest().SelectById(r.Context(), super,
+			registry_approved_guest.SelectByIdQuery{Id: sess.ApprovedGuestId},
+			registryapprovedguestapi.NewProjection(true),
+		)
+		if err != nil || guest.Status != enum_guest_status.Active {
+			writeResolveError(w, http.StatusForbidden, "access has been revoked")
+			return
+		}
+	} else {
+		// Per-request session: still honor block list against the email hash.
+		guests, _, err := h.client.RegistryApprovedGuest().Search(r.Context(), super,
+			registry_approved_guest.WhereClause{RegistryIdEq: &sess.RegistryId, EmailHashEq: &sess.EmailHash},
+			registryapprovedguestapi.QueryOptions{Limit: 1},
+		)
+		if err == nil && len(guests.Data) > 0 && guests.Data[0].Status != enum_guest_status.Active {
+			writeResolveError(w, http.StatusForbidden, "access has been revoked")
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"registryTitle": reg.Title,
+		"recipientName": reg.ShippingRecipientName,
+		"line1":         reg.ShippingLine1,
+		"line2":         reg.ShippingLine2,
+		"city":          reg.ShippingCity,
+		"region":        reg.ShippingRegion,
+		"postalCode":    reg.ShippingPostalCode,
+		"country":       reg.ShippingCountry,
+		"deliveryNotes": reg.ShippingDeliveryNotes,
+		"expiresAt":     sess.ExpiresAt,
+	})
+}
+
+func writeResolveError(w http.ResponseWriter, status int, msg string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(map[string]any{"error": msg})
+}
