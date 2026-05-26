@@ -9,20 +9,21 @@ export default function Landing() {
         <BrandLogo variant="lockup" height={56} />
       </Box>
       <Typography variant="h2" gutterBottom>
-        A gentle, beautiful baby registry.
+        Feather the nest, your way.
       </Typography>
       <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>
-        Curate gifts from anywhere on the web. Share one link with friends and family.
-        Track what's been picked up — without the spreadsheets.
+        Drop a link from anywhere on the web, send it to your people,
+        and we'll quietly keep track of who got what.
       </Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
         <Button component={Link} to="/login" size="large" variant="contained" color="primary">
-          Create your registry
+          Start your nest
         </Button>
       </Stack>
       <Box sx={{ mt: 8, opacity: 0.9 }}>
         <Typography variant="body2" color="text.secondary">
-          Import from Amazon, Mamas & Papas, Etsy, John Lewis, IKEA — or any product page.
+          Plays nice with Amazon, IKEA, John Lewis, Etsy, Mamas &amp; Papas,
+          and pretty much any product page.
         </Typography>
       </Box>
     </Container>

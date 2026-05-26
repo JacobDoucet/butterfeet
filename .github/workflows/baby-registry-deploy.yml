@@ -1,0 +1,86 @@
+name: baby-registry deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/baby-registry/**"
+      - "infra/secrets/baby-registry.env.enc"
+      - "infra/.sops.yaml"
+      - ".github/workflows/baby-registry-deploy.yml"
+      - ".github/actions/sops-decrypt/**"
+  workflow_dispatch:
+
+concurrency:
+  group: baby-registry-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: deploy to droplet
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decrypt baby-registry env
+        uses: ./.github/actions/sops-decrypt
+        with:
+          age-key: ${{ secrets.SOPS_AGE_KEY }}
+          input: infra/secrets/baby-registry.env.enc
+          output: apps/baby-registry/.env
+
+      - name: Set up SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Upload .env to droplet
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          set -euo pipefail
+          scp -i ~/.ssh/id_ed25519 \
+            apps/baby-registry/.env \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:/home/${DEPLOY_USER}/baby-registry.env.new"
+
+      - name: Pull + redeploy on droplet
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_REPO_DIR: ${{ secrets.DEPLOY_REPO_DIR }}
+          DEPLOY_BRANCH: ${{ secrets.DEPLOY_BRANCH || 'main' }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/id_ed25519 "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            REPO_DIR="${DEPLOY_REPO_DIR}" BRANCH="${DEPLOY_BRANCH:-main}" \
+            'bash -se' <<'REMOTE'
+          set -euo pipefail
+          : "${REPO_DIR:?REPO_DIR is required}"
+          : "${BRANCH:?BRANCH is required}"
+          cd "$REPO_DIR"
+          git fetch --prune origin
+          git checkout "$BRANCH"
+          git reset --hard "origin/${BRANCH}"
+          install -m 600 "$HOME/baby-registry.env.new" apps/baby-registry/.env
+          rm -f "$HOME/baby-registry.env.new"
+          cd apps/baby-registry
+          docker compose -f docker-compose.yml -f compose.prod.yml --env-file .env pull || true
+          docker compose -f docker-compose.yml -f compose.prod.yml --env-file .env up -d --build
+          docker image prune -f
+          REMOTE
+
+      - name: Smoke test (LB)
+        if: ${{ vars.BABY_REGISTRY_URL != '' }}
+        run: |
+          set -euo pipefail
+          curl -fsS -I --max-time 15 "${{ vars.BABY_REGISTRY_URL }}" | head -n 1

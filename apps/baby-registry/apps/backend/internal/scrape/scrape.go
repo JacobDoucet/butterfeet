@@ -1,9 +1,12 @@
 package scrape
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -13,6 +16,79 @@ import (
 
 	"golang.org/x/net/html"
 )
+
+var privateRanges []*net.IPNet
+
+func init() {
+	for _, cidr := range []string{
+		"10.0.0.0/8",
+		"172.16.0.0/12",
+		"192.168.0.0/16",
+		"127.0.0.0/8",
+		"169.254.0.0/16",
+		"100.64.0.0/10",
+		"::1/128",
+		"fc00::/7",
+		"fe80::/10",
+		"0.0.0.0/8",
+	} {
+		_, network, _ := net.ParseCIDR(cidr)
+		privateRanges = append(privateRanges, network)
+	}
+}
+
+func isPrivateIP(ip net.IP) bool {
+	for _, network := range privateRanges {
+		if network.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+func newSafeClient() *http.Client {
+	safeDialer := &net.Dialer{Timeout: 10 * time.Second}
+	transport := &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			host, port, err := net.SplitHostPort(addr)
+			if err != nil {
+				return nil, err
+			}
+			addrs, err := net.DefaultResolver.LookupHost(ctx, host)
+			if err != nil {
+				return nil, err
+			}
+			for _, a := range addrs {
+				ip := net.ParseIP(a)
+				if ip == nil || isPrivateIP(ip) {
+					return nil, fmt.Errorf("requests to private or reserved addresses are not allowed")
+				}
+			}
+			return safeDialer.DialContext(ctx, network, net.JoinHostPort(addrs[0], port))
+		},
+	}
+	return &http.Client{
+		Timeout:   15 * time.Second,
+		Transport: transport,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 5 {
+				return errors.New("too many redirects")
+			}
+			host := req.URL.Hostname()
+			addrs, err := net.LookupHost(host)
+			if err != nil {
+				return err
+			}
+			for _, a := range addrs {
+				ip := net.ParseIP(a)
+				if ip == nil || isPrivateIP(ip) {
+					return errors.New("redirect to private or reserved address not allowed")
+				}
+			}
+			return nil
+		},
+	}
+}
 
 type Result struct {
 	Title      string  `json:"title"`
@@ -29,7 +105,7 @@ type Handler struct {
 
 func NewHandler() *Handler {
 	return &Handler{
-		client: &http.Client{Timeout: 15 * time.Second},
+		client: newSafeClient(),
 	}
 }
 

@@ -1,17 +1,20 @@
 package buyer
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"log"
 	"math/big"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -31,6 +34,8 @@ const (
 type Config struct {
 	DB        *mongo.Database
 	JWTSecret []byte
+	Prod      bool
+	Mailer    mailer.Mailer
 }
 
 type Service struct {
@@ -99,13 +104,18 @@ func (s *Service) handleRequest(w http.ResponseWriter, r *http.Request) {
 		mongoUpsert(),
 	)
 	if err != nil {
-		log.Printf("buyer otp upsert error: %v", err)
+		log.Error().Err(err).Msg("buyer OTP upsert error")
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	// Dev: log the code. In prod with SMTP wired up, this would email the buyer.
-	log.Printf("BUYER OTP for %s (slug=%s) -> %s", email, slug, code)
+	// In production, send the code via email (wire mailer in Phase 2).
+	if !s.cfg.Prod {
+		log.Info().Str("email", email).Str("slug", slug).Str("code", code).Msg("BUYER OTP (dev only)")
+	}
+	if s.cfg.Mailer != nil {
+		go s.sendOTP(email, slug, code)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
@@ -164,7 +174,7 @@ func (s *Service) handleConfirm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	http.SetCookie(w, buyerCookie(slug, token, sessionTTL))
+	http.SetCookie(w, buyerCookie(slug, token, sessionTTL, s.cfg.Prod))
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "email": email})
@@ -198,6 +208,7 @@ func (s *Service) handleLogout(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
 		HttpOnly: true,
+		Secure:   s.cfg.Prod,
 		SameSite: http.SameSiteLaxMode,
 	})
 	w.WriteHeader(http.StatusOK)
@@ -247,13 +258,14 @@ func cookieName(slug string) string {
 	return cookiePrefix + slug
 }
 
-func buyerCookie(slug, value string, ttl time.Duration) *http.Cookie {
+func buyerCookie(slug, value string, ttl time.Duration, secure bool) *http.Cookie {
 	return &http.Cookie{
 		Name:     cookieName(slug),
 		Value:    value,
 		Path:     "/",
 		Expires:  time.Now().Add(ttl),
 		HttpOnly: true,
+		Secure:   secure,
 		SameSite: http.SameSiteLaxMode,
 	}
 }
@@ -273,6 +285,20 @@ func randomDigits(n int) (string, error) {
 func sha256Hex(s string) string {
 	sum := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(sum[:])
+}
+
+func (s *Service) sendOTP(email, slug, code string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := s.cfg.Mailer.Send(ctx, mailer.Message{
+		To:      email,
+		Subject: "Your Stork Nest verification code",
+		Text:    "Your verification code for the \"" + slug + "\" registry is: " + code + "\n\nIt expires in 15 minutes.",
+		HTML:    `<p>Your verification code for the <strong>` + slug + `</strong> registry is:</p><p style="font-size:24px;letter-spacing:4px;font-weight:bold">` + code + `</p><p style="color:#666;font-size:12px">Expires in 15 minutes.</p>`,
+	})
+	if err != nil {
+		log.Error().Err(err).Str("email", email).Str("slug", slug).Msg("buyer OTP email failed")
+	}
 }
 
 // mongoUpsert builds the upsert option helper.

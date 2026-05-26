@@ -10,15 +10,15 @@ interface BrandLogoProps {
 }
 
 const SRC_BY_VARIANT: Record<BrandLogoVariant, string> = {
-  text: '/brand/stork-list-wordmark-900.png',
-  lockup: '/brand/stork-list-logo-lockup-900.png',
+  text: '/brand/stork-nest-wordmark-900.png',
+  lockup: '/brand/stork-nest-logo-lockup-900.png',
 };
 
 export default function BrandLogo({
   variant = 'lockup',
   height = 40,
   width,
-  alt = 'Stork List',
+  alt = 'Stork Nest',
 }: BrandLogoProps) {
   return (
     <Box

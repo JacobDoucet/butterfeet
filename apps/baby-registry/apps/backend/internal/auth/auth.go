@@ -6,10 +6,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/actor_role"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/api"
@@ -17,6 +18,7 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	owneruserapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -34,6 +36,8 @@ type Config struct {
 	Client     api.Client
 	JWTSecret  []byte
 	AppBaseURL string
+	Prod       bool
+	Mailer     mailer.Mailer
 }
 
 type Service struct {
@@ -97,14 +101,18 @@ func (s *Service) handleRequest(w http.ResponseWriter, r *http.Request) {
 		"usedAt":    nil,
 	})
 	if err != nil {
-		log.Printf("magic-link insert error: %v", err)
+		log.Error().Err(err).Msg("magic-link insert error")
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
 	link := strings.TrimRight(s.cfg.AppBaseURL, "/") + "/auth/callback?token=" + token
-	// In production, send this link via email. In dev we log it.
-	log.Printf("MAGIC LINK for %s -> %s", email, link)
+	if !s.cfg.Prod {
+		log.Info().Str("email", email).Str("link", link).Msg("MAGIC LINK (dev only)")
+	}
+	if s.cfg.Mailer != nil {
+		go s.sendMagicLink(email, link)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
@@ -172,7 +180,7 @@ func (s *Service) handleVerify(w http.ResponseWriter, r *http.Request) {
 			owner_user.NewProjection(true),
 		)
 		if cErr != nil {
-			log.Printf("owner create error: %v", cErr)
+			log.Error().Err(cErr).Msg("owner create error")
 			http.Error(w, "could not create owner", http.StatusInternalServerError)
 			return
 		}
@@ -193,6 +201,7 @@ func (s *Service) handleVerify(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		Expires:  time.Now().Add(sessionTTL),
 		HttpOnly: true,
+		Secure:   s.cfg.Prod,
 		SameSite: http.SameSiteLaxMode,
 	})
 
@@ -227,6 +236,7 @@ func (s *Service) handleLogout(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
 		HttpOnly: true,
+		Secure:   s.cfg.Prod,
 		SameSite: http.SameSiteLaxMode,
 	})
 
@@ -241,6 +251,7 @@ func (s *Service) handleLogout(w http.ResponseWriter, r *http.Request) {
 				Expires:  time.Unix(0, 0),
 				MaxAge:   -1,
 				HttpOnly: true,
+				Secure:   s.cfg.Prod,
 				SameSite: http.SameSiteLaxMode,
 			})
 		}
@@ -302,4 +313,18 @@ func randomToken(n int) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+func (s *Service) sendMagicLink(email, link string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := s.cfg.Mailer.Send(ctx, mailer.Message{
+		To:      email,
+		Subject: "Your Stork Nest sign-in link",
+		Text:    "Tap the link below to sign in to your Stork Nest registry. It expires in 15 minutes.\n\n" + link + "\n\nIf you didn't request this, you can ignore this message.",
+		HTML:    `<p>Tap the link below to sign in to your Stork Nest registry. It expires in 15 minutes.</p><p><a href="` + link + `">Sign in to Stork Nest</a></p><p style="color:#666;font-size:12px">If you didn't request this, you can ignore this message.</p>`,
+	})
+	if err != nil {
+		log.Error().Err(err).Str("email", email).Msg("magic link email failed")
+	}
 }

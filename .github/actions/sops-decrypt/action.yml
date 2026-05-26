@@ -1,0 +1,41 @@
+name: sops-decrypt
+description: Install sops + age and decrypt a sops-encrypted file using an age private key from a secret.
+
+inputs:
+  age-key:
+    description: Contents of the age private key (e.g. age-secret-key-1...). Pass from a GitHub secret.
+    required: true
+  input:
+    description: Path to the sops-encrypted input file.
+    required: true
+  output:
+    description: Path to write the decrypted plaintext to.
+    required: true
+  sops-version:
+    description: sops release version (without the leading v).
+    required: false
+    default: "3.9.1"
+
+runs:
+  using: composite
+  steps:
+    - name: Install sops + age
+      shell: bash
+      run: |
+        set -euo pipefail
+        SOPS_VERSION="${{ inputs.sops-version }}"
+        curl -fsSL -o /tmp/sops \
+          "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
+        sudo install -m 0755 /tmp/sops /usr/local/bin/sops
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq age
+
+    - name: Decrypt with sops
+      shell: bash
+      env:
+        SOPS_AGE_KEY: ${{ inputs.age-key }}
+      run: |
+        set -euo pipefail
+        mkdir -p "$(dirname '${{ inputs.output }}')"
+        sops --decrypt '${{ inputs.input }}' > '${{ inputs.output }}'
+        chmod 600 '${{ inputs.output }}'

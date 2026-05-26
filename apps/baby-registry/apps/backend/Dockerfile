@@ -1,5 +1,5 @@
 # Build stage — installs forge, generates code, builds binary
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 RUN apk add --no-cache git ca-certificates
 
@@ -19,7 +19,7 @@ RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/server .
 
 # Runtime
-FROM alpine:3.20
+FROM alpine:3.21
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /out/server ./server

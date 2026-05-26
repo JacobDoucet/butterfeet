@@ -1,0 +1,24 @@
+# Production overlay.
+#
+# TLS is terminated by a DigitalOcean Load Balancer in front of the droplet.
+# Each app publishes its frontend on a unique host port; the LB forwards
+# 443 -> <droplet-ip>:<port> for the right hostname.
+#
+# Port allocation (keep this list as new apps are added to the droplet):
+#   baby-registry / storknest.baby  -> 3035
+#
+# Usage on the droplet:
+#   docker compose -f docker-compose.yml -f compose.prod.yml \
+#     --env-file .env up -d --build
+
+services:
+  backend:
+    # Backend is reachable only on the docker network; nginx proxies /api to it.
+    ports: !reset []
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.prod
+    ports:
+      - "${FRONTEND_HOST_PORT:-3035}:80"

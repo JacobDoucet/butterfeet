@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,6 +10,9 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	addressaccesssessionmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session_mongo"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/api"
@@ -26,6 +28,7 @@ import (
 	shippingaddressrequestmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request_mongo"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/auth"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/buyer"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/public"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/scrape"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/shipping"
@@ -34,31 +37,49 @@ import (
 )
 
 func main() {
+	appEnv := getEnv("APP_ENV", "development")
+	isProd := appEnv == "production"
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
+	if !isProd {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+
 	mongoURI := getEnv("MONGO_URI", "mongodb://localhost:27017")
 	dbName := getEnv("DB_NAME", "baby_registry")
 	port := getEnv("PORT", "8088")
 	jwtSecret := getEnv("JWT_SECRET", "dev-insecure-secret-change-me")
+	if isProd && (jwtSecret == "dev-insecure-secret-change-me" || len(jwtSecret) < 32) {
+		log.Fatal().Msg("JWT_SECRET must be set to a cryptographically random value of at least 32 characters in production")
+	}
 	appBaseURL := getEnv("APP_BASE_URL", "http://localhost:5173")
 	allowedOrigins := parseAllowedOrigins(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3035,http://localhost:5173"))
+
+	mailSvc := mailer.New(mailer.Config{
+		ResendAPIKey: os.Getenv("RESEND_API_KEY"),
+		From:         getEnv("MAIL_FROM", "Stork Nest <onboarding@resend.dev>"),
+	})
+	if isProd && os.Getenv("RESEND_API_KEY") == "" {
+		log.Fatal().Msg("RESEND_API_KEY must be set in production")
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v", err)
+		log.Fatal().Err(err).Msg("Failed to connect to MongoDB")
 	}
 	defer func() {
 		_ = mongoClient.Disconnect(context.Background())
 	}()
 	if err := mongoClient.Ping(ctx, nil); err != nil {
-		log.Fatalf("Failed to ping MongoDB: %v", err)
+		log.Fatal().Err(err).Msg("Failed to ping MongoDB")
 	}
-	log.Println("Connected to MongoDB")
+	log.Info().Msg("Connected to MongoDB")
 
 	db := mongoClient.Database(dbName)
 	if err := ensureIndexes(context.Background(), db); err != nil {
-		log.Fatalf("Failed to ensure Mongo indexes: %v", err)
+		log.Fatal().Err(err).Msg("Failed to ensure Mongo indexes")
 	}
 	apiClient := api.NewMongoBackedClient(db)
 
@@ -67,6 +88,8 @@ func main() {
 		Client:     apiClient,
 		JWTSecret:  []byte(jwtSecret),
 		AppBaseURL: appBaseURL,
+		Prod:       isProd,
+		Mailer:     mailSvc,
 	})
 
 	resolveActor := func(r *http.Request) (permissions.Actor, error) {
@@ -80,11 +103,11 @@ func main() {
 	forgeMux, err := http_server.ServeMux(apiClient, http_server.ServeMuxProps{
 		ResolveActor: resolveActor,
 		OnError: func(handler string, e error) {
-			log.Printf("forge handler error %s: %v", handler, e)
+			log.Error().Str("handler", handler).Err(e).Msg("forge handler error")
 		},
 	})
 	if err != nil {
-		log.Fatalf("Failed to create forge HTTP server: %v", err)
+		log.Fatal().Err(err).Msg("Failed to create forge HTTP server")
 	}
 
 	root := http.NewServeMux()
@@ -92,12 +115,14 @@ func main() {
 	authSvc.Register(root)
 
 	scrapeHandler := scrape.NewHandler()
-	root.Handle("/api/scrape", scrapeHandler)
+	root.Handle("/api/scrape", forgeAuthWrapper(scrapeHandler, authSvc))
 
 	publicHandler := public.NewHandler(apiClient)
 	buyerSvc := buyer.NewService(buyer.Config{
 		DB:        db,
 		JWTSecret: []byte(jwtSecret),
+		Prod:      isProd,
+		Mailer:    mailSvc,
 	})
 	publicHandler.SetBuyerResolver(buyerSvc.ResolveBuyer)
 	buyerSvc.Register(publicHandler.Mux())
@@ -125,16 +150,16 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("Backend listening on :%s", port)
+		log.Info().Str("port", port).Msg("Backend listening")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server error: %v", err)
+			log.Fatal().Err(err).Msg("server error")
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down...")
+	log.Info().Msg("Shutting down")
 
 	shutdownCtx, sCancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer sCancel()
