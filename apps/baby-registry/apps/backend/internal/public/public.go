@@ -3,6 +3,7 @@ package public
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -15,6 +16,8 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_guest_status"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_item_source"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_reservation_status"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
+	owneruserapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	registryapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_api"
@@ -24,17 +27,20 @@ import (
 	registryitemapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
 	reservationapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation_api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/shipping"
+	"github.com/rs/zerolog/log"
 )
 
 type Handler struct {
 	mux          *http.ServeMux
 	client       api.Client
+	mailer       mailer.Mailer
 	resolveBuyer func(r *http.Request, slug string) (string, error)
 }
 
-func NewHandler(client api.Client) *Handler {
-	h := &Handler{client: client}
+func NewHandler(client api.Client, notificationMailer mailer.Mailer) *Handler {
+	h := &Handler{client: client, mailer: notificationMailer}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/r/", h.handleRegistryBySlug)
 	mux.HandleFunc("/items/", h.handleItemRoute) // /items/:id/reserve
@@ -270,15 +276,16 @@ func (h *Handler) handleItemRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	reg, _, regErr := h.client.Registry().SelectById(r.Context(), super,
+		registry.SelectByIdQuery{Id: item.RegistryId}, registryapi.NewProjection(true))
+	if regErr != nil {
+		http.Error(w, "registry not found", http.StatusNotFound)
+		return
+	}
+
 	// Gate: reserver must be email-verified for this registry.
 	var buyerEmail string
 	if h.resolveBuyer != nil {
-		reg, _, regErr := h.client.Registry().SelectById(r.Context(), super,
-			registry.SelectByIdQuery{Id: item.RegistryId}, registryapi.NewProjection(true))
-		if regErr != nil {
-			http.Error(w, "registry not found", http.StatusNotFound)
-			return
-		}
 		email, err := h.resolveBuyer(r, reg.Slug)
 		if err != nil {
 			http.Error(w, "verification required", http.StatusUnauthorized)
@@ -315,8 +322,72 @@ func (h *Handler) handleItemRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.sendOwnerReservationNotification(reg.OwnerId, reg.Title, item.Title, body.Quantity, name, body.IsAnonymous, buyerEmail, strings.TrimSpace(body.Message))
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
+}
+
+func (h *Handler) sendOwnerReservationNotification(ownerID, registryTitle, itemTitle string, quantity int, reserverName string, isAnonymous bool, buyerEmail, message string) {
+	if h.mailer == nil || ownerID == "" {
+		return
+	}
+
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		super := permissions.NewSuperActor()
+		owner, _, err := h.client.OwnerUser().SelectById(ctx, super, owner_user.SelectByIdQuery{Id: ownerID}, owneruserapi.NewProjection(true))
+		if err != nil {
+			log.Error().Err(err).Str("ownerId", ownerID).Msg("owner reservation notification lookup failed")
+			return
+		}
+		if strings.TrimSpace(owner.Email) == "" {
+			return
+		}
+		ownerName := fallbackString(strings.TrimSpace(owner.Name), "there")
+
+		buyerName := reserverName
+		if isAnonymous {
+			buyerName = "Anonymous"
+		} else if buyerName == "" {
+			buyerName = "Unknown buyer"
+		}
+		qtyLine := ""
+		if quantity > 1 {
+			qtyLine = fmt.Sprintf("Quantity: %d\n", quantity)
+		}
+		messageLine := ""
+		if message != "" {
+			messageLine = "Message: " + message + "\n"
+		}
+
+		err = h.mailer.Send(ctx, mailer.Message{
+			To:      owner.Email,
+			Subject: "Someone claimed an item on your Stork Nest registry",
+			Text: fmt.Sprintf(
+				"Hi %s,\n\n%s marked \"%s\" as claimed on your \"%s\" registry.\n%sBuyer email: %s\n%s\nYou can review your registry in Stork Nest.\n",
+				ownerName,
+				buyerName,
+				itemTitle,
+				registryTitle,
+				qtyLine,
+				fallbackString(strings.TrimSpace(buyerEmail), "not available"),
+				messageLine,
+			),
+		})
+		if err != nil {
+			log.Error().Err(err).Str("ownerId", ownerID).Str("email", owner.Email).Msg("owner reservation notification send failed")
+		}
+	}()
+}
+
+func fallbackString(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+	return value
 }
 
 func (h *Handler) resolveApprovedGuest(ctx context.Context, super permissions.Actor, registryId, email string) (*registryapprovedguestapi.Model, error) {

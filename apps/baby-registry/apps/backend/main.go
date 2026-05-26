@@ -117,7 +117,7 @@ func main() {
 	scrapeHandler := scrape.NewHandler()
 	root.Handle("/api/scrape", forgeAuthWrapper(scrapeHandler, authSvc))
 
-	publicHandler := public.NewHandler(apiClient)
+	publicHandler := public.NewHandler(apiClient, mailSvc)
 	buyerSvc := buyer.NewService(buyer.Config{
 		DB:        db,
 		JWTSecret: []byte(jwtSecret),

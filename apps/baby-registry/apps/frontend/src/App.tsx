@@ -41,7 +41,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             variant="h6"
             sx={{ textDecoration: 'none', color: 'inherit', fontWeight: 700, display: 'flex', alignItems: 'center' }}
           >
-            <BrandLogo variant="lockup" height={34} />
+            <BrandLogo variant="lockup" height={35} markScale={1.12} wordmarkScale={1.1} />
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
           {me ? (

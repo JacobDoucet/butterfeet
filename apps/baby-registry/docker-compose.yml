@@ -2,6 +2,9 @@ services:
   mongo:
     image: mongo:8
     restart: unless-stopped
+    # Local dev only. Prod uses DigitalOcean Managed MongoDB, so this service
+    # is gated behind the `dev` profile and won't start unless you opt in.
+    profiles: ["dev"]
     volumes:
       - mongo_data:/data/db
     # Mongo is reachable on the compose network as `mongo:27017`.
@@ -16,8 +19,8 @@ services:
       dockerfile: apps/backend/Dockerfile
     restart: unless-stopped
     environment:
-      MONGO_URI: mongodb://mongo:27017
-      DB_NAME: baby_registry
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017}
+      DB_NAME: ${DB_NAME:-baby_registry}
       PORT: "8080"
       APP_ENV: ${APP_ENV:-development}
       JWT_SECRET: ${JWT_SECRET:-dev-insecure-secret-change-me}

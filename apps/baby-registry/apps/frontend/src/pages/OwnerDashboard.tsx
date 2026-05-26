@@ -68,6 +68,7 @@ export default function OwnerDashboard() {
         slug: normalizedSlug,
         title: title.trim(),
         parentNames: parentNames.trim(),
+        addressAccessMode: 'RequestApproval',
         isPublic: true,
         ownerId: meQ.data?.id,
       });

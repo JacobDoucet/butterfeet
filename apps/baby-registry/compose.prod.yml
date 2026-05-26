@@ -12,9 +12,14 @@
 #     --env-file .env up -d --build
 
 services:
+  # Mongo is gated behind the `dev` profile in docker-compose.yml, so it
+  # never starts in prod. We use DigitalOcean Managed MongoDB instead;
+  # MONGO_URI is supplied via the .env file.
+
   backend:
     # Backend is reachable only on the docker network; nginx proxies /api to it.
     ports: !reset []
+    depends_on: !reset []
 
   frontend:
     build:

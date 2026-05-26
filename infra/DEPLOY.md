@@ -147,14 +147,14 @@ Two workflows live under `.github/workflows/`:
 
 ### Required GitHub secrets (Settings -> Secrets and variables -> Actions)
 
-| Name                 | Value                                                                           |
-| -------------------- | ------------------------------------------------------------------------------- |
-| `SOPS_AGE_KEY`       | Contents of `~/.config/sops/age/keys.txt` (the **private** age key, full file). |
-| `DEPLOY_SSH_KEY`     | Private SSH key (PEM) for the `deploy` user on the droplet.                     |
-| `DEPLOY_HOST`        | Droplet public IP or hostname.                                                  |
-| `DEPLOY_USER`        | `deploy`                                                                        |
-| `DEPLOY_REPO_DIR`    | Absolute path of the checkout on the droplet, e.g. `/home/deploy/butterfeet`.   |
-| `DEPLOY_BRANCH`      | (Optional) branch to deploy. Defaults to `main`.                                |
+| Name              | Value                                                                           |
+| ----------------- | ------------------------------------------------------------------------------- |
+| `SOPS_AGE_KEY`    | Contents of `~/.config/sops/age/keys.txt` (the **private** age key, full file). |
+| `DEPLOY_SSH_KEY`  | Private SSH key (PEM) for the `deploy` user on the droplet.                     |
+| `DEPLOY_HOST`     | Droplet public IP or hostname.                                                  |
+| `DEPLOY_USER`     | `deploy`                                                                        |
+| `DEPLOY_REPO_DIR` | Absolute path of the checkout on the droplet, e.g. `/home/deploy/butterfeet`.   |
+| `DEPLOY_BRANCH`   | (Optional) branch to deploy. Defaults to `main`.                                |
 
 ### Required GitHub variables (optional)
 

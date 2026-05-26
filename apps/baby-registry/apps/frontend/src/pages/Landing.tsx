@@ -6,7 +6,7 @@ export default function Landing() {
   return (
     <Container maxWidth="md" sx={{ py: { xs: 6, md: 12 }, textAlign: 'center' }}>
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-        <BrandLogo variant="lockup" height={56} />
+        <BrandLogo variant="lockup" height={60} markScale={1.3} wordmarkScale={1.26} />
       </Box>
       <Typography variant="h2" gutterBottom>
         Feather the nest, your way.
