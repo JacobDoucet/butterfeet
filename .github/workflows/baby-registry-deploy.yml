@@ -62,6 +62,10 @@ jobs:
           DEPLOY_BRANCH: ${{ secrets.DEPLOY_BRANCH || 'main' }}
         run: |
           set -euo pipefail
+          DEPLOY_HOST="${DEPLOY_HOST//[$'\t\r\n ']}"
+          DEPLOY_USER="${DEPLOY_USER//[$'\t\r\n ']}"
+          DEPLOY_REPO_DIR="${DEPLOY_REPO_DIR//[$'\t\r\n']}"
+          DEPLOY_BRANCH="${DEPLOY_BRANCH//[$'\t\r\n ']}"
           ssh -i ~/.ssh/id_ed25519 "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "REPO_DIR='${DEPLOY_REPO_DIR}' BRANCH='${DEPLOY_BRANCH}' bash -se" <<'REMOTE'
           set -euo pipefail
