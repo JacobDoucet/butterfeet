@@ -63,8 +63,7 @@ jobs:
         run: |
           set -euo pipefail
           ssh -i ~/.ssh/id_ed25519 "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            REPO_DIR="${DEPLOY_REPO_DIR}" BRANCH="${DEPLOY_BRANCH:-main}" \
-            'bash -se' <<'REMOTE'
+            "REPO_DIR='${DEPLOY_REPO_DIR}' BRANCH='${DEPLOY_BRANCH}' bash -se" <<'REMOTE'
           set -euo pipefail
           : "${REPO_DIR:?REPO_DIR is required}"
           : "${BRANCH:?BRANCH is required}"
