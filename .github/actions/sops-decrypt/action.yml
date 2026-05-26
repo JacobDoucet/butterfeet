@@ -11,6 +11,10 @@ inputs:
   output:
     description: Path to write the decrypted plaintext to.
     required: true
+  format:
+    description: sops input/output format (dotenv, json, yaml, binary). Needed when the encrypted file's extension is not recognized.
+    required: false
+    default: dotenv
   sops-version:
     description: sops release version (without the leading v).
     required: false
@@ -37,5 +41,8 @@ runs:
       run: |
         set -euo pipefail
         mkdir -p "$(dirname '${{ inputs.output }}')"
-        sops --decrypt '${{ inputs.input }}' > '${{ inputs.output }}'
+        sops --decrypt \
+          --input-type '${{ inputs.format }}' \
+          --output-type '${{ inputs.format }}' \
+          '${{ inputs.input }}' > '${{ inputs.output }}'
         chmod 600 '${{ inputs.output }}'
