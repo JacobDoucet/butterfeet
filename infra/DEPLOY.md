@@ -151,7 +151,6 @@ Two workflows live under `.github/workflows/`:
 | -------------------- | ------------------------------------------------------------------------------- |
 | `SOPS_AGE_KEY`       | Contents of `~/.config/sops/age/keys.txt` (the **private** age key, full file). |
 | `DEPLOY_SSH_KEY`     | Private SSH key (PEM) for the `deploy` user on the droplet.                     |
-| `DEPLOY_KNOWN_HOSTS` | Output of `ssh-keyscan <droplet-ip>` so the workflow trusts the host.           |
 | `DEPLOY_HOST`        | Droplet public IP or hostname.                                                  |
 | `DEPLOY_USER`        | `deploy`                                                                        |
 | `DEPLOY_REPO_DIR`    | Absolute path of the checkout on the droplet, e.g. `/home/deploy/butterfeet`.   |
@@ -163,13 +162,10 @@ Two workflows live under `.github/workflows/`:
 | ------------------- | -------------------------------------------------------------------- |
 | `BABY_REGISTRY_URL` | e.g. `https://storknest.baby` — used for the post-deploy smoke test. |
 
-Generate the SSH keypair locally, add the **public** key to
-`/home/deploy/.ssh/authorized_keys` on the droplet, and put the **private**
-key in `DEPLOY_SSH_KEY`. Capture host keys with:
-
-```bash
-ssh-keyscan <droplet-ip>
-```
+Generate the SSH keypair locally and add the **public** key to
+`/home/deploy/.ssh/authorized_keys` on the droplet. Put the **private**
+key in `DEPLOY_SSH_KEY`. The workflow runs `ssh-keyscan` against `DEPLOY_HOST`
+at deploy time to pin the host key.
 
 The deploy workflow uses a GitHub Environment called `production`, so you
 can add a manual approval gate there if you want one.
