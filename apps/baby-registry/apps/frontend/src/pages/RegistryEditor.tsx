@@ -18,6 +18,9 @@ import {
   IconButton,
   CircularProgress,
   Chip,
+  Tabs,
+  Tab,
+  Box,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -43,6 +46,7 @@ type DeleteTarget =
 export default function RegistryEditor() {
   const { slug = '' } = useParams();
   const qc = useQueryClient();
+  const [activeTab, setActiveTab] = useState<'items' | 'shipping' | 'access'>('items');
 
   const regsQ = useQuery({
     queryKey: ['registries'],
@@ -255,12 +259,28 @@ export default function RegistryEditor() {
             View public page → /r/{reg.slug}
           </Typography>
         </Stack>
-        <Button variant="contained" onClick={() => setOpen(true)}>Add item</Button>
+        {activeTab === 'items' && (
+          <Button variant="contained" onClick={() => setOpen(true)}>Add item</Button>
+        )}
       </Stack>
 
-      <PrivacyPanel reg={reg} />
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={(_, value) => setActiveTab(value)}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          <Tab value="items" label="Items" />
+          <Tab value="shipping" label="Shipping info" />
+          <Tab value="access" label="User access" />
+        </Tabs>
+      </Box>
 
-      <Grid container spacing={2}>
+      {activeTab === 'shipping' && <PrivacyPanel reg={reg} section="shipping" />}
+      {activeTab === 'access' && <PrivacyPanel reg={reg} section="access" />}
+
+      {activeTab === 'items' && <Grid container spacing={2}>
         {list.map((it) => {
           const itemReservations = reservationsByItem[it.id] ?? [];
           const activeReservations = itemReservations.filter((r) => r.status !== 'Cancelled');
@@ -380,7 +400,7 @@ export default function RegistryEditor() {
             <Typography color="text.secondary">No items yet. Paste a product URL to start.</Typography>
           </Grid>
         )}
-      </Grid>
+      </Grid>}
 
       <Dialog open={open} onClose={() => { setOpen(false); reset(); }} fullWidth maxWidth="sm">
         <DialogTitle>Add item</DialogTitle>

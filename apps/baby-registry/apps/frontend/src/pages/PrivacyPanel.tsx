@@ -61,7 +61,15 @@ const MODES: { value: AddressAccessMode; label: string; help: string }[] = [
   },
 ];
 
-export default function PrivacyPanel({ reg }: { reg: Registry }) {
+type PrivacyPanelSection = 'all' | 'shipping' | 'access';
+
+export default function PrivacyPanel({
+  reg,
+  section = 'all',
+}: {
+  reg: Registry;
+  section?: PrivacyPanelSection;
+}) {
   const qc = useQueryClient();
   const [mode, setMode] = useState<AddressAccessMode>(reg.addressAccessMode ?? 'RequestApproval');
   const [recipientName, setRecipientName] = useState(reg.shippingRecipientName ?? '');
@@ -110,6 +118,84 @@ export default function PrivacyPanel({ reg }: { reg: Registry }) {
     onError: (err) => setError((err as Error).message),
   });
 
+  const shippingContent = (
+    <Stack spacing={3}>
+      <Typography variant="body2" color="text.secondary">
+        Only people you approve can view your shipping address. Everyone else must request access first.
+        This address is never shown on your public registry page.
+      </Typography>
+
+      <Box>
+        <Typography variant="overline" color="text.secondary">Access mode</Typography>
+        <ToggleButtonGroup
+          exclusive
+          value={mode}
+          onChange={(_, v) => v && setMode(v as AddressAccessMode)}
+          sx={{ display: 'flex', flexWrap: 'wrap', mt: 1 }}
+        >
+          {MODES.map((m) => (
+            <ToggleButton key={m.value} value={m.value} sx={{ textTransform: 'none', px: 2 }}>
+              {m.label}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+          {MODES.find((m) => m.value === mode)?.help}
+        </Typography>
+      </Box>
+
+      <Box>
+        <Typography variant="overline" color="text.secondary">Shipping address</Typography>
+        <Stack spacing={2} sx={{ mt: 1 }}>
+          <TextField label="Recipient name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} />
+          <TextField label="Address line 1" value={line1} onChange={(e) => setLine1(e.target.value)} />
+          <TextField label="Address line 2" value={line2} onChange={(e) => setLine2(e.target.value)} />
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <TextField label="City" value={city} onChange={(e) => setCity(e.target.value)} sx={{ flex: 1 }} />
+            <TextField label="Region / State" value={region} onChange={(e) => setRegion(e.target.value)} sx={{ flex: 1 }} />
+          </Stack>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <TextField label="Postal code" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} sx={{ flex: 1 }} />
+            <TextField label="Country" value={country} onChange={(e) => setCountry(e.target.value)} sx={{ flex: 1 }} />
+          </Stack>
+          <TextField
+            label="Delivery notes (optional)"
+            value={deliveryNotes}
+            onChange={(e) => setDeliveryNotes(e.target.value)}
+            multiline
+            minRows={2}
+            helperText="Buzzer code, where to leave parcels, etc."
+          />
+        </Stack>
+      </Box>
+
+      {error && <Alert severity="error">{error}</Alert>}
+      {saved && <Alert severity="success">Saved.</Alert>}
+
+      <Stack direction="row" justifyContent="flex-end">
+        <Button variant="contained" onClick={() => saveM.mutate()} disabled={saveM.isPending}>
+          Save shipping settings
+        </Button>
+      </Stack>
+    </Stack>
+  );
+
+  const accessContent = (
+    <Stack spacing={3}>
+      <AddressRequestsSection registryId={reg.id} />
+      <Divider />
+      <ApprovedGuestsSection registryId={reg.id} />
+    </Stack>
+  );
+
+  if (section === 'shipping') {
+    return shippingContent;
+  }
+
+  if (section === 'access') {
+    return accessContent;
+  }
+
   return (
     <Accordion sx={{ mb: 3 }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -123,71 +209,11 @@ export default function PrivacyPanel({ reg }: { reg: Registry }) {
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={3}>
-          <Typography variant="body2" color="text.secondary">
-            Only people you approve can view your shipping address. Everyone else must request access first.
-            This address is never shown on your public registry page.
-          </Typography>
-
-          <Box>
-            <Typography variant="overline" color="text.secondary">Access mode</Typography>
-            <ToggleButtonGroup
-              exclusive
-              value={mode}
-              onChange={(_, v) => v && setMode(v as AddressAccessMode)}
-              sx={{ display: 'flex', flexWrap: 'wrap', mt: 1 }}
-            >
-              {MODES.map((m) => (
-                <ToggleButton key={m.value} value={m.value} sx={{ textTransform: 'none', px: 2 }}>
-                  {m.label}
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-              {MODES.find((m) => m.value === mode)?.help}
-            </Typography>
-          </Box>
-
-          <Box>
-            <Typography variant="overline" color="text.secondary">Shipping address</Typography>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <TextField label="Recipient name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} />
-              <TextField label="Address line 1" value={line1} onChange={(e) => setLine1(e.target.value)} />
-              <TextField label="Address line 2" value={line2} onChange={(e) => setLine2(e.target.value)} />
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <TextField label="City" value={city} onChange={(e) => setCity(e.target.value)} sx={{ flex: 1 }} />
-                <TextField label="Region / State" value={region} onChange={(e) => setRegion(e.target.value)} sx={{ flex: 1 }} />
-              </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                <TextField label="Postal code" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} sx={{ flex: 1 }} />
-                <TextField label="Country" value={country} onChange={(e) => setCountry(e.target.value)} sx={{ flex: 1 }} />
-              </Stack>
-              <TextField
-                label="Delivery notes (optional)"
-                value={deliveryNotes}
-                onChange={(e) => setDeliveryNotes(e.target.value)}
-                multiline
-                minRows={2}
-                helperText="Buzzer code, where to leave parcels, etc."
-              />
-            </Stack>
-          </Box>
-
-          {error && <Alert severity="error">{error}</Alert>}
-          {saved && <Alert severity="success">Saved.</Alert>}
-
-          <Stack direction="row" justifyContent="flex-end">
-            <Button variant="contained" onClick={() => saveM.mutate()} disabled={saveM.isPending}>
-              Save privacy settings
-            </Button>
-          </Stack>
+          {shippingContent}
 
           <Divider />
 
-          <AddressRequestsSection registryId={reg.id} />
-
-          <Divider />
-
-          <ApprovedGuestsSection registryId={reg.id} />
+          {accessContent}
         </Stack>
       </AccordionDetails>
     </Accordion>

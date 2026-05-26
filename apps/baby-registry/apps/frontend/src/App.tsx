@@ -1,4 +1,4 @@
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { AppBar, Toolbar, Box, Button, Typography, Container } from '@mui/material';
 import LandingPage from './pages/Landing';
 import LoginPage from './pages/Login';
@@ -13,6 +13,7 @@ import BrandLogo from './components/BrandLogo';
 
 function Shell({ children }: { children: React.ReactNode }) {
   const nav = useNavigate();
+  const location = useLocation();
   const qc = useQueryClient();
   const { data: me } = useQuery<Me | null>({
     queryKey: ['me'],
@@ -31,10 +32,15 @@ function Shell({ children }: { children: React.ReactNode }) {
     nav('/');
   };
 
+  const hideHeaderActions = location.pathname.startsWith('/r/');
+  const toolbarSx = hideHeaderActions
+    ? { gap: 2, minHeight: { xs: 64, sm: 68 }, justifyContent: 'center' }
+    : { gap: 2 };
+
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AppBar position="sticky" color="transparent" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-        <Toolbar sx={{ gap: 2 }}>
+        <Toolbar sx={toolbarSx}>
           <Typography
             component={Link}
             to="/"
@@ -43,8 +49,8 @@ function Shell({ children }: { children: React.ReactNode }) {
           >
             <BrandLogo variant="lockup" height={35} markScale={1.12} wordmarkScale={1.1} />
           </Typography>
-          <Box sx={{ flexGrow: 1 }} />
-          {me ? (
+          {!hideHeaderActions && <Box sx={{ flexGrow: 1 }} />}
+          {!hideHeaderActions && (me ? (
             <>
               <Button component={Link} to="/owner" color="primary">
                 My registries
@@ -57,7 +63,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             <Button component={Link} to="/login" variant="contained" color="primary">
               Sign in
             </Button>
-          )}
+          ))}
         </Toolbar>
       </AppBar>
       <Box sx={{ flexGrow: 1 }}>{children}</Box>
