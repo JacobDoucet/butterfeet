@@ -14,6 +14,7 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_guest_access_level"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_guest_status"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
+	owneruserapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	registryapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_api"
@@ -21,7 +22,6 @@ import (
 	registryapprovedguestapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	shippingaddressrequestapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request_api"
-	owneruserapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
 	"github.com/rs/zerolog/log"
 )

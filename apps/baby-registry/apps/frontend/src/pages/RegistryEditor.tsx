@@ -24,6 +24,7 @@ import {
   FormControlLabel,
   Checkbox,
   Autocomplete,
+  Snackbar,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -40,6 +41,7 @@ import {
 } from '@mui/material';
 import { registries, items, scrape, reservations, type RegistryItem, type Registry, type Reservation, type ReservationStatus } from '../api';
 import PrivacyPanel from './PrivacyPanel';
+import CsvImportDialog from '../components/CsvImportDialog';
 
 type DeleteTarget =
   | { kind: 'item'; id: string; title: string }
@@ -49,6 +51,8 @@ export default function RegistryEditor() {
   const { slug = '' } = useParams();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<'items' | 'shipping' | 'access'>('items');
+  const [csvImportOpen, setCsvImportOpen] = useState(false);
+  const [csvImportSnack, setCsvImportSnack] = useState<string | null>(null);
 
   const regsQ = useQuery({
     queryKey: ['registries'],
@@ -326,7 +330,10 @@ export default function RegistryEditor() {
           </Typography>
         </Stack>
         {activeTab === 'items' && (
-          <Button variant="contained" onClick={() => { reset(); setOpen(true); }}>Add item</Button>
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" onClick={() => setCsvImportOpen(true)}>Import CSV</Button>
+            <Button variant="contained" onClick={() => { reset(); setOpen(true); }}>Add item</Button>
+          </Stack>
         )}
       </Stack>
 
@@ -840,6 +847,26 @@ export default function RegistryEditor() {
           </Button>
         </DialogActions>
       </Dialog>
+      {reg && (
+        <CsvImportDialog
+          open={csvImportOpen}
+          onClose={() => setCsvImportOpen(false)}
+          registryId={reg.id}
+          existingItems={list}
+          onComplete={(created, skipped) => {
+            qc.invalidateQueries({ queryKey: ['items', reg.id] });
+            const parts = [`Imported ${created} item${created === 1 ? '' : 's'}`];
+            if (skipped > 0) parts.push(`${skipped} already in registry`);
+            setCsvImportSnack(parts.join(' \u00b7 '));
+          }}
+        />
+      )}
+      <Snackbar
+        open={!!csvImportSnack}
+        autoHideDuration={4000}
+        onClose={() => setCsvImportSnack(null)}
+        message={csvImportSnack ?? ''}
+      />
     </Container>
   );
 }

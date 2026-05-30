@@ -69,22 +69,22 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type publicItem struct {
-	Id          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	ImageUrl    string `json:"imageUrl"`
-	ProductUrl  string `json:"productUrl"`
-	Source      string `json:"source"`
-	PriceCents  int    `json:"priceCents"`
-	Currency    string `json:"currency"`
-	Quantity    int    `json:"quantity"`
+	Id                string `json:"id"`
+	Title             string `json:"title"`
+	Description       string `json:"description"`
+	ImageUrl          string `json:"imageUrl"`
+	ProductUrl        string `json:"productUrl"`
+	Source            string `json:"source"`
+	PriceCents        int    `json:"priceCents"`
+	Currency          string `json:"currency"`
+	Quantity          int    `json:"quantity"`
 	QuantityUnlimited bool   `json:"quantityUnlimited"`
-	Category    string `json:"category"`
-	NoSubstitutes bool `json:"noSubstitutes"`
-	ParentItemId string `json:"parentItemId,omitempty"`
-	Notes       string `json:"notes"`
-	Position    int    `json:"position"`
-	Reserved    int    `json:"reserved"`
+	Category          string `json:"category"`
+	NoSubstitutes     bool   `json:"noSubstitutes"`
+	ParentItemId      string `json:"parentItemId,omitempty"`
+	Notes             string `json:"notes"`
+	Position          int    `json:"position"`
+	Reserved          int    `json:"reserved"`
 }
 
 type publicRegistry struct {
@@ -203,22 +203,22 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 	for _, it := range itemsResult.Data {
 		groupID := groupRootID(it, itemByID)
 		publicItems = append(publicItems, publicItem{
-			Id:          it.Id,
-			Title:       it.Title,
-			Description: it.Description,
-			ImageUrl:    it.ImageUrl,
-			ProductUrl:  it.ProductUrl,
-			Source:      string(it.Source),
-			PriceCents:  it.PriceCents,
-			Currency:    it.Currency,
-			Quantity:    it.Quantity,
+			Id:                it.Id,
+			Title:             it.Title,
+			Description:       it.Description,
+			ImageUrl:          it.ImageUrl,
+			ProductUrl:        it.ProductUrl,
+			Source:            string(it.Source),
+			PriceCents:        it.PriceCents,
+			Currency:          it.Currency,
+			Quantity:          it.Quantity,
 			QuantityUnlimited: it.QuantityUnlimited,
-			Category:    it.Category,
-			NoSubstitutes: it.NoSubstitutes,
-			ParentItemId: it.ParentItemId,
-			Notes:       it.Notes,
-			Position:    it.Position,
-			Reserved:    reservedByGroup[groupID],
+			Category:          it.Category,
+			NoSubstitutes:     it.NoSubstitutes,
+			ParentItemId:      it.ParentItemId,
+			Notes:             it.Notes,
+			Position:          it.Position,
+			Reserved:          reservedByGroup[groupID],
 		})
 	}
 

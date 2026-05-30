@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -8,12 +9,14 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"golang.org/x/net/html"
 )
 
@@ -67,9 +70,11 @@ func newSafeClient() *http.Client {
 			return safeDialer.DialContext(ctx, network, net.JoinHostPort(addrs[0], port))
 		},
 	}
+	jar, _ := cookiejar.New(nil)
 	return &http.Client{
 		Timeout:   15 * time.Second,
 		Transport: transport,
+		Jar:       jar,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) >= 5 {
 				return errors.New("too many redirects")
@@ -130,20 +135,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	// Use a real-browser User-Agent + common headers. Many shopping sites
-	// (Etsy, John Lewis, Mamas & Papas, etc.) sit behind bot-detection
-	// services that return 403 for plain HTTP clients.
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
-	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
-	req.Header.Set("Accept-Language", "en-GB,en;q=0.9")
-	req.Header.Set("Sec-Fetch-Dest", "document")
-	req.Header.Set("Sec-Fetch-Mode", "navigate")
-	req.Header.Set("Sec-Fetch-Site", "none")
-	req.Header.Set("Sec-Fetch-User", "?1")
-	req.Header.Set("Upgrade-Insecure-Requests", "1")
+	setBrowserHeaders(req)
 
 	resp, err := h.client.Do(req)
 	if err != nil {
+		log.Warn().Err(err).Str("url", target).Msg("scrape: fetch error")
 		writeResult(w, fallbackResult(target, parsed))
 		return
 	}
@@ -151,17 +147,31 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 4*1024*1024))
 	if err != nil {
+		log.Warn().Err(err).Str("url", target).Msg("scrape: read error")
 		writeResult(w, fallbackResult(target, parsed))
 		return
 	}
+	initialStatus := resp.StatusCode
+	initialLen := len(body)
+	solved := false
+
+	// Amazon often serves a "Continue shopping" interstitial to fresh
+	// server IPs. Submitting the embedded form sets session cookies that
+	// unblock the real product page on retry.
+	if retryBody, ok := h.solveAmazonInterstitial(r.Context(), parsed, body); ok {
+		body = retryBody
+		solved = true
+	}
 
 	if resp.StatusCode >= 400 || looksBlocked(body) {
+		log.Warn().Str("url", target).Int("status", initialStatus).Int("len", len(body)).Bool("solvedChallenge", solved).Msg("scrape: blocked, returning fallback")
 		writeResult(w, fallbackResult(target, parsed))
 		return
 	}
 
 	res, err := parseHTML(string(body), parsed)
 	if err != nil {
+		log.Warn().Err(err).Str("url", target).Int("status", initialStatus).Int("len", len(body)).Bool("solvedChallenge", solved).Msg("scrape: parse failed, returning fallback")
 		// Couldn't extract a title — fall back to slug-derived metadata
 		// rather than a hard error so the user still gets a head start.
 		writeResult(w, fallbackResult(target, parsed))
@@ -170,12 +180,106 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res.ProductUrl = target
 	res.Source = detectSource(parsed.Host)
 
+	log.Info().Str("url", target).Int("initialStatus", initialStatus).Int("initialLen", initialLen).Int("finalLen", len(body)).Bool("solvedChallenge", solved).Bool("hasImage", res.ImageUrl != "").Str("source", res.Source).Msg("scrape: ok")
+
 	writeResult(w, res)
 }
 
 func writeResult(w http.ResponseWriter, res Result) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(res)
+}
+
+// setBrowserHeaders applies a realistic Chrome header set. Many shopping
+// sites (Etsy, John Lewis, Mamas & Papas, Amazon, etc.) sit behind
+// bot-detection services that return 403 or interstitials for plain
+// HTTP clients.
+func setBrowserHeaders(req *http.Request) {
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "en-GB,en;q=0.9")
+	req.Header.Set("Sec-Fetch-Dest", "document")
+	req.Header.Set("Sec-Fetch-Mode", "navigate")
+	req.Header.Set("Sec-Fetch-Site", "none")
+	req.Header.Set("Sec-Fetch-User", "?1")
+	req.Header.Set("Upgrade-Insecure-Requests", "1")
+}
+
+var amazonInterstitialFormRE = regexp.MustCompile(`(?is)<form[^>]*action="(/errors/validateCaptcha[^"]*)"[^>]*>(.*?)</form>`)
+var amazonHiddenInputRE = regexp.MustCompile(`(?is)<input[^>]*type=["']?hidden["']?[^>]*>`)
+var amazonInputNameRE = regexp.MustCompile(`(?is)name=["']?([a-zA-Z0-9_-]+)["']?`)
+var amazonInputValueRE = regexp.MustCompile(`(?is)value=["']([^"']*)["']`)
+
+// solveAmazonInterstitial detects Amazon's "Continue shopping" challenge
+// page and submits the embedded form so the client picks up session
+// cookies, then refetches the original URL. Returns the new body on
+// success.
+func (h *Handler) solveAmazonInterstitial(ctx context.Context, original *url.URL, body []byte) ([]byte, bool) {
+	if !strings.Contains(original.Hostname(), "amazon.") {
+		return nil, false
+	}
+	snippet := string(body)
+	if !strings.Contains(snippet, "Continue shopping") || !strings.Contains(snippet, "/errors/validateCaptcha") {
+		return nil, false
+	}
+	m := amazonInterstitialFormRE.FindStringSubmatch(snippet)
+	if len(m) < 3 {
+		log.Warn().Str("url", original.String()).Msg("scrape: amazon interstitial detected but form not parsed")
+		return nil, false
+	}
+	action := html.UnescapeString(m[1])
+	values := url.Values{}
+	for _, input := range amazonHiddenInputRE.FindAllString(m[2], -1) {
+		nameMatch := amazonInputNameRE.FindStringSubmatch(input)
+		valueMatch := amazonInputValueRE.FindStringSubmatch(input)
+		if len(nameMatch) < 2 || len(valueMatch) < 2 {
+			continue
+		}
+		values.Set(nameMatch[1], html.UnescapeString(valueMatch[1]))
+	}
+	if len(values) == 0 {
+		log.Warn().Str("url", original.String()).Msg("scrape: amazon interstitial form had no hidden inputs")
+		return nil, false
+	}
+	challengeURL := &url.URL{
+		Scheme:   original.Scheme,
+		Host:     original.Host,
+		Path:     action,
+		RawQuery: values.Encode(),
+	}
+	challengeReq, err := http.NewRequestWithContext(ctx, http.MethodGet, challengeURL.String(), nil)
+	if err != nil {
+		return nil, false
+	}
+	setBrowserHeaders(challengeReq)
+	challengeReq.Header.Set("Referer", original.String())
+	challengeResp, err := h.client.Do(challengeReq)
+	if err != nil {
+		log.Warn().Err(err).Str("url", original.String()).Msg("scrape: amazon challenge request failed")
+		return nil, false
+	}
+	_, _ = io.Copy(io.Discard, io.LimitReader(challengeResp.Body, 1024*1024))
+	challengeResp.Body.Close()
+
+	retryReq, err := http.NewRequestWithContext(ctx, http.MethodGet, original.String(), nil)
+	if err != nil {
+		return nil, false
+	}
+	setBrowserHeaders(retryReq)
+	retryReq.Header.Set("Referer", original.String())
+	retryResp, err := h.client.Do(retryReq)
+	if err != nil {
+		log.Warn().Err(err).Str("url", original.String()).Msg("scrape: amazon retry failed")
+		return nil, false
+	}
+	defer retryResp.Body.Close()
+	retryBody, err := io.ReadAll(io.LimitReader(retryResp.Body, 4*1024*1024))
+	if err != nil {
+		return nil, false
+	}
+	stillChallenged := bytes.Contains(retryBody, []byte("Continue shopping"))
+	log.Info().Str("url", original.String()).Int("retryStatus", retryResp.StatusCode).Int("retryLen", len(retryBody)).Bool("stillChallenged", stillChallenged).Msg("scrape: amazon interstitial solved")
+	return retryBody, true
 }
 
 // looksBlocked returns true when the response body looks like an
