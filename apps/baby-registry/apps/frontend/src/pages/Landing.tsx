@@ -5,11 +5,17 @@ import BrandLogo from '../components/BrandLogo';
 export default function Landing() {
   return (
     <Container maxWidth="md" sx={{ py: { xs: 6, md: 12 }, textAlign: 'center' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2, maxWidth: '100%', overflow: 'hidden' }}>
         <BrandLogo variant="lockup" height={60} markScale={1.3} wordmarkScale={1.26} />
       </Box>
-      <Typography variant="h2" gutterBottom>
-        Feather the nest, your way.
+      <Typography
+        variant="h2"
+        gutterBottom
+        sx={{ fontSize: { xs: 'clamp(1.4rem, 6vw, 3rem)', md: '3.75rem' } }}
+      >
+        <Box component="span" sx={{ whiteSpace: 'nowrap' }}>Feather the nest,</Box>
+        <Box component="br" sx={{ display: { xs: 'block', md: 'none' } }} />
+        {' '}<Box component="span" sx={{ whiteSpace: 'nowrap' }}>your way.</Box>
       </Typography>
       <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>
         Drop a link from anywhere on the web, send it to your people,

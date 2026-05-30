@@ -48,6 +48,7 @@ export default function BrandLogo({
         alignItems: 'center',
         gap: 1,
         maxWidth: '100%',
+        overflow: 'hidden',
       }}
     >
       <Box
@@ -55,14 +56,27 @@ export default function BrandLogo({
         src={MARK_SRC}
         alt=""
         aria-hidden="true"
-        sx={{ display: 'block', height: height * markScale, width: 'auto' }}
+        sx={{
+          display: 'block',
+          height: height * markScale,
+          maxHeight: '13vw',
+          width: 'auto',
+          flexShrink: 0,
+        }}
       />
       <Box
         component="img"
         src={WORDMARK_SRC}
         alt=""
         aria-hidden="true"
-        sx={{ display: 'block', height: height * wordmarkScale, width: 'auto' }}
+        sx={{
+          display: 'block',
+          height: height * wordmarkScale,
+          maxHeight: '16vw',
+          width: 'auto',
+          minWidth: 0,
+          flexShrink: 1,
+        }}
       />
     </Box>
   );
