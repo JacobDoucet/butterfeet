@@ -124,7 +124,8 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Gate: buyer must have verified their email for this registry.
+	// Gate: buyer must have verified their email for this registry. Approved
+	// guest status only controls whether shipping details are included.
 	canViewShippingAddress := false
 	if h.resolveBuyer != nil {
 		buyerEmail, err := h.resolveBuyer(r, slug)
@@ -146,19 +147,9 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "lookup error", http.StatusInternalServerError)
 			return
 		}
-		if guest == nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusForbidden)
-			_ = json.NewEncoder(w).Encode(map[string]any{
-				"error":                 "approved guest access required",
-				"approvedGuestRequired": true,
-				"title":                 reg.Title,
-				"parentNames":           reg.ParentNames,
-				"themeColor":            reg.ThemeColor,
-			})
-			return
+		if guest != nil {
+			canViewShippingAddress = guest.AccessLevel == enum_guest_access_level.ViewShippingAddress
 		}
-		canViewShippingAddress = guest.AccessLevel == enum_guest_access_level.ViewShippingAddress
 	}
 
 	itemsResult, _, err := h.client.RegistryItem().Search(r.Context(), super, registry_item.WhereClause{
@@ -283,7 +274,8 @@ func (h *Handler) handleItemRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Gate: reserver must be email-verified for this registry.
+	// Gate: reserver must be email-verified for this registry. Approved guest
+	// access is not required to reserve an item; it only controls address access.
 	var buyerEmail string
 	if h.resolveBuyer != nil {
 		email, err := h.resolveBuyer(r, reg.Slug)
@@ -292,16 +284,6 @@ func (h *Handler) handleItemRoute(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		buyerEmail = email
-
-		guest, gErr := h.resolveApprovedGuest(r.Context(), super, item.RegistryId, buyerEmail)
-		if gErr != nil {
-			http.Error(w, "lookup error", http.StatusInternalServerError)
-			return
-		}
-		if guest == nil {
-			http.Error(w, "approved guest access required", http.StatusForbidden)
-			return
-		}
 	}
 	if buyerEmail == "" {
 		buyerEmail = strings.TrimSpace(body.ContactEmail)
