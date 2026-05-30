@@ -117,7 +117,7 @@ func main() {
 	scrapeHandler := scrape.NewHandler()
 	root.Handle("/api/scrape", forgeAuthWrapper(scrapeHandler, authSvc))
 
-	publicHandler := public.NewHandler(apiClient, mailSvc)
+	publicHandler := public.NewHandler(apiClient, mailSvc, appBaseURL)
 	buyerSvc := buyer.NewService(buyer.Config{
 		DB:        db,
 		JWTSecret: []byte(jwtSecret),
@@ -128,7 +128,7 @@ func main() {
 	buyerSvc.Register(publicHandler.Mux())
 	root.Handle("/api/public/", http.StripPrefix("/api/public", publicHandler))
 
-	shippingHandler := shipping.NewHandler(apiClient, shipping.ActorResolver(resolveActor))
+	shippingHandler := shipping.NewHandler(apiClient, shipping.ActorResolver(resolveActor), mailSvc, appBaseURL)
 	root.Handle("/api/shipping/", http.StripPrefix("/api/shipping", shippingHandler))
 
 	// Mount forge mux behind /api (owner-authenticated CRUD).

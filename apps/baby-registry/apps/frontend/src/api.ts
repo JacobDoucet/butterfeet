@@ -174,6 +174,8 @@ export const pub = {
   registry: (slug: string) => api.get<PublicRegistry>(`/api/public/r/${encodeURIComponent(slug)}`),
   reserve: (itemId: string, body: { reserverName: string; isAnonymous: boolean; message: string; contactEmail?: string; quantity?: number }) =>
     api.post<{ ok: boolean }>(`/api/public/items/${itemId}/reserve`, body),
+  requestAddress: (body: { slug: string; itemId?: string; name?: string; note?: string }) =>
+    api.post<{ ok: boolean; status?: 'pending'; id?: string }>('/api/public/address-requests', body),
 };
 
 export interface BuyerSession {

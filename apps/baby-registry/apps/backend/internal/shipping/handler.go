@@ -21,19 +21,29 @@ import (
 	registryapprovedguestapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	shippingaddressrequestapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request_api"
+	owneruserapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user_api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
+	"github.com/rs/zerolog/log"
 )
 
 // ActorResolver mirrors the auth package's resolver to avoid an import cycle.
 type ActorResolver func(*http.Request) (permissions.Actor, error)
 
 type Handler struct {
-	mux      *http.ServeMux
-	client   api.Client
-	resolver ActorResolver
+	mux        *http.ServeMux
+	client     api.Client
+	resolver   ActorResolver
+	mailer     mailer.Mailer
+	appBaseURL string
 }
 
-func NewHandler(client api.Client, resolver ActorResolver) *Handler {
-	h := &Handler{client: client, resolver: resolver}
+func NewHandler(client api.Client, resolver ActorResolver, notificationMailer mailer.Mailer, appBaseURL string) *Handler {
+	h := &Handler{
+		client:     client,
+		resolver:   resolver,
+		mailer:     notificationMailer,
+		appBaseURL: strings.TrimRight(appBaseURL, "/"),
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/registries/", h.handleRegistryScoped)
 	mux.HandleFunc("/approved-guests/", h.handleGuestById)
@@ -393,6 +403,7 @@ func (h *Handler) handleRequestById(w http.ResponseWriter, r *http.Request) {
 			if err == nil {
 				resp["token"] = raw
 				resp["tokenExpiresAt"] = exp
+				h.sendBuyerApprovedNotification(updated.OwnerId, reg.Model.Title, DecryptEmail(updated.EmailEnc), updated.Name, raw, exp)
 			}
 		}
 	}
@@ -520,4 +531,49 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 
 func writeJSONError(w http.ResponseWriter, status int, msg string) {
 	writeJSON(w, status, map[string]any{"error": msg})
+}
+
+func (h *Handler) sendBuyerApprovedNotification(ownerId, registryTitle, buyerEmail, buyerName, rawToken string, expiresAt time.Time) {
+	if h.mailer == nil || strings.TrimSpace(buyerEmail) == "" || strings.TrimSpace(rawToken) == "" {
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		var ownerName string
+		if strings.TrimSpace(ownerId) != "" {
+			super := permissions.NewSuperActor()
+			owner, _, err := h.client.OwnerUser().SelectById(ctx, super,
+				owner_user.SelectByIdQuery{Id: ownerId},
+				owneruserapi.NewProjection(true),
+			)
+			if err == nil {
+				ownerName = strings.TrimSpace(owner.Name)
+			}
+		}
+		if ownerName == "" {
+			ownerName = "the parents"
+		}
+
+		greeting := strings.TrimSpace(buyerName)
+		if greeting == "" {
+			greeting = "there"
+		}
+
+		link := h.appBaseURL + "/ship#tok=" + rawToken
+
+		err := h.mailer.Send(ctx, mailer.Message{
+			To:      buyerEmail,
+			Subject: "Your shipping address request was approved",
+			Text: "Hi " + greeting + ",\n\n" +
+				ownerName + " approved your request to view the shipping address for the \"" + registryTitle + "\" registry.\n\n" +
+				"View the address here (link expires " + expiresAt.UTC().Format("Jan 2, 2006 15:04 UTC") + "):\n" +
+				link + "\n\n" +
+				"Keep this link private — anyone with it can view the address until it expires.\n",
+		})
+		if err != nil {
+			log.Error().Err(err).Str("ownerId", ownerId).Str("to", buyerEmail).Msg("buyer approved notification send failed")
+		}
+	}()
 }

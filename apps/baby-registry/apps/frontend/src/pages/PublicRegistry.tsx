@@ -59,6 +59,8 @@ export default function PublicRegistry() {
   const [celebrate, setCelebrate] = useState<{ title: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
+  const [accessNote, setAccessNote] = useState('');
+  const [accessRequested, setAccessRequested] = useState(false);
   // Snapshot of the last opened target so the public Dialog stays
   // populated through its exit animation. Declared at the top to satisfy
   // React's rules of hooks (early returns happen further below).
@@ -109,6 +111,22 @@ export default function PublicRegistry() {
       const purchasedItem = regQ.data?.items.find((it) => it.id === effectiveId) ?? rootItem;
       setCelebrate({ title: purchasedItem?.title ?? 'this gift' });
       setTarget(null); setSelectedOptionId(null); setName(''); setAnon(false); setMessage(''); setError(null); setReserveQtyMode('one'); setReserveQty('1');
+    },
+    onError: (err) => setError((err as Error).message),
+  });
+
+  const requestAddressM = useMutation({
+    mutationFn: () =>
+      pub.requestAddress({
+        slug,
+        itemId: target ?? undefined,
+        name: name.trim() || undefined,
+        note: accessNote.trim() || undefined,
+      }),
+    onSuccess: () => {
+      setAccessRequested(true);
+      setAccessNote('');
+      setSnack("Request sent \u2014 we'll email you the address once the parents approve.");
     },
     onError: (err) => setError((err as Error).message),
   });
@@ -568,6 +586,8 @@ export default function PublicRegistry() {
           TransitionProps={{
             onExited: () => {
               targetSnapshotRef.current = null;
+              setAccessRequested(false);
+              setAccessNote('');
             },
           }}
           PaperProps={{ sx: { ...modalPaperSx, width: 'min(960px, calc(100vw - 32px))' } }}
@@ -839,9 +859,42 @@ export default function PublicRegistry() {
                         )}
                       </Box>
                     ) : (
-                      <Alert severity="warning">
-                        Delivery address is protected and not shown on the public registry page.
-                        Share your purchase note below and the parents can send shipping details via a private link.
+                      <Alert severity="warning" sx={{ '& .MuiAlert-message': { width: '100%' } }}>
+                        <Stack spacing={1.5}>
+                          <Box>
+                            Delivery address is protected and not shown on the public registry page.
+                            You can ask the parents to send it to you privately.
+                          </Box>
+                          {accessRequested ? (
+                            <Box sx={{ fontSize: 14, color: 'text.secondary' }}>
+                              Request sent. We'll email <strong>{meQ.data?.email}</strong> a private link
+                              as soon as the parents approve.
+                            </Box>
+                          ) : (
+                            <>
+                              <TextField
+                                size="small"
+                                label="Add a short note (optional)"
+                                placeholder="Example: For the Pottery Barn glider I'm shipping next week."
+                                value={accessNote}
+                                onChange={(e) => setAccessNote(e.target.value)}
+                                multiline
+                                minRows={2}
+                                fullWidth
+                              />
+                              <Box>
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={() => requestAddressM.mutate()}
+                                  disabled={requestAddressM.isPending}
+                                >
+                                  {requestAddressM.isPending ? 'Sending\u2026' : 'Request shipping address'}
+                                </Button>
+                              </Box>
+                            </>
+                          )}
+                        </Stack>
                       </Alert>
                     )}
 

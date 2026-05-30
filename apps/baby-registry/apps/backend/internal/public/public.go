@@ -12,6 +12,7 @@ import (
 	addressaccesssessionapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_address_access_mode"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_address_request_status"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_guest_access_level"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_guest_status"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_item_source"
@@ -27,6 +28,8 @@ import (
 	registryitemapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
 	reservationapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation_api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
+	shippingaddressrequestapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/shipping"
 	"github.com/rs/zerolog/log"
@@ -36,15 +39,17 @@ type Handler struct {
 	mux          *http.ServeMux
 	client       api.Client
 	mailer       mailer.Mailer
+	appBaseURL   string
 	resolveBuyer func(r *http.Request, slug string) (string, error)
 }
 
-func NewHandler(client api.Client, notificationMailer mailer.Mailer) *Handler {
-	h := &Handler{client: client, mailer: notificationMailer}
+func NewHandler(client api.Client, notificationMailer mailer.Mailer, appBaseURL string) *Handler {
+	h := &Handler{client: client, mailer: notificationMailer, appBaseURL: strings.TrimRight(appBaseURL, "/")}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/r/", h.handleRegistryBySlug)
 	mux.HandleFunc("/items/", h.handleItemRoute) // /items/:id/reserve
 	mux.HandleFunc("/shipping/resolve", h.handleShippingResolve)
+	mux.HandleFunc("/address-requests", h.handleAddressRequestCreate)
 	h.mux = mux
 	return h
 }
@@ -569,4 +574,163 @@ func writeResolveError(w http.ResponseWriter, status int, msg string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(map[string]any{"error": msg})
+}
+
+type addressRequestBody struct {
+	Slug   string `json:"slug"`
+	ItemId string `json:"itemId"`
+	Name   string `json:"name"`
+	Note   string `json:"note"`
+}
+
+// handleAddressRequestCreate lets a verified buyer ask the registry owner
+// for the shipping address. Creates a Pending ShippingAddressRequest and
+// emails the owner. Idempotent: if a Pending request already exists for the
+// same buyer + registry, it is returned without creating a duplicate.
+func (h *Handler) handleAddressRequestCreate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var body addressRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid body", http.StatusBadRequest)
+		return
+	}
+	slug := strings.TrimSpace(body.Slug)
+	if slug == "" {
+		http.Error(w, "slug required", http.StatusBadRequest)
+		return
+	}
+
+	if h.resolveBuyer == nil {
+		http.Error(w, "verification required", http.StatusUnauthorized)
+		return
+	}
+	buyerEmail, err := h.resolveBuyer(r, slug)
+	if err != nil || strings.TrimSpace(buyerEmail) == "" {
+		http.Error(w, "verification required", http.StatusUnauthorized)
+		return
+	}
+
+	super := permissions.NewSuperActor()
+
+	regResult, _, err := h.client.Registry().Search(r.Context(), super,
+		registry.WhereClause{SlugEq: &slug},
+		registryapi.QueryOptions{Limit: 1},
+	)
+	if err != nil || len(regResult.Data) == 0 {
+		http.Error(w, "registry not found", http.StatusNotFound)
+		return
+	}
+	reg := regResult.Data[0]
+
+	if reg.AddressAccessMode == enum_address_access_mode.Disabled {
+		http.Error(w, "the owner has disabled address sharing", http.StatusForbidden)
+		return
+	}
+
+	emailHash := shipping.HashEmail(buyerEmail)
+	pending := enum_address_request_status.Pending
+
+	// Dedupe: return the existing Pending request if one already exists.
+	existing, _, err := h.client.ShippingAddressRequest().Search(r.Context(), super,
+		shipping_address_request.WhereClause{
+			RegistryIdEq: &reg.Id,
+			EmailHashEq:  &emailHash,
+			StatusEq:     &pending,
+		},
+		shippingaddressrequestapi.QueryOptions{Limit: 1},
+	)
+	if err == nil && len(existing.Data) > 0 {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"ok":     true,
+			"status": "pending",
+			"id":     existing.Data[0].Id,
+		})
+		return
+	}
+
+	created, _, err := h.client.ShippingAddressRequest().Create(r.Context(), super,
+		shipping_address_request.Model{
+			OwnerId:        reg.OwnerId,
+			RegistryId:     reg.Id,
+			RegistryItemId: strings.TrimSpace(body.ItemId),
+			EmailHash:      emailHash,
+			EmailEnc:       shipping.EncryptEmail(buyerEmail),
+			Name:           strings.TrimSpace(body.Name),
+			Note:           strings.TrimSpace(body.Note),
+			Status:         pending,
+			PolicyVersion:  reg.ShippingPolicyVersion,
+		},
+		shipping_address_request.NewProjection(true),
+	)
+	if err != nil {
+		log.Error().Err(err).Str("slug", slug).Msg("create address request failed")
+		http.Error(w, "could not create request", http.StatusInternalServerError)
+		return
+	}
+
+	h.sendOwnerAddressRequestNotification(reg.OwnerId, reg.Title, reg.Slug, strings.TrimSpace(body.Name), buyerEmail, strings.TrimSpace(body.Note))
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"ok":     true,
+		"status": "pending",
+		"id":     created.Id,
+	})
+}
+
+func (h *Handler) sendOwnerAddressRequestNotification(ownerID, registryTitle, registrySlug, buyerName, buyerEmail, note string) {
+	if h.mailer == nil || ownerID == "" {
+		return
+	}
+
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		super := permissions.NewSuperActor()
+		owner, _, err := h.client.OwnerUser().SelectById(ctx, super,
+			owner_user.SelectByIdQuery{Id: ownerID},
+			owneruserapi.NewProjection(true),
+		)
+		if err != nil {
+			log.Error().Err(err).Str("ownerId", ownerID).Msg("owner address-request notification lookup failed")
+			return
+		}
+		if strings.TrimSpace(owner.Email) == "" {
+			return
+		}
+		ownerName := fallbackString(strings.TrimSpace(owner.Name), "there")
+
+		displayName := strings.TrimSpace(buyerName)
+		if displayName == "" {
+			displayName = "A guest"
+		}
+		noteLine := ""
+		if note != "" {
+			noteLine = "Their message: \"" + note + "\"\n\n"
+		}
+
+		dashboardLink := h.appBaseURL + "/owner/r/" + registrySlug + "?tab=access"
+
+		err = h.mailer.Send(ctx, mailer.Message{
+			To:      owner.Email,
+			Subject: "Someone is asking for your shipping address on Stork Nest",
+			Text: fmt.Sprintf(
+				"Hi %s,\n\n%s (%s) requested your shipping address for your \"%s\" registry.\n\n%sReview the request and approve or decline here:\n%s\n\nIf you approve, we'll generate a private link for them to view the address. They won't see it until you do.\n",
+				ownerName,
+				displayName,
+				fallbackString(strings.TrimSpace(buyerEmail), "email not available"),
+				registryTitle,
+				noteLine,
+				dashboardLink,
+			),
+		})
+		if err != nil {
+			log.Error().Err(err).Str("ownerId", ownerID).Str("email", owner.Email).Msg("owner address-request notification send failed")
+		}
+	}()
 }
