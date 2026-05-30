@@ -395,7 +395,23 @@ export default function PublicRegistry() {
   );
 
   return (
-    <Box sx={{ bgcolor: reg.themeColor || 'background.default', minHeight: '100%' }}>
+    <Box
+      sx={{
+        minHeight: '100%',
+        ...(reg.themeColor
+          ? { bgcolor: reg.themeColor }
+          : {
+              background: [
+                'radial-gradient(ellipse 80% 60% at 0% 0%, rgba(232,168,124,0.18), transparent 60%)',
+                'radial-gradient(ellipse 70% 50% at 100% 10%, rgba(122,158,126,0.16), transparent 60%)',
+                'radial-gradient(ellipse 90% 70% at 50% 100%, rgba(232,168,124,0.10), transparent 65%)',
+                'linear-gradient(180deg, #fbf7f2 0%, #f6efe6 100%)',
+              ].join(', '),
+              backgroundAttachment: 'fixed',
+              backgroundRepeat: 'no-repeat',
+            }),
+      }}
+    >
       <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
         <Stack alignItems="center" sx={{ textAlign: 'center', mb: { xs: 4, md: 6 } }}>
           <Typography
