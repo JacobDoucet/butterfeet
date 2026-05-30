@@ -287,6 +287,7 @@ export default function CsvImportDialog({ open, onClose, registryId, existingIte
                     value={mapping[f.key]}
                     onChange={(e) => updateMapping(f.key, e.target.value)}
                     displayEmpty
+                    sx={!mapping[f.key] ? { bgcolor: 'action.hover', color: 'text.disabled' } : undefined}
                   >
                     <MenuItem value=""><em>— Not mapped —</em></MenuItem>
                     {headers.map((h) => (

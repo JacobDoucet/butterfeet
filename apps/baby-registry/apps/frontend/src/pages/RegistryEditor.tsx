@@ -365,9 +365,9 @@ export default function RegistryEditor() {
           const fulfilled = !isUnlimited && activeCount >= requested;
           const optionCount = optionItems.length;
           return (
-            <Grid item xs={12} sm={6} md={4} key={it.id}>
+            <Grid item xs={12} sm={6} md={4} key={it.id} sx={{ display: 'flex' }}>
               <Card
-                sx={{ cursor: 'pointer' }}
+                sx={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', width: '100%' }}
                 onClick={() => beginEdit(it)}
                 role="button"
                 tabIndex={0}
@@ -381,7 +381,7 @@ export default function RegistryEditor() {
                 {it.imageUrl && (
                   <CardMedia component="img" image={it.imageUrl} sx={{ aspectRatio: '1', objectFit: 'contain', bgcolor: '#f4ede3' }} />
                 )}
-                <CardContent>
+                <CardContent sx={{ flexGrow: 1 }}>
                   <Typography
                     variant="subtitle1"
                     sx={{

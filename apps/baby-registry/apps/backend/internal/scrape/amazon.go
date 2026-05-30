@@ -23,10 +23,13 @@ func (amazonParser) Apply(s pageSignals, res *Result) {
 		s.ImageByID["landingImage"],
 		s.ImageByID["imgBlkFront"],
 		firstNonEmpty(s.AmazonDynamicImages...),
+		s.Meta["og:image"],
 		s.Meta["image"],
 	)
-	if amazonImage != "" && (res.ImageUrl == "" || isGenericAmazonImage(res.ImageUrl)) {
+	if amazonImage != "" {
 		res.ImageUrl = amazonImage
+	} else if isGenericAmazonImage(res.ImageUrl) {
+		res.ImageUrl = ""
 	}
 	if res.Price == 0 {
 		priceCandidates := []string{
@@ -115,19 +118,20 @@ func isGenericAmazonImage(raw string) bool {
 	}
 	host := strings.ToLower(u.Host)
 	path := strings.ToLower(u.Path)
-	if !strings.Contains(host, "amazon.") {
+	if !strings.Contains(host, "amazon.") && !strings.Contains(host, "ssl-images-amazon.com") && !strings.Contains(host, "media-amazon.com") {
 		return false
 	}
-	if strings.Contains(path, "/images/g/01/social") {
+	// Real Amazon product images live on m.media-amazon.com or *-images-amazon.com
+	// under a /images/I/ path. Anything else on an amazon.* host (tracking
+	// beacons like fls-eu.amazon.co.uk/1/batch, uedata pixels, nav sprites,
+	// logos, social share images) is not a usable product image.
+	if strings.Contains(host, "media-amazon.com") || strings.Contains(host, "ssl-images-amazon.com") {
+		if strings.Contains(path, "/images/i/") {
+			return false
+		}
 		return true
 	}
-	if strings.Contains(path, "logo") || strings.Contains(path, "favicon") || strings.Contains(path, "icon") {
-		return true
-	}
-	if strings.Contains(path, "nav") || strings.Contains(path, "sprite") {
-		return true
-	}
-	return false
+	return true
 }
 
 func currencyFromValue(v string) string {
