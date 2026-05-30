@@ -13,6 +13,7 @@ type MongoRecord struct {
 	Created            *actor_trace.MongoRecord `bson:"created,omitempty"`
 	Currency           *string                  `bson:"currency,omitempty"`
 	Description        *string                  `bson:"description,omitempty"`
+	ImageBgColor       *string                  `bson:"imageBgColor,omitempty"`
 	ImageUrl           *string                  `bson:"imageUrl,omitempty"`
 	NoSubstitutes      *bool                    `bson:"noSubstitutes,omitempty"`
 	Notes              *string                  `bson:"notes,omitempty"`
@@ -58,6 +59,10 @@ func (r *MongoRecord) ToModel() (Model, error) {
 	if r.Description != nil {
 		elemdescription0 := r.Description
 		m.Description = *elemdescription0
+	}
+	if r.ImageBgColor != nil {
+		elemimageBgColor0 := r.ImageBgColor
+		m.ImageBgColor = *elemimageBgColor0
 	}
 	if r.ImageUrl != nil {
 		elemimageUrl0 := r.ImageUrl
@@ -176,6 +181,18 @@ type MongoWhereClause struct {
 	DescriptionExists *bool
 	DescriptionLike   *string
 	DescriptionNlike  *string
+	// imageBgColor (string) search options
+	ImageBgColorEq     *string
+	ImageBgColorNe     *string
+	ImageBgColorGt     *string
+	ImageBgColorGte    *string
+	ImageBgColorLt     *string
+	ImageBgColorLte    *string
+	ImageBgColorIn     *[]string
+	ImageBgColorNin    *[]string
+	ImageBgColorExists *bool
+	ImageBgColorLike   *string
+	ImageBgColorNlike  *string
 	// imageUrl (string) search options
 	ImageUrlEq     *string
 	ImageUrlNe     *string
@@ -529,6 +546,61 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 	if o.DescriptionNlike != nil {
 		query := bson.M{}
 		query["description"] = bson.M{"$not": bson.M{"$regex": o.DescriptionNlike, "$options": "i"}}
+		and = append(and, query)
+	}
+	if o.ImageBgColorEq != nil {
+		query := bson.M{}
+		query["imageBgColor"] = o.ImageBgColorEq
+		and = append(and, query)
+	}
+	if o.ImageBgColorNe != nil {
+		query := bson.M{}
+		query["imageBgColor"] = bson.M{"$ne": o.ImageBgColorNe}
+		and = append(and, query)
+	}
+	if o.ImageBgColorGt != nil {
+		query := bson.M{}
+		query["imageBgColor"] = bson.M{"$gt": o.ImageBgColorGt}
+		and = append(and, query)
+	}
+	if o.ImageBgColorGte != nil {
+		query := bson.M{}
+		query["imageBgColor"] = bson.M{"$gte": o.ImageBgColorGte}
+		and = append(and, query)
+	}
+	if o.ImageBgColorLt != nil {
+		query := bson.M{}
+		query["imageBgColor"] = bson.M{"$lt": o.ImageBgColorLt}
+		and = append(and, query)
+	}
+	if o.ImageBgColorLte != nil {
+		query := bson.M{}
+		query["imageBgColor"] = bson.M{"$lte": o.ImageBgColorLte}
+		and = append(and, query)
+	}
+	if o.ImageBgColorIn != nil {
+		query := bson.M{}
+		query["imageBgColor"] = bson.M{"$in": o.ImageBgColorIn}
+		and = append(and, query)
+	}
+	if o.ImageBgColorNin != nil {
+		query := bson.M{}
+		query["imageBgColor"] = bson.M{"$nin": o.ImageBgColorNin}
+		and = append(and, query)
+	}
+	if o.ImageBgColorExists != nil {
+		query := bson.M{}
+		query["imageBgColor"] = bson.M{"$exists": *o.ImageBgColorExists}
+		and = append(and, query)
+	}
+	if o.ImageBgColorLike != nil {
+		query := bson.M{}
+		query["imageBgColor"] = bson.M{"$regex": o.ImageBgColorLike, "$options": "i"}
+		and = append(and, query)
+	}
+	if o.ImageBgColorNlike != nil {
+		query := bson.M{}
+		query["imageBgColor"] = bson.M{"$not": bson.M{"$regex": o.ImageBgColorNlike, "$options": "i"}}
 		and = append(and, query)
 	}
 	if o.ImageUrlEq != nil {

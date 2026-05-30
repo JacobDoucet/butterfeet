@@ -12,6 +12,7 @@ type Projection struct {
 	CreatedFields            actor_trace.Projection `json:"createdFields,omitempty"`
 	Currency                 bool                   `json:"currency"`
 	Description              bool                   `json:"description"`
+	ImageBgColor             bool                   `json:"imageBgColor"`
 	ImageUrl                 bool                   `json:"imageUrl"`
 	NoSubstitutes            bool                   `json:"noSubstitutes"`
 	Notes                    bool                   `json:"notes"`
@@ -39,6 +40,7 @@ func NewProjection(defaultVal bool) Projection {
 		CreatedFields:            actor_trace.NewProjection(defaultVal),
 		Currency:                 defaultVal,
 		Description:              defaultVal,
+		ImageBgColor:             defaultVal,
 		ImageUrl:                 defaultVal,
 		NoSubstitutes:            defaultVal,
 		Notes:                    defaultVal,
@@ -84,6 +86,9 @@ func (p Projection) ToBson() bson.M {
 	}
 	if p.Description {
 		projection["description"] = 1
+	}
+	if p.ImageBgColor {
+		projection["imageBgColor"] = 1
 	}
 	if p.ImageUrl {
 		projection["imageUrl"] = 1

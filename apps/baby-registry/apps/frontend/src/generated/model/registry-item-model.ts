@@ -9,6 +9,7 @@ export type RegistryItem = {
   created?: ActorTrace;
   currency?: string;
   description?: string;
+  imageBgColor?: string;
   imageUrl?: string;
   noSubstitutes?: boolean;
   notes?: string;
@@ -33,6 +34,7 @@ export type RegistryItemProjection = {
 		createdFields?: ActorTraceProjection;
     currency?: boolean;
     description?: boolean;
+    imageBgColor?: boolean;
     imageUrl?: boolean;
     noSubstitutes?: boolean;
     notes?: boolean;

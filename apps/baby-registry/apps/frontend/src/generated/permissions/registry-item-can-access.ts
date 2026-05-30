@@ -12,6 +12,7 @@ type canAccessRegistryItem<T = RegistryItem> = ActorCanAccessFunc<T> & {
         created: ReturnType<typeof NewCanReadActorTrace<RegistryItem>>,
         currency: ActorCanAccessFunc<RegistryItem>;
         description: ActorCanAccessFunc<RegistryItem>;
+        imageBgColor: ActorCanAccessFunc<RegistryItem>;
         imageUrl: ActorCanAccessFunc<RegistryItem>;
         noSubstitutes: ActorCanAccessFunc<RegistryItem>;
         notes: ActorCanAccessFunc<RegistryItem>;
@@ -70,6 +71,7 @@ export function NewCanReadRegistryItem<T = RegistryItem>(canAccessObj: ActorCanA
                 created:  NewCanReadActorTrace( (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true),
                 currency: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 description: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
+                imageBgColor: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 imageUrl: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 noSubstitutes: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 notes: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
@@ -102,6 +104,7 @@ export function NewCanWriteRegistryItem<T = RegistryItem>(canAccessObj: ActorCan
                 created:  NewCanWriteActorTrace( (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true),
                 currency: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 description: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
+                imageBgColor: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 imageUrl: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 noSubstitutes: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 notes: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,

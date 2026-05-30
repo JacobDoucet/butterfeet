@@ -580,6 +580,15 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 					searchRequest.Query.DescriptionIn = utils.StringSliceToStringSlicePtr(values)
 					continue
 				}
+			case "imageBgColor":
+				if len(values) == 1 {
+					searchRequest.Query.ImageBgColorEq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.ImageBgColorIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
 			case "imageUrl":
 				if len(values) == 1 {
 					searchRequest.Query.ImageUrlEq = utils.StringSliceToStringPtr(values)
@@ -699,6 +708,7 @@ type AggregateResultRowHTTP struct {
 	Category          any `json:"category,omitempty"`
 	Currency          any `json:"currency,omitempty"`
 	Description       any `json:"description,omitempty"`
+	ImageBgColor      any `json:"imageBgColor,omitempty"`
 	ImageUrl          any `json:"imageUrl,omitempty"`
 	NoSubstitutes     any `json:"noSubstitutes,omitempty"`
 	Notes             any `json:"notes,omitempty"`
@@ -808,6 +818,7 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 			httpRow.Category = row.Category
 			httpRow.Currency = row.Currency
 			httpRow.Description = row.Description
+			httpRow.ImageBgColor = row.ImageBgColor
 			httpRow.ImageUrl = row.ImageUrl
 			httpRow.NoSubstitutes = row.NoSubstitutes
 			httpRow.Notes = row.Notes

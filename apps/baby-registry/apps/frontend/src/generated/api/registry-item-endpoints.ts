@@ -142,6 +142,7 @@ export const RegistryItemGroupByFields = {
     Category: 'category',
     Currency: 'currency',
     Description: 'description',
+    ImageBgColor: 'imageBgColor',
     ImageUrl: 'imageUrl',
     NoSubstitutes: 'noSubstitutes',
     Notes: 'notes',
@@ -170,6 +171,7 @@ export type RegistryItemAggregateResultRow = {
     category?: string | null;
     currency?: string | null;
     description?: string | null;
+    imageBgColor?: string | null;
     imageUrl?: string | null;
     noSubstitutes?: boolean | null;
     notes?: string | null;

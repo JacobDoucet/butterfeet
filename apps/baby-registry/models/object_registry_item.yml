@@ -11,6 +11,8 @@ objects:
         type: string
       - name: imageUrl
         type: string
+      - name: imageBgColor
+        type: string
       - name: productUrl
         type: string
       - name: source

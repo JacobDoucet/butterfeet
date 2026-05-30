@@ -11,6 +11,7 @@ type HTTPRecord struct {
 	Created            *actor_trace.HTTPRecord `json:"created,omitempty"`
 	Currency           *string                 `json:"currency,omitempty"`
 	Description        *string                 `json:"description,omitempty"`
+	ImageBgColor       *string                 `json:"imageBgColor,omitempty"`
 	ImageUrl           *string                 `json:"imageUrl,omitempty"`
 	NoSubstitutes      *bool                   `json:"noSubstitutes,omitempty"`
 	Notes              *string                 `json:"notes,omitempty"`
@@ -52,6 +53,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 	if r.Description != nil {
 		elemdescription0 := r.Description
 		m.Description = *elemdescription0
+	}
+	if r.ImageBgColor != nil {
+		elemimageBgColor0 := r.ImageBgColor
+		m.ImageBgColor = *elemimageBgColor0
 	}
 	if r.ImageUrl != nil {
 		elemimageUrl0 := r.ImageUrl
@@ -139,6 +144,9 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	}
 	if r.Description != nil {
 		p.Description = true
+	}
+	if r.ImageBgColor != nil {
+		p.ImageBgColor = true
 	}
 	if r.ImageUrl != nil {
 		p.ImageUrl = true
@@ -238,6 +246,18 @@ type HTTPWhereClause struct {
 	DescriptionExists *bool     `json:"descriptionExists,omitempty"`
 	DescriptionLike   *string   `json:"descriptionLike,omitempty"`
 	DescriptionNlike  *string   `json:"descriptionNlike,omitempty"`
+	// imageBgColor (string) search options
+	ImageBgColorEq     *string   `json:"imageBgColorEq,omitempty"`
+	ImageBgColorNe     *string   `json:"imageBgColorNe,omitempty"`
+	ImageBgColorGt     *string   `json:"imageBgColorGt,omitempty"`
+	ImageBgColorGte    *string   `json:"imageBgColorGte,omitempty"`
+	ImageBgColorLt     *string   `json:"imageBgColorLt,omitempty"`
+	ImageBgColorLte    *string   `json:"imageBgColorLte,omitempty"`
+	ImageBgColorIn     *[]string `json:"imageBgColorIn,omitempty"`
+	ImageBgColorNin    *[]string `json:"imageBgColorNin,omitempty"`
+	ImageBgColorExists *bool     `json:"imageBgColorExists,omitempty"`
+	ImageBgColorLike   *string   `json:"imageBgColorLike,omitempty"`
+	ImageBgColorNlike  *string   `json:"imageBgColorNlike,omitempty"`
 	// imageUrl (string) search options
 	ImageUrlEq     *string   `json:"imageUrlEq,omitempty"`
 	ImageUrlNe     *string   `json:"imageUrlNe,omitempty"`
@@ -567,6 +587,58 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 	if o.DescriptionNlike != nil {
 		elemdescriptionNlike0 := o.DescriptionNlike
 		to.DescriptionNlike = elemdescriptionNlike0
+	}
+	if o.ImageBgColorEq != nil {
+		elemimageBgColorEq0 := o.ImageBgColorEq
+		to.ImageBgColorEq = elemimageBgColorEq0
+	}
+	if o.ImageBgColorNe != nil {
+		elemimageBgColorNe0 := o.ImageBgColorNe
+		to.ImageBgColorNe = elemimageBgColorNe0
+	}
+	if o.ImageBgColorGt != nil {
+		elemimageBgColorGt0 := o.ImageBgColorGt
+		to.ImageBgColorGt = elemimageBgColorGt0
+	}
+	if o.ImageBgColorGte != nil {
+		elemimageBgColorGte0 := o.ImageBgColorGte
+		to.ImageBgColorGte = elemimageBgColorGte0
+	}
+	if o.ImageBgColorLt != nil {
+		elemimageBgColorLt0 := o.ImageBgColorLt
+		to.ImageBgColorLt = elemimageBgColorLt0
+	}
+	if o.ImageBgColorLte != nil {
+		elemimageBgColorLte0 := o.ImageBgColorLte
+		to.ImageBgColorLte = elemimageBgColorLte0
+	}
+	if o.ImageBgColorIn != nil {
+		elemimageBgColorIn0 := make([]string, 0)
+		for _, oimageBgColorIn0 := range *o.ImageBgColorIn {
+			elemimageBgColorIn1 := oimageBgColorIn0
+			elemimageBgColorIn0 = append(elemimageBgColorIn0, elemimageBgColorIn1)
+		}
+		to.ImageBgColorIn = &elemimageBgColorIn0
+	}
+	if o.ImageBgColorNin != nil {
+		elemimageBgColorNin0 := make([]string, 0)
+		for _, oimageBgColorNin0 := range *o.ImageBgColorNin {
+			elemimageBgColorNin1 := oimageBgColorNin0
+			elemimageBgColorNin0 = append(elemimageBgColorNin0, elemimageBgColorNin1)
+		}
+		to.ImageBgColorNin = &elemimageBgColorNin0
+	}
+	if o.ImageBgColorExists != nil {
+		elemimageBgColorExists0 := o.ImageBgColorExists
+		to.ImageBgColorExists = elemimageBgColorExists0
+	}
+	if o.ImageBgColorLike != nil {
+		elemimageBgColorLike0 := o.ImageBgColorLike
+		to.ImageBgColorLike = elemimageBgColorLike0
+	}
+	if o.ImageBgColorNlike != nil {
+		elemimageBgColorNlike0 := o.ImageBgColorNlike
+		to.ImageBgColorNlike = elemimageBgColorNlike0
 	}
 	if o.ImageUrlEq != nil {
 		elemimageUrlEq0 := o.ImageUrlEq

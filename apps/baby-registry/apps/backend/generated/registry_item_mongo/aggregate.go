@@ -78,6 +78,7 @@ type AggregateResultRow struct {
 	Category          *string             `bson:"category" json:"category,omitempty"`
 	Currency          *string             `bson:"currency" json:"currency,omitempty"`
 	Description       *string             `bson:"description" json:"description,omitempty"`
+	ImageBgColor      *string             `bson:"imageBgColor" json:"imageBgColor,omitempty"`
 	ImageUrl          *string             `bson:"imageUrl" json:"imageUrl,omitempty"`
 	NoSubstitutes     *bool               `bson:"noSubstitutes" json:"noSubstitutes,omitempty"`
 	Notes             *string             `bson:"notes" json:"notes,omitempty"`

@@ -170,6 +170,7 @@ const (
 	GroupByFieldCategory          GroupByField = "category"
 	GroupByFieldCurrency          GroupByField = "currency"
 	GroupByFieldDescription       GroupByField = "description"
+	GroupByFieldImageBgColor      GroupByField = "imageBgColor"
 	GroupByFieldImageUrl          GroupByField = "imageUrl"
 	GroupByFieldNoSubstitutes     GroupByField = "noSubstitutes"
 	GroupByFieldNotes             GroupByField = "notes"
@@ -190,6 +191,7 @@ func ValidGroupByFields() []GroupByField {
 		GroupByFieldCategory,
 		GroupByFieldCurrency,
 		GroupByFieldDescription,
+		GroupByFieldImageBgColor,
 		GroupByFieldImageUrl,
 		GroupByFieldNoSubstitutes,
 		GroupByFieldNotes,
@@ -273,6 +275,7 @@ type AggregateResultRow struct {
 	Category          *string `json:"category,omitempty"`
 	Currency          *string `json:"currency,omitempty"`
 	Description       *string `json:"description,omitempty"`
+	ImageBgColor      *string `json:"imageBgColor,omitempty"`
 	ImageUrl          *string `json:"imageUrl,omitempty"`
 	NoSubstitutes     *bool   `json:"noSubstitutes,omitempty"`
 	Notes             *string `json:"notes,omitempty"`

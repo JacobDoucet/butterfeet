@@ -117,7 +117,7 @@ export default function OwnerDashboard() {
                   <Button size="small" component={Link} to={`/owner/r/${r.slug}`}>
                     Manage
                   </Button>
-                  <Button size="small" component={Link} to={`/r/${r.slug}`}>
+                  <Button size="small" component="a" href={`/r/${r.slug}`} target="_blank" rel="noreferrer">
                     View public
                   </Button>
                 </Stack>

@@ -168,11 +168,9 @@ export default function PublicRegistry() {
     if (r.quantityUnlimited) return false;
     return Math.max(0, (r.quantity || 1) - (r.reserved || 0)) === 0;
   };
-  const sortedTopLevelItems = [...topLevelItems].sort((a, b) => {
-    const ac = isClaimed(a.id) ? 1 : 0;
-    const bc = isClaimed(b.id) ? 1 : 0;
-    return ac - bc;
-  });
+  const sortedTopLevelItems = [...topLevelItems].sort((a, b) =>
+    (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' }),
+  );
   const categories = Array.from(
     new Set(topLevelItems.map((it) => (it.category || '').trim()).filter(Boolean)),
   ).sort((a, b) => a.localeCompare(b));
@@ -242,7 +240,7 @@ export default function PublicRegistry() {
             }
           }}
         >
-          <Box sx={{ position: 'relative', bgcolor: '#f4ede3' }}>
+          <Box sx={{ position: 'relative', bgcolor: it.imageBgColor || '#ffffff' }}>
             {it.imageUrl ? (
               <CardMedia
                 component="img"
@@ -376,7 +374,7 @@ export default function PublicRegistry() {
               )}
               {!claimed && (
                 <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600 }}>
-                  Get this →
+                  Gift this →
                 </Typography>
               )}
             </Stack>
@@ -430,52 +428,58 @@ export default function PublicRegistry() {
             }),
       }}
     >
-      <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
-        <Stack alignItems="center" sx={{ textAlign: 'center', mb: { xs: 4, md: 6 } }}>
-          <Typography
-            variant="overline"
-            sx={{ letterSpacing: 2, color: 'text.secondary', mb: 1 }}
-          >
-            A baby registry
-          </Typography>
-          <Typography
-            variant="h2"
-            sx={{
-              fontWeight: 600,
-              fontSize: { xs: '2rem', sm: '2.75rem', md: '3.25rem' },
-              lineHeight: 1.1,
-              letterSpacing: '-0.02em',
-            }}
-            gutterBottom
-          >
-            {reg.title}
-          </Typography>
-          {reg.parentNames && (
-            <Typography variant="subtitle1" color="text.secondary">
-              with love, for {reg.parentNames}
+      <Box
+        sx={{
+          pt: { xs: 4, md: 6 },
+        }}
+      >
+        <Container maxWidth="lg">
+          <Stack alignItems="center" sx={{ textAlign: 'center' }}>
+            <Typography
+              variant="overline"
+              sx={{ letterSpacing: 2, color: 'text.secondary', mb: 1 }}
+            >
+              A baby registry
             </Typography>
-          )}
-          {reg.welcomeMessage && (
-            <Typography sx={{ mt: 2, maxWidth: 640, color: 'text.secondary', lineHeight: 1.6 }}>
-              {reg.welcomeMessage}
+            <Typography
+              variant="h2"
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: '2rem', sm: '2.75rem', md: '3.25rem' },
+                lineHeight: 1.1,
+                letterSpacing: '0.04em',
+              }}
+              gutterBottom
+            >
+              {reg.title}
             </Typography>
-          )}
-          <Box sx={{ width: 48, height: 2, bgcolor: 'primary.main', mt: 3, opacity: 0.6, borderRadius: 1 }} />
-        </Stack>
+            {reg.parentNames && (
+              <Typography variant="subtitle1" color="text.secondary">
+                with love, for {reg.parentNames}
+              </Typography>
+            )}
+            {reg.welcomeMessage && (
+              <Typography sx={{ mt: 2, maxWidth: 640, color: 'text.secondary', lineHeight: 1.6 }}>
+                {reg.welcomeMessage}
+              </Typography>
+            )}
+          </Stack>
+        </Container>
+      </Box>
 
+      <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
         {categories.length > 0 && (
           <Box
             sx={{
               mb: 4,
               position: 'sticky',
-              top: { xs: 56, sm: 64 },
+              top: { xs: 104, sm: 108 },
               zIndex: 3,
-              bgcolor: 'rgba(255,255,255,0.85)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              borderRadius: 2,
-              boxShadow: '0 1px 0 rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)',
+              borderRadius: 0,
               px: 1,
+              bgcolor: 'transparent',
+              backdropFilter: 'blur(14px) saturate(140%)',
+              WebkitBackdropFilter: 'blur(14px) saturate(140%)',
             }}
           >
             <Tabs
@@ -487,9 +491,8 @@ export default function PublicRegistry() {
               sx={{
                 minHeight: 52,
                 '& .MuiTab-root': {
-                  textTransform: 'none',
                   fontWeight: 600,
-                  fontSize: '0.95rem',
+                  fontSize: '0.85rem',
                   minHeight: 52,
                   px: 2.5,
                 },
@@ -529,37 +532,44 @@ export default function PublicRegistry() {
 
         {categoryFilter === '__all__' && categories.length > 1 ? (
           <Stack spacing={5}>
-            {categories.map((cat) => (
-              <Box key={cat}>
-                <Stack
-                  direction="row"
-                  alignItems="baseline"
-                  justifyContent="space-between"
-                  sx={{ mb: 2 }}
-                >
-                  <Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: '-0.01em' }}>
-                    {cat}
-                  </Typography>
-                  <Button
-                    size="small"
-                    onClick={() => setCategoryFilter(cat)}
-                    sx={{ textTransform: 'none', fontWeight: 600 }}
+            {categories.map((cat) => {
+              const all = itemsByCategory[cat];
+              const preview = all.slice(0, 4);
+              const hasMore = all.length > preview.length;
+              return (
+                <Box key={cat}>
+                  <Stack
+                    direction="row"
+                    alignItems="baseline"
+                    justifyContent="space-between"
+                    sx={{ mb: 2 }}
                   >
-                    See all ({itemsByCategory[cat].length}) →
-                  </Button>
-                </Stack>
-                <Grid container spacing={3}>
-                  {itemsByCategory[cat].map((it) => renderItemCard(it))}
-                </Grid>
-              </Box>
-            ))}
+                    <Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: '-0.01em' }}>
+                      {cat}
+                    </Typography>
+                    {hasMore && (
+                      <Button
+                        size="small"
+                        onClick={() => setCategoryFilter(cat)}
+                        sx={{ textTransform: 'none', fontWeight: 600 }}
+                      >
+                        See all ({all.length}) →
+                      </Button>
+                    )}
+                  </Stack>
+                  <Grid container spacing={3}>
+                    {preview.map((it) => renderItemCard(it))}
+                  </Grid>
+                </Box>
+              );
+            })}
             {uncategorisedItems.length > 0 && (
               <Box>
                 <Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: '-0.01em', mb: 2 }}>
                   Everything else
                 </Typography>
                 <Grid container spacing={3}>
-                  {uncategorisedItems.map((it) => renderItemCard(it))}
+                  {uncategorisedItems.slice(0, 4).map((it) => renderItemCard(it))}
                 </Grid>
               </Box>
             )}
@@ -620,7 +630,7 @@ export default function PublicRegistry() {
                       sx={{
                         width: { xs: '100%', sm: 160 },
                         flexShrink: 0,
-                        bgcolor: '#f4ede3',
+                        bgcolor: targetOptions[0].imageBgColor || '#ffffff',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -711,7 +721,7 @@ export default function PublicRegistry() {
                             sx={{
                               width: '100%',
                               aspectRatio: '1 / 1',
-                              bgcolor: '#f4ede3',
+                              bgcolor: opt.imageBgColor || '#ffffff',
                               overflow: 'hidden',
                               display: 'flex',
                               alignItems: 'center',

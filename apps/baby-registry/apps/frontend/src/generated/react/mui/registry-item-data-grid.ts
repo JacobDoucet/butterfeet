@@ -596,6 +596,153 @@ export function useRegistryItemMuiDataGridFilterModel(options: FilterOptions = {
                             },
                         };
                 }
+            case "imageBgColor":
+                switch(gridFilterModel?.items?.[0]?.operator) { 
+                    case "equals":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "is":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notEquals":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThan":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "after":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrAfter":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThan":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "before":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrBefore":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "in":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                imageBgColorIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notIn":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                imageBgColorNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "isEmpty":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                imageBgColorExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "contains":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorLike: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorLike: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notContains":
+                        return { 
+                            searchQuery: { 
+                                imageBgColorNlike: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                imageBgColorNlike: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                }
             case "imageUrl":
                 switch(gridFilterModel?.items?.[0]?.operator) { 
                     case "equals":
@@ -2373,6 +2520,40 @@ export function useRegistryItemDescriptionDataGridColumn(options: RegistryItemDe
     ]);
 }
 
+type RegistryItemImageBgColorDataGridColumnOptions = {
+    headerName?: string;
+    width?: number;
+    sortable?: boolean;
+    hideable?: boolean;
+    getValue?: (obj: RegistryItemWithRefs | undefined) => string;
+    renderCell?: GridColDef<RegistryItemWithRefs>['renderCell'];
+};
+
+export const RegistryItemImageBgColorDataGridColumnKey = 'imageBgColor' as const;
+
+export function useRegistryItemImageBgColorDataGridColumn(options: RegistryItemImageBgColorDataGridColumnOptions) {
+
+    return useMemo<GridColDef<RegistryItemWithRefs>>(() => ({
+        headerName: options.headerName ?? RegistryItemImageBgColorDataGridColumnKey,
+        width: options.width,
+        sortable: options.sortable,
+        hideable: options.hideable,
+        field: RegistryItemImageBgColorDataGridColumnKey,
+        valueGetter: (_, row) => { 
+            return options.getValue ? options.getValue(row) : row.registryItem.imageBgColor;
+        },
+        type: "string",
+        renderCell: options.renderCell,
+    }), [
+        options.headerName, 
+        options.width, 
+        options.sortable,
+        options.hideable,
+        options.getValue,
+        options.renderCell,
+    ]);
+}
+
 type RegistryItemImageUrlDataGridColumnOptions = {
     headerName?: string;
     width?: number;
@@ -2930,6 +3111,7 @@ export function getRegistryItemColumnVisibilityModel(
         created: projection.created ?? false,
         currency: projection.currency ?? false,
         description: projection.description ?? false,
+        imageBgColor: projection.imageBgColor ?? false,
         imageUrl: projection.imageUrl ?? false,
         noSubstitutes: projection.noSubstitutes ?? false,
         notes: projection.notes ?? false,

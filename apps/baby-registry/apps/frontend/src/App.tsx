@@ -40,7 +40,33 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <AppBar position="sticky" color="transparent" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+      <AppBar
+        position="sticky"
+        color="transparent"
+        elevation={0}
+        sx={{
+          bgcolor: 'background.paper',
+          overflow: 'visible',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            height: 40,
+            pointerEvents: 'none',
+            backgroundColor: 'background.paper',
+            WebkitMaskImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40' preserveAspectRatio='none'><path d='M0 0 Q40 56 80 0 Z' fill='black'/></svg>")`,
+            maskImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40' preserveAspectRatio='none'><path d='M0 0 Q40 56 80 0 Z' fill='black'/></svg>")`,
+            WebkitMaskSize: '80px 40px',
+            maskSize: '80px 40px',
+            WebkitMaskRepeat: 'repeat-x',
+            maskRepeat: 'repeat-x',
+            WebkitMaskPosition: 'top left',
+            maskPosition: 'top left',
+          },
+        }}
+      >
         <Toolbar sx={toolbarSx}>
           <Typography
             component={Link}

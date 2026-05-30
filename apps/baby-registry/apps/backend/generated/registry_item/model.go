@@ -13,6 +13,7 @@ type Model struct {
 	Created            actor_trace.Model
 	Currency           string
 	Description        string
+	ImageBgColor       string
 	ImageUrl           string
 	NoSubstitutes      bool
 	Notes              string
@@ -57,6 +58,10 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 	if projection.Description {
 		elemdescription0 := m.Description
 		r.Description = &elemdescription0
+	}
+	if projection.ImageBgColor {
+		elemimageBgColor0 := m.ImageBgColor
+		r.ImageBgColor = &elemimageBgColor0
 	}
 	if projection.ImageUrl {
 		elemimageUrl0 := m.ImageUrl
@@ -157,6 +162,10 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 	if projection.Description {
 		elemdescription0 := m.Description
 		r.Description = &elemdescription0
+	}
+	if projection.ImageBgColor {
+		elemimageBgColor0 := m.ImageBgColor
+		r.ImageBgColor = &elemimageBgColor0
 	}
 	if projection.ImageUrl {
 		elemimageUrl0 := m.ImageUrl
@@ -275,6 +284,18 @@ type WhereClause struct {
 	DescriptionExists *bool
 	DescriptionLike   *string
 	DescriptionNlike  *string
+	// imageBgColor (string) search options
+	ImageBgColorEq     *string
+	ImageBgColorNe     *string
+	ImageBgColorGt     *string
+	ImageBgColorGte    *string
+	ImageBgColorLt     *string
+	ImageBgColorLte    *string
+	ImageBgColorIn     *[]string
+	ImageBgColorNin    *[]string
+	ImageBgColorExists *bool
+	ImageBgColorLike   *string
+	ImageBgColorNlike  *string
 	// imageUrl (string) search options
 	ImageUrlEq     *string
 	ImageUrlNe     *string
@@ -616,6 +637,58 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 	if o.DescriptionNlike != nil {
 		elemdescriptionNlike0 := o.DescriptionNlike
 		to.DescriptionNlike = elemdescriptionNlike0
+	}
+	if o.ImageBgColorEq != nil {
+		elemimageBgColorEq0 := o.ImageBgColorEq
+		to.ImageBgColorEq = elemimageBgColorEq0
+	}
+	if o.ImageBgColorNe != nil {
+		elemimageBgColorNe0 := o.ImageBgColorNe
+		to.ImageBgColorNe = elemimageBgColorNe0
+	}
+	if o.ImageBgColorGt != nil {
+		elemimageBgColorGt0 := o.ImageBgColorGt
+		to.ImageBgColorGt = elemimageBgColorGt0
+	}
+	if o.ImageBgColorGte != nil {
+		elemimageBgColorGte0 := o.ImageBgColorGte
+		to.ImageBgColorGte = elemimageBgColorGte0
+	}
+	if o.ImageBgColorLt != nil {
+		elemimageBgColorLt0 := o.ImageBgColorLt
+		to.ImageBgColorLt = elemimageBgColorLt0
+	}
+	if o.ImageBgColorLte != nil {
+		elemimageBgColorLte0 := o.ImageBgColorLte
+		to.ImageBgColorLte = elemimageBgColorLte0
+	}
+	if o.ImageBgColorIn != nil {
+		elemimageBgColorIn0 := make([]string, 0)
+		for _, oimageBgColorIn0 := range *o.ImageBgColorIn {
+			elemimageBgColorIn1 := oimageBgColorIn0
+			elemimageBgColorIn0 = append(elemimageBgColorIn0, elemimageBgColorIn1)
+		}
+		to.ImageBgColorIn = &elemimageBgColorIn0
+	}
+	if o.ImageBgColorNin != nil {
+		elemimageBgColorNin0 := make([]string, 0)
+		for _, oimageBgColorNin0 := range *o.ImageBgColorNin {
+			elemimageBgColorNin1 := oimageBgColorNin0
+			elemimageBgColorNin0 = append(elemimageBgColorNin0, elemimageBgColorNin1)
+		}
+		to.ImageBgColorNin = &elemimageBgColorNin0
+	}
+	if o.ImageBgColorExists != nil {
+		elemimageBgColorExists0 := o.ImageBgColorExists
+		to.ImageBgColorExists = elemimageBgColorExists0
+	}
+	if o.ImageBgColorLike != nil {
+		elemimageBgColorLike0 := o.ImageBgColorLike
+		to.ImageBgColorLike = elemimageBgColorLike0
+	}
+	if o.ImageBgColorNlike != nil {
+		elemimageBgColorNlike0 := o.ImageBgColorNlike
+		to.ImageBgColorNlike = elemimageBgColorNlike0
 	}
 	if o.ImageUrlEq != nil {
 		elemimageUrlEq0 := o.ImageUrlEq

@@ -73,6 +73,7 @@ type publicItem struct {
 	Title             string `json:"title"`
 	Description       string `json:"description"`
 	ImageUrl          string `json:"imageUrl"`
+	ImageBgColor      string `json:"imageBgColor"`
 	ProductUrl        string `json:"productUrl"`
 	Source            string `json:"source"`
 	PriceCents        int    `json:"priceCents"`
@@ -207,6 +208,7 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 			Title:             it.Title,
 			Description:       it.Description,
 			ImageUrl:          it.ImageUrl,
+			ImageBgColor:      it.ImageBgColor,
 			ProductUrl:        it.ProductUrl,
 			Source:            string(it.Source),
 			PriceCents:        it.PriceCents,

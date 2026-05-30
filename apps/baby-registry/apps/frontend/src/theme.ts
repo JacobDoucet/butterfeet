@@ -11,10 +11,10 @@ export const theme = createTheme({
   shape: { borderRadius: 14 },
   typography: {
     fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
-    h1: { fontWeight: 700, letterSpacing: '-0.02em' },
-    h2: { fontWeight: 700, letterSpacing: '-0.02em' },
-    h3: { fontWeight: 700, letterSpacing: '-0.01em' },
-    h4: { fontWeight: 700 },
+    h1: { fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' },
+    h2: { fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' },
+    h3: { fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' },
+    h4: { fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' },
     button: { textTransform: 'none', fontWeight: 600 },
   },
   components: {
@@ -26,5 +26,10 @@ export const theme = createTheme({
       styleOverrides: { root: { borderRadius: 18 } },
     },
     MuiTextField: { defaultProps: { fullWidth: true } },
+    MuiTab: {
+      styleOverrides: {
+        root: { textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 },
+      },
+    },
   },
 });

@@ -100,6 +100,7 @@ export default function RegistryEditor() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [imageBgColor, setImageBgColor] = useState('');
   const [source, setSource] = useState('');
   const [quantity, setQuantity] = useState('1');
   const [quantityUnlimited, setQuantityUnlimited] = useState(false);
@@ -122,6 +123,7 @@ export default function RegistryEditor() {
     setTitle('');
     setDescription('');
     setImageUrl('');
+    setImageBgColor('');
     setSource('');
     setQuantity('1');
     setQuantityUnlimited(false);
@@ -140,6 +142,7 @@ export default function RegistryEditor() {
     setTitle(it.title || '');
     setDescription(it.description || '');
     setImageUrl(it.imageUrl || '');
+    setImageBgColor(it.imageBgColor || '');
     setSource(it.source || '');
     setQuantity(String(it.quantity || 1));
     setQuantityUnlimited(!!it.quantityUnlimited);
@@ -183,6 +186,7 @@ export default function RegistryEditor() {
         title,
         description,
         imageUrl,
+        imageBgColor,
         productUrl: url,
         source,
         quantity: qty,
@@ -213,6 +217,7 @@ export default function RegistryEditor() {
         title,
         description,
         imageUrl,
+        imageBgColor,
         productUrl: url,
         source,
         quantity: qty,
@@ -303,7 +308,9 @@ export default function RegistryEditor() {
     acc[rootId] = (acc[rootId] ?? 0) + 1;
     return acc;
   }, {});
-  const topLevelItems = list.filter((it) => !it.parentItemId || !itemById[it.parentItemId]);
+  const topLevelItems = list
+    .filter((it) => !it.parentItemId || !itemById[it.parentItemId])
+    .sort((a, b) => (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' }));
   const editingItem = list.find((it) => it.id === editingId) ?? null;
   const editRootId = editingItem ? groupRootId(editingItem) : null;
   const editRootItem = editRootId ? itemById[editRootId] ?? null : null;
@@ -325,7 +332,13 @@ export default function RegistryEditor() {
       <Stack direction="row" alignItems="center" sx={{ mb: 4 }}>
         <Stack sx={{ flexGrow: 1 }}>
           <Typography variant="h4">{reg.title}</Typography>
-          <Typography color="text.secondary" component={Link} to={`/r/${reg.slug}`}>
+          <Typography
+            color="text.secondary"
+            component="a"
+            href={`/r/${reg.slug}`}
+            target="_blank"
+            rel="noreferrer"
+          >
             View public page → /r/{reg.slug}
           </Typography>
         </Stack>
@@ -379,7 +392,7 @@ export default function RegistryEditor() {
                 }}
               >
                 {it.imageUrl && (
-                  <CardMedia component="img" image={it.imageUrl} sx={{ aspectRatio: '1', objectFit: 'contain', bgcolor: '#f4ede3' }} />
+                  <CardMedia component="img" image={it.imageUrl} sx={{ aspectRatio: '1', objectFit: 'contain', bgcolor: it.imageBgColor || '#ffffff' }} />
                 )}
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Typography
@@ -482,7 +495,7 @@ export default function RegistryEditor() {
                   sx={{
                     borderRadius: 2,
                     overflow: 'hidden',
-                    bgcolor: '#f6efe6',
+                    bgcolor: imageBgColor || '#ffffff',
                     minHeight: 220,
                   }}
                 >
@@ -497,9 +510,22 @@ export default function RegistryEditor() {
                     </Stack>
                   )}
                 </Card>
-                <Typography variant="caption" color="text.secondary">
-                  Preview updates as you fetch or paste an image URL.
-                </Typography>
+                <TextField fullWidth label="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1 }}>
+                    Image background
+                  </Typography>
+                  <Box
+                    component="input"
+                    type="color"
+                    value={imageBgColor || '#ffffff'}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setImageBgColor(e.target.value)}
+                    sx={{ width: 36, height: 28, border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 0, cursor: 'pointer', bgcolor: 'transparent' }}
+                  />
+                  {imageBgColor && (
+                    <Button size="small" onClick={() => setImageBgColor('')}>Reset</Button>
+                  )}
+                </Stack>
               </Stack>
             </Grid>
             <Grid item xs={12} md={7} sx={{ minWidth: 0 }}>
@@ -517,7 +543,6 @@ export default function RegistryEditor() {
                 )}
                 <TextField fullWidth label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
                 <TextField fullWidth label="Description" value={description} onChange={(e) => setDescription(e.target.value)} multiline minRows={2} />
-                <TextField fullWidth label="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
                 <FormControlLabel
                   control={<Checkbox checked={quantityUnlimited} onChange={(e) => setQuantityUnlimited(e.target.checked)} />}
                   label="Allow unlimited reservations"
@@ -621,7 +646,7 @@ export default function RegistryEditor() {
                         sx={{
                           borderRadius: 2,
                           overflow: 'hidden',
-                          bgcolor: '#f6efe6',
+                          bgcolor: imageBgColor || '#ffffff',
                           minHeight: 220,
                         }}
                       >
@@ -636,9 +661,22 @@ export default function RegistryEditor() {
                           </Stack>
                         )}
                       </Card>
-                      <Typography variant="caption" color="text.secondary">
-                        Preview updates as you fetch or paste an image URL.
-                      </Typography>
+                      <TextField fullWidth label="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1 }}>
+                          Image background
+                        </Typography>
+                        <Box
+                          component="input"
+                          type="color"
+                          value={imageBgColor || '#ffffff'}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setImageBgColor(e.target.value)}
+                          sx={{ width: 36, height: 28, border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 0, cursor: 'pointer', bgcolor: 'transparent' }}
+                        />
+                        {imageBgColor && (
+                          <Button size="small" onClick={() => setImageBgColor('')}>Reset</Button>
+                        )}
+                      </Stack>
                     </Stack>
                   </Box>
                   <Box sx={{ width: { xs: '100%', md: '60%' }, minWidth: 0 }}>
@@ -656,7 +694,6 @@ export default function RegistryEditor() {
                       )}
                       <TextField fullWidth label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
                       <TextField fullWidth label="Description" value={description} onChange={(e) => setDescription(e.target.value)} multiline minRows={2} />
-                      <TextField fullWidth label="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
                       <FormControlLabel
                         control={<Checkbox checked={quantityUnlimited} onChange={(e) => setQuantityUnlimited(e.target.checked)} />}
                         label="Allow unlimited reservations"

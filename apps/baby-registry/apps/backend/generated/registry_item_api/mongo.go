@@ -224,6 +224,7 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 		row.Category = r.Category
 		row.Currency = r.Currency
 		row.Description = r.Description
+		row.ImageBgColor = r.ImageBgColor
 		row.ImageUrl = r.ImageUrl
 		row.NoSubstitutes = r.NoSubstitutes
 		row.Notes = r.Notes

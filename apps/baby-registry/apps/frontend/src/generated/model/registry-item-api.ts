@@ -68,6 +68,18 @@ export type RegistryItemSearchQuery = {
     descriptionExists?: boolean;
     descriptionLike?: string;
     descriptionNlike?: string;
+    // imageBgColor (string) search options
+    imageBgColorEq?: string;
+    imageBgColorNe?: string;
+    imageBgColorGt?: string;
+    imageBgColorGte?: string;
+    imageBgColorLt?: string;
+    imageBgColorLte?: string;
+    imageBgColorIn?: string[];
+    imageBgColorNin?: string[];
+    imageBgColorExists?: boolean;
+    imageBgColorLike?: string;
+    imageBgColorNlike?: string;
     // imageUrl (string) search options
     imageUrlEq?: string;
     imageUrlNe?: string;
