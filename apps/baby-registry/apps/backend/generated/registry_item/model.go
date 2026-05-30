@@ -9,16 +9,20 @@ import (
 
 type Model struct {
 	Id                 string
+	Category           string
 	Created            actor_trace.Model
 	Currency           string
 	Description        string
 	ImageUrl           string
+	NoSubstitutes      bool
 	Notes              string
 	OwnerPurchased     bool
+	ParentItemId       string
 	Position           int
 	PriceCents         int
 	ProductUrl         string
 	Quantity           int
+	QuantityUnlimited  bool
 	RegistryId         string
 	Source             enum_item_source.Value
 	Title              string
@@ -34,6 +38,10 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 			return r, errors.Join(errors.New("invalid m.Id"), err)
 		}
 		r.Id = &elemid0
+	}
+	if projection.Category {
+		elemcategory0 := m.Category
+		r.Category = &elemcategory0
 	}
 	if projection.Created {
 		elemcreated0, err := m.Created.ToMongoRecord(projection.CreatedFields)
@@ -54,6 +62,10 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 		elemimageUrl0 := m.ImageUrl
 		r.ImageUrl = &elemimageUrl0
 	}
+	if projection.NoSubstitutes {
+		elemnoSubstitutes0 := m.NoSubstitutes
+		r.NoSubstitutes = &elemnoSubstitutes0
+	}
 	if projection.Notes {
 		elemnotes0 := m.Notes
 		r.Notes = &elemnotes0
@@ -61,6 +73,13 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 	if projection.OwnerPurchased {
 		elemownerPurchased0 := m.OwnerPurchased
 		r.OwnerPurchased = &elemownerPurchased0
+	}
+	if projection.ParentItemId && m.ParentItemId != "" {
+		elemparentItemId0, err := primitive.ObjectIDFromHex(m.ParentItemId)
+		if err != nil {
+			return r, errors.Join(errors.New("invalid m.ParentItemId"), err)
+		}
+		r.ParentItemId = &elemparentItemId0
 	}
 	if projection.Position {
 		elemposition0 := m.Position
@@ -77,6 +96,10 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 	if projection.Quantity {
 		elemquantity0 := m.Quantity
 		r.Quantity = &elemquantity0
+	}
+	if projection.QuantityUnlimited {
+		elemquantityUnlimited0 := m.QuantityUnlimited
+		r.QuantityUnlimited = &elemquantityUnlimited0
 	}
 	if projection.RegistryId && m.RegistryId != "" {
 		elemregistryId0, err := primitive.ObjectIDFromHex(m.RegistryId)
@@ -116,6 +139,10 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 		elemid0 := m.Id
 		r.Id = &elemid0
 	}
+	if projection.Category {
+		elemcategory0 := m.Category
+		r.Category = &elemcategory0
+	}
 	if projection.Created {
 		elemcreated0, err := m.Created.ToHTTPRecord(projection.CreatedFields)
 		if err != nil {
@@ -135,6 +162,10 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 		elemimageUrl0 := m.ImageUrl
 		r.ImageUrl = &elemimageUrl0
 	}
+	if projection.NoSubstitutes {
+		elemnoSubstitutes0 := m.NoSubstitutes
+		r.NoSubstitutes = &elemnoSubstitutes0
+	}
 	if projection.Notes {
 		elemnotes0 := m.Notes
 		r.Notes = &elemnotes0
@@ -142,6 +173,10 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 	if projection.OwnerPurchased {
 		elemownerPurchased0 := m.OwnerPurchased
 		r.OwnerPurchased = &elemownerPurchased0
+	}
+	if projection.ParentItemId && m.ParentItemId != "" {
+		elemparentItemId0 := m.ParentItemId
+		r.ParentItemId = &elemparentItemId0
 	}
 	if projection.Position {
 		elemposition0 := m.Position
@@ -158,6 +193,10 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 	if projection.Quantity {
 		elemquantity0 := m.Quantity
 		r.Quantity = &elemquantity0
+	}
+	if projection.QuantityUnlimited {
+		elemquantityUnlimited0 := m.QuantityUnlimited
+		r.QuantityUnlimited = &elemquantityUnlimited0
 	}
 	if projection.RegistryId && m.RegistryId != "" {
 		elemregistryId0 := m.RegistryId
@@ -198,6 +237,18 @@ type WhereClause struct {
 	IdIn     *[]string
 	IdNin    *[]string
 	IdExists *bool
+	// category (string) search options
+	CategoryEq     *string
+	CategoryNe     *string
+	CategoryGt     *string
+	CategoryGte    *string
+	CategoryLt     *string
+	CategoryLte    *string
+	CategoryIn     *[]string
+	CategoryNin    *[]string
+	CategoryExists *bool
+	CategoryLike   *string
+	CategoryNlike  *string
 	// created (ActorTrace) search options
 	Created *actor_trace.WhereClause
 	// currency (string) search options
@@ -236,6 +287,16 @@ type WhereClause struct {
 	ImageUrlExists *bool
 	ImageUrlLike   *string
 	ImageUrlNlike  *string
+	// noSubstitutes (bool) search options
+	NoSubstitutesEq     *bool
+	NoSubstitutesNe     *bool
+	NoSubstitutesGt     *bool
+	NoSubstitutesGte    *bool
+	NoSubstitutesLt     *bool
+	NoSubstitutesLte    *bool
+	NoSubstitutesIn     *[]bool
+	NoSubstitutesNin    *[]bool
+	NoSubstitutesExists *bool
 	// notes (string) search options
 	NotesEq     *string
 	NotesNe     *string
@@ -258,6 +319,11 @@ type WhereClause struct {
 	OwnerPurchasedIn     *[]bool
 	OwnerPurchasedNin    *[]bool
 	OwnerPurchasedExists *bool
+	// parentItemId (Ref<RegistryItem>) search options
+	ParentItemIdEq     *string
+	ParentItemIdIn     *[]string
+	ParentItemIdNin    *[]string
+	ParentItemIdExists *bool
 	// position (int) search options
 	PositionEq     *int
 	PositionNe     *int
@@ -300,6 +366,16 @@ type WhereClause struct {
 	QuantityIn     *[]int
 	QuantityNin    *[]int
 	QuantityExists *bool
+	// quantityUnlimited (bool) search options
+	QuantityUnlimitedEq     *bool
+	QuantityUnlimitedNe     *bool
+	QuantityUnlimitedGt     *bool
+	QuantityUnlimitedGte    *bool
+	QuantityUnlimitedLt     *bool
+	QuantityUnlimitedLte    *bool
+	QuantityUnlimitedIn     *[]bool
+	QuantityUnlimitedNin    *[]bool
+	QuantityUnlimitedExists *bool
 	// registryId (ParentRef<Registry>) search options
 	RegistryIdEq     *string
 	RegistryIdIn     *[]string
@@ -377,6 +453,58 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 	if o.IdExists != nil {
 		elemidExists0 := o.IdExists
 		to.IdExists = elemidExists0
+	}
+	if o.CategoryEq != nil {
+		elemcategoryEq0 := o.CategoryEq
+		to.CategoryEq = elemcategoryEq0
+	}
+	if o.CategoryNe != nil {
+		elemcategoryNe0 := o.CategoryNe
+		to.CategoryNe = elemcategoryNe0
+	}
+	if o.CategoryGt != nil {
+		elemcategoryGt0 := o.CategoryGt
+		to.CategoryGt = elemcategoryGt0
+	}
+	if o.CategoryGte != nil {
+		elemcategoryGte0 := o.CategoryGte
+		to.CategoryGte = elemcategoryGte0
+	}
+	if o.CategoryLt != nil {
+		elemcategoryLt0 := o.CategoryLt
+		to.CategoryLt = elemcategoryLt0
+	}
+	if o.CategoryLte != nil {
+		elemcategoryLte0 := o.CategoryLte
+		to.CategoryLte = elemcategoryLte0
+	}
+	if o.CategoryIn != nil {
+		elemcategoryIn0 := make([]string, 0)
+		for _, ocategoryIn0 := range *o.CategoryIn {
+			elemcategoryIn1 := ocategoryIn0
+			elemcategoryIn0 = append(elemcategoryIn0, elemcategoryIn1)
+		}
+		to.CategoryIn = &elemcategoryIn0
+	}
+	if o.CategoryNin != nil {
+		elemcategoryNin0 := make([]string, 0)
+		for _, ocategoryNin0 := range *o.CategoryNin {
+			elemcategoryNin1 := ocategoryNin0
+			elemcategoryNin0 = append(elemcategoryNin0, elemcategoryNin1)
+		}
+		to.CategoryNin = &elemcategoryNin0
+	}
+	if o.CategoryExists != nil {
+		elemcategoryExists0 := o.CategoryExists
+		to.CategoryExists = elemcategoryExists0
+	}
+	if o.CategoryLike != nil {
+		elemcategoryLike0 := o.CategoryLike
+		to.CategoryLike = elemcategoryLike0
+	}
+	if o.CategoryNlike != nil {
+		elemcategoryNlike0 := o.CategoryNlike
+		to.CategoryNlike = elemcategoryNlike0
 	}
 	if o.Created != nil {
 		elemcreated0, err := o.Created.ToMongoWhereClause()
@@ -541,6 +669,50 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 		elemimageUrlNlike0 := o.ImageUrlNlike
 		to.ImageUrlNlike = elemimageUrlNlike0
 	}
+	if o.NoSubstitutesEq != nil {
+		elemnoSubstitutesEq0 := o.NoSubstitutesEq
+		to.NoSubstitutesEq = elemnoSubstitutesEq0
+	}
+	if o.NoSubstitutesNe != nil {
+		elemnoSubstitutesNe0 := o.NoSubstitutesNe
+		to.NoSubstitutesNe = elemnoSubstitutesNe0
+	}
+	if o.NoSubstitutesGt != nil {
+		elemnoSubstitutesGt0 := o.NoSubstitutesGt
+		to.NoSubstitutesGt = elemnoSubstitutesGt0
+	}
+	if o.NoSubstitutesGte != nil {
+		elemnoSubstitutesGte0 := o.NoSubstitutesGte
+		to.NoSubstitutesGte = elemnoSubstitutesGte0
+	}
+	if o.NoSubstitutesLt != nil {
+		elemnoSubstitutesLt0 := o.NoSubstitutesLt
+		to.NoSubstitutesLt = elemnoSubstitutesLt0
+	}
+	if o.NoSubstitutesLte != nil {
+		elemnoSubstitutesLte0 := o.NoSubstitutesLte
+		to.NoSubstitutesLte = elemnoSubstitutesLte0
+	}
+	if o.NoSubstitutesIn != nil {
+		elemnoSubstitutesIn0 := make([]bool, 0)
+		for _, onoSubstitutesIn0 := range *o.NoSubstitutesIn {
+			elemnoSubstitutesIn1 := onoSubstitutesIn0
+			elemnoSubstitutesIn0 = append(elemnoSubstitutesIn0, elemnoSubstitutesIn1)
+		}
+		to.NoSubstitutesIn = &elemnoSubstitutesIn0
+	}
+	if o.NoSubstitutesNin != nil {
+		elemnoSubstitutesNin0 := make([]bool, 0)
+		for _, onoSubstitutesNin0 := range *o.NoSubstitutesNin {
+			elemnoSubstitutesNin1 := onoSubstitutesNin0
+			elemnoSubstitutesNin0 = append(elemnoSubstitutesNin0, elemnoSubstitutesNin1)
+		}
+		to.NoSubstitutesNin = &elemnoSubstitutesNin0
+	}
+	if o.NoSubstitutesExists != nil {
+		elemnoSubstitutesExists0 := o.NoSubstitutesExists
+		to.NoSubstitutesExists = elemnoSubstitutesExists0
+	}
 	if o.NotesEq != nil {
 		elemnotesEq0 := o.NotesEq
 		to.NotesEq = elemnotesEq0
@@ -636,6 +808,39 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 	if o.OwnerPurchasedExists != nil {
 		elemownerPurchasedExists0 := o.OwnerPurchasedExists
 		to.OwnerPurchasedExists = elemownerPurchasedExists0
+	}
+	if o.ParentItemIdEq != nil {
+		elemparentItemIdEq0, err := primitive.ObjectIDFromHex(*o.ParentItemIdEq)
+		if err != nil {
+			return to, errors.Join(errors.New("invalid o.ParentItemIdEq"), err)
+		}
+		to.ParentItemIdEq = &elemparentItemIdEq0
+	}
+	if o.ParentItemIdIn != nil {
+		elemparentItemIdIn0 := make([]primitive.ObjectID, 0)
+		for _, oparentItemIdIn0 := range *o.ParentItemIdIn {
+			elemparentItemIdIn1, err := primitive.ObjectIDFromHex(oparentItemIdIn0)
+			if err != nil {
+				return to, errors.Join(errors.New("invalid oparentItemIdIn0"), err)
+			}
+			elemparentItemIdIn0 = append(elemparentItemIdIn0, elemparentItemIdIn1)
+		}
+		to.ParentItemIdIn = &elemparentItemIdIn0
+	}
+	if o.ParentItemIdNin != nil {
+		elemparentItemIdNin0 := make([]primitive.ObjectID, 0)
+		for _, oparentItemIdNin0 := range *o.ParentItemIdNin {
+			elemparentItemIdNin1, err := primitive.ObjectIDFromHex(oparentItemIdNin0)
+			if err != nil {
+				return to, errors.Join(errors.New("invalid oparentItemIdNin0"), err)
+			}
+			elemparentItemIdNin0 = append(elemparentItemIdNin0, elemparentItemIdNin1)
+		}
+		to.ParentItemIdNin = &elemparentItemIdNin0
+	}
+	if o.ParentItemIdExists != nil {
+		elemparentItemIdExists0 := o.ParentItemIdExists
+		to.ParentItemIdExists = elemparentItemIdExists0
 	}
 	if o.PositionEq != nil {
 		elempositionEq0 := o.PositionEq
@@ -820,6 +1025,50 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 	if o.QuantityExists != nil {
 		elemquantityExists0 := o.QuantityExists
 		to.QuantityExists = elemquantityExists0
+	}
+	if o.QuantityUnlimitedEq != nil {
+		elemquantityUnlimitedEq0 := o.QuantityUnlimitedEq
+		to.QuantityUnlimitedEq = elemquantityUnlimitedEq0
+	}
+	if o.QuantityUnlimitedNe != nil {
+		elemquantityUnlimitedNe0 := o.QuantityUnlimitedNe
+		to.QuantityUnlimitedNe = elemquantityUnlimitedNe0
+	}
+	if o.QuantityUnlimitedGt != nil {
+		elemquantityUnlimitedGt0 := o.QuantityUnlimitedGt
+		to.QuantityUnlimitedGt = elemquantityUnlimitedGt0
+	}
+	if o.QuantityUnlimitedGte != nil {
+		elemquantityUnlimitedGte0 := o.QuantityUnlimitedGte
+		to.QuantityUnlimitedGte = elemquantityUnlimitedGte0
+	}
+	if o.QuantityUnlimitedLt != nil {
+		elemquantityUnlimitedLt0 := o.QuantityUnlimitedLt
+		to.QuantityUnlimitedLt = elemquantityUnlimitedLt0
+	}
+	if o.QuantityUnlimitedLte != nil {
+		elemquantityUnlimitedLte0 := o.QuantityUnlimitedLte
+		to.QuantityUnlimitedLte = elemquantityUnlimitedLte0
+	}
+	if o.QuantityUnlimitedIn != nil {
+		elemquantityUnlimitedIn0 := make([]bool, 0)
+		for _, oquantityUnlimitedIn0 := range *o.QuantityUnlimitedIn {
+			elemquantityUnlimitedIn1 := oquantityUnlimitedIn0
+			elemquantityUnlimitedIn0 = append(elemquantityUnlimitedIn0, elemquantityUnlimitedIn1)
+		}
+		to.QuantityUnlimitedIn = &elemquantityUnlimitedIn0
+	}
+	if o.QuantityUnlimitedNin != nil {
+		elemquantityUnlimitedNin0 := make([]bool, 0)
+		for _, oquantityUnlimitedNin0 := range *o.QuantityUnlimitedNin {
+			elemquantityUnlimitedNin1 := oquantityUnlimitedNin0
+			elemquantityUnlimitedNin0 = append(elemquantityUnlimitedNin0, elemquantityUnlimitedNin1)
+		}
+		to.QuantityUnlimitedNin = &elemquantityUnlimitedNin0
+	}
+	if o.QuantityUnlimitedExists != nil {
+		elemquantityUnlimitedExists0 := o.QuantityUnlimitedExists
+		to.QuantityUnlimitedExists = elemquantityUnlimitedExists0
 	}
 	if o.RegistryIdEq != nil {
 		elemregistryIdEq0, err := primitive.ObjectIDFromHex(*o.RegistryIdEq)

@@ -7,16 +7,20 @@ import (
 
 type HTTPRecord struct {
 	Id                 *string                 `json:"id,omitempty"`
+	Category           *string                 `json:"category,omitempty"`
 	Created            *actor_trace.HTTPRecord `json:"created,omitempty"`
 	Currency           *string                 `json:"currency,omitempty"`
 	Description        *string                 `json:"description,omitempty"`
 	ImageUrl           *string                 `json:"imageUrl,omitempty"`
+	NoSubstitutes      *bool                   `json:"noSubstitutes,omitempty"`
 	Notes              *string                 `json:"notes,omitempty"`
 	OwnerPurchased     *bool                   `json:"ownerPurchased,omitempty"`
+	ParentItemId       *string                 `json:"parentItemId,omitempty"`
 	Position           *int                    `json:"position,omitempty"`
 	PriceCents         *int                    `json:"priceCents,omitempty"`
 	ProductUrl         *string                 `json:"productUrl,omitempty"`
 	Quantity           *int                    `json:"quantity,omitempty"`
+	QuantityUnlimited  *bool                   `json:"quantityUnlimited,omitempty"`
 	RegistryId         *string                 `json:"registryId,omitempty"`
 	Source             *enum_item_source.Value `json:"source,omitempty"`
 	Title              *string                 `json:"title,omitempty"`
@@ -29,6 +33,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 	if r.Id != nil {
 		elemid0 := r.Id
 		m.Id = *elemid0
+	}
+	if r.Category != nil {
+		elemcategory0 := r.Category
+		m.Category = *elemcategory0
 	}
 	if r.Created != nil {
 		elemcreated0, err := r.Created.ToModel()
@@ -49,6 +57,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 		elemimageUrl0 := r.ImageUrl
 		m.ImageUrl = *elemimageUrl0
 	}
+	if r.NoSubstitutes != nil {
+		elemnoSubstitutes0 := r.NoSubstitutes
+		m.NoSubstitutes = *elemnoSubstitutes0
+	}
 	if r.Notes != nil {
 		elemnotes0 := r.Notes
 		m.Notes = *elemnotes0
@@ -56,6 +68,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 	if r.OwnerPurchased != nil {
 		elemownerPurchased0 := r.OwnerPurchased
 		m.OwnerPurchased = *elemownerPurchased0
+	}
+	if r.ParentItemId != nil {
+		elemparentItemId0 := r.ParentItemId
+		m.ParentItemId = *elemparentItemId0
 	}
 	if r.Position != nil {
 		elemposition0 := r.Position
@@ -72,6 +88,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 	if r.Quantity != nil {
 		elemquantity0 := r.Quantity
 		m.Quantity = *elemquantity0
+	}
+	if r.QuantityUnlimited != nil {
+		elemquantityUnlimited0 := r.QuantityUnlimited
+		m.QuantityUnlimited = *elemquantityUnlimited0
 	}
 	if r.RegistryId != nil {
 		elemregistryId0 := r.RegistryId
@@ -107,6 +127,9 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	if r.Id != nil {
 		p.Id = true
 	}
+	if r.Category != nil {
+		p.Category = true
+	}
 	if r.Created != nil {
 		p.Created = true
 		p.CreatedFields = actor_trace.NewProjection(true)
@@ -120,11 +143,17 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	if r.ImageUrl != nil {
 		p.ImageUrl = true
 	}
+	if r.NoSubstitutes != nil {
+		p.NoSubstitutes = true
+	}
 	if r.Notes != nil {
 		p.Notes = true
 	}
 	if r.OwnerPurchased != nil {
 		p.OwnerPurchased = true
+	}
+	if r.ParentItemId != nil {
+		p.ParentItemId = true
 	}
 	if r.Position != nil {
 		p.Position = true
@@ -137,6 +166,9 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	}
 	if r.Quantity != nil {
 		p.Quantity = true
+	}
+	if r.QuantityUnlimited != nil {
+		p.QuantityUnlimited = true
 	}
 	if r.RegistryId != nil {
 		p.RegistryId = true
@@ -168,6 +200,18 @@ type HTTPWhereClause struct {
 	IdIn     *[]string `json:"idIn,omitempty"`
 	IdNin    *[]string `json:"idNin,omitempty"`
 	IdExists *bool     `json:"idExists,omitempty"`
+	// category (string) search options
+	CategoryEq     *string   `json:"categoryEq,omitempty"`
+	CategoryNe     *string   `json:"categoryNe,omitempty"`
+	CategoryGt     *string   `json:"categoryGt,omitempty"`
+	CategoryGte    *string   `json:"categoryGte,omitempty"`
+	CategoryLt     *string   `json:"categoryLt,omitempty"`
+	CategoryLte    *string   `json:"categoryLte,omitempty"`
+	CategoryIn     *[]string `json:"categoryIn,omitempty"`
+	CategoryNin    *[]string `json:"categoryNin,omitempty"`
+	CategoryExists *bool     `json:"categoryExists,omitempty"`
+	CategoryLike   *string   `json:"categoryLike,omitempty"`
+	CategoryNlike  *string   `json:"categoryNlike,omitempty"`
 	// created (ActorTrace) search options
 	Created *actor_trace.HTTPWhereClause `json:"created,omitempty"`
 	// currency (string) search options
@@ -206,6 +250,16 @@ type HTTPWhereClause struct {
 	ImageUrlExists *bool     `json:"imageUrlExists,omitempty"`
 	ImageUrlLike   *string   `json:"imageUrlLike,omitempty"`
 	ImageUrlNlike  *string   `json:"imageUrlNlike,omitempty"`
+	// noSubstitutes (bool) search options
+	NoSubstitutesEq     *bool   `json:"noSubstitutesEq,omitempty"`
+	NoSubstitutesNe     *bool   `json:"noSubstitutesNe,omitempty"`
+	NoSubstitutesGt     *bool   `json:"noSubstitutesGt,omitempty"`
+	NoSubstitutesGte    *bool   `json:"noSubstitutesGte,omitempty"`
+	NoSubstitutesLt     *bool   `json:"noSubstitutesLt,omitempty"`
+	NoSubstitutesLte    *bool   `json:"noSubstitutesLte,omitempty"`
+	NoSubstitutesIn     *[]bool `json:"noSubstitutesIn,omitempty"`
+	NoSubstitutesNin    *[]bool `json:"noSubstitutesNin,omitempty"`
+	NoSubstitutesExists *bool   `json:"noSubstitutesExists,omitempty"`
 	// notes (string) search options
 	NotesEq     *string   `json:"notesEq,omitempty"`
 	NotesNe     *string   `json:"notesNe,omitempty"`
@@ -228,6 +282,11 @@ type HTTPWhereClause struct {
 	OwnerPurchasedIn     *[]bool `json:"ownerPurchasedIn,omitempty"`
 	OwnerPurchasedNin    *[]bool `json:"ownerPurchasedNin,omitempty"`
 	OwnerPurchasedExists *bool   `json:"ownerPurchasedExists,omitempty"`
+	// parentItemId (Ref<RegistryItem>) search options
+	ParentItemIdEq     *string   `json:"parentItemIdEq,omitempty"`
+	ParentItemIdIn     *[]string `json:"parentItemIdIn,omitempty"`
+	ParentItemIdNin    *[]string `json:"parentItemIdNin,omitempty"`
+	ParentItemIdExists *bool     `json:"parentItemIdExists,omitempty"`
 	// position (int) search options
 	PositionEq     *int   `json:"positionEq,omitempty"`
 	PositionNe     *int   `json:"positionNe,omitempty"`
@@ -270,6 +329,16 @@ type HTTPWhereClause struct {
 	QuantityIn     *[]int `json:"quantityIn,omitempty"`
 	QuantityNin    *[]int `json:"quantityNin,omitempty"`
 	QuantityExists *bool  `json:"quantityExists,omitempty"`
+	// quantityUnlimited (bool) search options
+	QuantityUnlimitedEq     *bool   `json:"quantityUnlimitedEq,omitempty"`
+	QuantityUnlimitedNe     *bool   `json:"quantityUnlimitedNe,omitempty"`
+	QuantityUnlimitedGt     *bool   `json:"quantityUnlimitedGt,omitempty"`
+	QuantityUnlimitedGte    *bool   `json:"quantityUnlimitedGte,omitempty"`
+	QuantityUnlimitedLt     *bool   `json:"quantityUnlimitedLt,omitempty"`
+	QuantityUnlimitedLte    *bool   `json:"quantityUnlimitedLte,omitempty"`
+	QuantityUnlimitedIn     *[]bool `json:"quantityUnlimitedIn,omitempty"`
+	QuantityUnlimitedNin    *[]bool `json:"quantityUnlimitedNin,omitempty"`
+	QuantityUnlimitedExists *bool   `json:"quantityUnlimitedExists,omitempty"`
 	// registryId (ParentRef<Registry>) search options
 	RegistryIdEq     *string   `json:"registryIdEq,omitempty"`
 	RegistryIdIn     *[]string `json:"registryIdIn,omitempty"`
@@ -335,6 +404,58 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 	if o.IdExists != nil {
 		elemidExists0 := o.IdExists
 		to.IdExists = elemidExists0
+	}
+	if o.CategoryEq != nil {
+		elemcategoryEq0 := o.CategoryEq
+		to.CategoryEq = elemcategoryEq0
+	}
+	if o.CategoryNe != nil {
+		elemcategoryNe0 := o.CategoryNe
+		to.CategoryNe = elemcategoryNe0
+	}
+	if o.CategoryGt != nil {
+		elemcategoryGt0 := o.CategoryGt
+		to.CategoryGt = elemcategoryGt0
+	}
+	if o.CategoryGte != nil {
+		elemcategoryGte0 := o.CategoryGte
+		to.CategoryGte = elemcategoryGte0
+	}
+	if o.CategoryLt != nil {
+		elemcategoryLt0 := o.CategoryLt
+		to.CategoryLt = elemcategoryLt0
+	}
+	if o.CategoryLte != nil {
+		elemcategoryLte0 := o.CategoryLte
+		to.CategoryLte = elemcategoryLte0
+	}
+	if o.CategoryIn != nil {
+		elemcategoryIn0 := make([]string, 0)
+		for _, ocategoryIn0 := range *o.CategoryIn {
+			elemcategoryIn1 := ocategoryIn0
+			elemcategoryIn0 = append(elemcategoryIn0, elemcategoryIn1)
+		}
+		to.CategoryIn = &elemcategoryIn0
+	}
+	if o.CategoryNin != nil {
+		elemcategoryNin0 := make([]string, 0)
+		for _, ocategoryNin0 := range *o.CategoryNin {
+			elemcategoryNin1 := ocategoryNin0
+			elemcategoryNin0 = append(elemcategoryNin0, elemcategoryNin1)
+		}
+		to.CategoryNin = &elemcategoryNin0
+	}
+	if o.CategoryExists != nil {
+		elemcategoryExists0 := o.CategoryExists
+		to.CategoryExists = elemcategoryExists0
+	}
+	if o.CategoryLike != nil {
+		elemcategoryLike0 := o.CategoryLike
+		to.CategoryLike = elemcategoryLike0
+	}
+	if o.CategoryNlike != nil {
+		elemcategoryNlike0 := o.CategoryNlike
+		to.CategoryNlike = elemcategoryNlike0
 	}
 	if o.Created != nil {
 		elemcreated0, err := o.Created.ToWhereClause()
@@ -499,6 +620,50 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 		elemimageUrlNlike0 := o.ImageUrlNlike
 		to.ImageUrlNlike = elemimageUrlNlike0
 	}
+	if o.NoSubstitutesEq != nil {
+		elemnoSubstitutesEq0 := o.NoSubstitutesEq
+		to.NoSubstitutesEq = elemnoSubstitutesEq0
+	}
+	if o.NoSubstitutesNe != nil {
+		elemnoSubstitutesNe0 := o.NoSubstitutesNe
+		to.NoSubstitutesNe = elemnoSubstitutesNe0
+	}
+	if o.NoSubstitutesGt != nil {
+		elemnoSubstitutesGt0 := o.NoSubstitutesGt
+		to.NoSubstitutesGt = elemnoSubstitutesGt0
+	}
+	if o.NoSubstitutesGte != nil {
+		elemnoSubstitutesGte0 := o.NoSubstitutesGte
+		to.NoSubstitutesGte = elemnoSubstitutesGte0
+	}
+	if o.NoSubstitutesLt != nil {
+		elemnoSubstitutesLt0 := o.NoSubstitutesLt
+		to.NoSubstitutesLt = elemnoSubstitutesLt0
+	}
+	if o.NoSubstitutesLte != nil {
+		elemnoSubstitutesLte0 := o.NoSubstitutesLte
+		to.NoSubstitutesLte = elemnoSubstitutesLte0
+	}
+	if o.NoSubstitutesIn != nil {
+		elemnoSubstitutesIn0 := make([]bool, 0)
+		for _, onoSubstitutesIn0 := range *o.NoSubstitutesIn {
+			elemnoSubstitutesIn1 := onoSubstitutesIn0
+			elemnoSubstitutesIn0 = append(elemnoSubstitutesIn0, elemnoSubstitutesIn1)
+		}
+		to.NoSubstitutesIn = &elemnoSubstitutesIn0
+	}
+	if o.NoSubstitutesNin != nil {
+		elemnoSubstitutesNin0 := make([]bool, 0)
+		for _, onoSubstitutesNin0 := range *o.NoSubstitutesNin {
+			elemnoSubstitutesNin1 := onoSubstitutesNin0
+			elemnoSubstitutesNin0 = append(elemnoSubstitutesNin0, elemnoSubstitutesNin1)
+		}
+		to.NoSubstitutesNin = &elemnoSubstitutesNin0
+	}
+	if o.NoSubstitutesExists != nil {
+		elemnoSubstitutesExists0 := o.NoSubstitutesExists
+		to.NoSubstitutesExists = elemnoSubstitutesExists0
+	}
 	if o.NotesEq != nil {
 		elemnotesEq0 := o.NotesEq
 		to.NotesEq = elemnotesEq0
@@ -594,6 +759,30 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 	if o.OwnerPurchasedExists != nil {
 		elemownerPurchasedExists0 := o.OwnerPurchasedExists
 		to.OwnerPurchasedExists = elemownerPurchasedExists0
+	}
+	if o.ParentItemIdEq != nil {
+		elemparentItemIdEq0 := o.ParentItemIdEq
+		to.ParentItemIdEq = elemparentItemIdEq0
+	}
+	if o.ParentItemIdIn != nil {
+		elemparentItemIdIn0 := make([]string, 0)
+		for _, oparentItemIdIn0 := range *o.ParentItemIdIn {
+			elemparentItemIdIn1 := oparentItemIdIn0
+			elemparentItemIdIn0 = append(elemparentItemIdIn0, elemparentItemIdIn1)
+		}
+		to.ParentItemIdIn = &elemparentItemIdIn0
+	}
+	if o.ParentItemIdNin != nil {
+		elemparentItemIdNin0 := make([]string, 0)
+		for _, oparentItemIdNin0 := range *o.ParentItemIdNin {
+			elemparentItemIdNin1 := oparentItemIdNin0
+			elemparentItemIdNin0 = append(elemparentItemIdNin0, elemparentItemIdNin1)
+		}
+		to.ParentItemIdNin = &elemparentItemIdNin0
+	}
+	if o.ParentItemIdExists != nil {
+		elemparentItemIdExists0 := o.ParentItemIdExists
+		to.ParentItemIdExists = elemparentItemIdExists0
 	}
 	if o.PositionEq != nil {
 		elempositionEq0 := o.PositionEq
@@ -778,6 +967,50 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 	if o.QuantityExists != nil {
 		elemquantityExists0 := o.QuantityExists
 		to.QuantityExists = elemquantityExists0
+	}
+	if o.QuantityUnlimitedEq != nil {
+		elemquantityUnlimitedEq0 := o.QuantityUnlimitedEq
+		to.QuantityUnlimitedEq = elemquantityUnlimitedEq0
+	}
+	if o.QuantityUnlimitedNe != nil {
+		elemquantityUnlimitedNe0 := o.QuantityUnlimitedNe
+		to.QuantityUnlimitedNe = elemquantityUnlimitedNe0
+	}
+	if o.QuantityUnlimitedGt != nil {
+		elemquantityUnlimitedGt0 := o.QuantityUnlimitedGt
+		to.QuantityUnlimitedGt = elemquantityUnlimitedGt0
+	}
+	if o.QuantityUnlimitedGte != nil {
+		elemquantityUnlimitedGte0 := o.QuantityUnlimitedGte
+		to.QuantityUnlimitedGte = elemquantityUnlimitedGte0
+	}
+	if o.QuantityUnlimitedLt != nil {
+		elemquantityUnlimitedLt0 := o.QuantityUnlimitedLt
+		to.QuantityUnlimitedLt = elemquantityUnlimitedLt0
+	}
+	if o.QuantityUnlimitedLte != nil {
+		elemquantityUnlimitedLte0 := o.QuantityUnlimitedLte
+		to.QuantityUnlimitedLte = elemquantityUnlimitedLte0
+	}
+	if o.QuantityUnlimitedIn != nil {
+		elemquantityUnlimitedIn0 := make([]bool, 0)
+		for _, oquantityUnlimitedIn0 := range *o.QuantityUnlimitedIn {
+			elemquantityUnlimitedIn1 := oquantityUnlimitedIn0
+			elemquantityUnlimitedIn0 = append(elemquantityUnlimitedIn0, elemquantityUnlimitedIn1)
+		}
+		to.QuantityUnlimitedIn = &elemquantityUnlimitedIn0
+	}
+	if o.QuantityUnlimitedNin != nil {
+		elemquantityUnlimitedNin0 := make([]bool, 0)
+		for _, oquantityUnlimitedNin0 := range *o.QuantityUnlimitedNin {
+			elemquantityUnlimitedNin1 := oquantityUnlimitedNin0
+			elemquantityUnlimitedNin0 = append(elemquantityUnlimitedNin0, elemquantityUnlimitedNin1)
+		}
+		to.QuantityUnlimitedNin = &elemquantityUnlimitedNin0
+	}
+	if o.QuantityUnlimitedExists != nil {
+		elemquantityUnlimitedExists0 := o.QuantityUnlimitedExists
+		to.QuantityUnlimitedExists = elemquantityUnlimitedExists0
 	}
 	if o.RegistryIdEq != nil {
 		elemregistryIdEq0 := o.RegistryIdEq

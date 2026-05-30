@@ -553,6 +553,15 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 					searchRequest.Query.IdIn = utils.StringSliceToStringSlicePtr(values)
 					continue
 				}
+			case "category":
+				if len(values) == 1 {
+					searchRequest.Query.CategoryEq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.CategoryIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
 			case "currency":
 				if len(values) == 1 {
 					searchRequest.Query.CurrencyEq = utils.StringSliceToStringPtr(values)
@@ -578,6 +587,15 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 				}
 				if len(values) > 1 {
 					searchRequest.Query.ImageUrlIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
+			case "noSubstitutes":
+				if len(values) == 1 {
+					searchRequest.Query.NoSubstitutesEq = utils.StringSliceToBoolPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.NoSubstitutesIn = utils.StringSliceToBoolSlicePtr(values)
 					continue
 				}
 			case "notes":
@@ -634,6 +652,15 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 					searchRequest.Query.QuantityIn = utils.StringSliceToIntSlicePtr(values)
 					continue
 				}
+			case "quantityUnlimited":
+				if len(values) == 1 {
+					searchRequest.Query.QuantityUnlimitedEq = utils.StringSliceToBoolPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.QuantityUnlimitedIn = utils.StringSliceToBoolSlicePtr(values)
+					continue
+				}
 			case "title":
 				if len(values) == 1 {
 					searchRequest.Query.TitleEq = utils.StringSliceToStringPtr(values)
@@ -669,17 +696,21 @@ type AggregateRequest struct {
 
 // AggregateResultRowHTTP is the HTTP response type for a single aggregate result row
 type AggregateResultRowHTTP struct {
-	Currency       any `json:"currency,omitempty"`
-	Description    any `json:"description,omitempty"`
-	ImageUrl       any `json:"imageUrl,omitempty"`
-	Notes          any `json:"notes,omitempty"`
-	OwnerPurchased any `json:"ownerPurchased,omitempty"`
-	Position       any `json:"position,omitempty"`
-	PriceCents     any `json:"priceCents,omitempty"`
-	ProductUrl     any `json:"productUrl,omitempty"`
-	Quantity       any `json:"quantity,omitempty"`
-	RegistryId     any `json:"registryId,omitempty"`
-	Title          any `json:"title,omitempty"`
+	Category          any `json:"category,omitempty"`
+	Currency          any `json:"currency,omitempty"`
+	Description       any `json:"description,omitempty"`
+	ImageUrl          any `json:"imageUrl,omitempty"`
+	NoSubstitutes     any `json:"noSubstitutes,omitempty"`
+	Notes             any `json:"notes,omitempty"`
+	OwnerPurchased    any `json:"ownerPurchased,omitempty"`
+	ParentItemId      any `json:"parentItemId,omitempty"`
+	Position          any `json:"position,omitempty"`
+	PriceCents        any `json:"priceCents,omitempty"`
+	ProductUrl        any `json:"productUrl,omitempty"`
+	Quantity          any `json:"quantity,omitempty"`
+	QuantityUnlimited any `json:"quantityUnlimited,omitempty"`
+	RegistryId        any `json:"registryId,omitempty"`
+	Title             any `json:"title,omitempty"`
 	// Ref field Registry
 	Registry any `json:"registry,omitempty"`
 	// Ref field Reservations
@@ -774,15 +805,19 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 				AggregateKeys: row.AggregateKeys,
 			}
 			// Copy group-by fields
+			httpRow.Category = row.Category
 			httpRow.Currency = row.Currency
 			httpRow.Description = row.Description
 			httpRow.ImageUrl = row.ImageUrl
+			httpRow.NoSubstitutes = row.NoSubstitutes
 			httpRow.Notes = row.Notes
 			httpRow.OwnerPurchased = row.OwnerPurchased
+			httpRow.ParentItemId = row.ParentItemId
 			httpRow.Position = row.Position
 			httpRow.PriceCents = row.PriceCents
 			httpRow.ProductUrl = row.ProductUrl
 			httpRow.Quantity = row.Quantity
+			httpRow.QuantityUnlimited = row.QuantityUnlimited
 			httpRow.RegistryId = row.RegistryId
 			httpRow.Title = row.Title
 			// Convert ref fields to HTTP records

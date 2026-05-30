@@ -167,31 +167,39 @@ type GroupByField string
 
 // Valid group-by fields for RegistryItem
 const (
-	GroupByFieldCurrency       GroupByField = "currency"
-	GroupByFieldDescription    GroupByField = "description"
-	GroupByFieldImageUrl       GroupByField = "imageUrl"
-	GroupByFieldNotes          GroupByField = "notes"
-	GroupByFieldOwnerPurchased GroupByField = "ownerPurchased"
-	GroupByFieldPosition       GroupByField = "position"
-	GroupByFieldPriceCents     GroupByField = "priceCents"
-	GroupByFieldProductUrl     GroupByField = "productUrl"
-	GroupByFieldQuantity       GroupByField = "quantity"
-	GroupByFieldRegistryId     GroupByField = "registryId"
-	GroupByFieldTitle          GroupByField = "title"
+	GroupByFieldCategory          GroupByField = "category"
+	GroupByFieldCurrency          GroupByField = "currency"
+	GroupByFieldDescription       GroupByField = "description"
+	GroupByFieldImageUrl          GroupByField = "imageUrl"
+	GroupByFieldNoSubstitutes     GroupByField = "noSubstitutes"
+	GroupByFieldNotes             GroupByField = "notes"
+	GroupByFieldOwnerPurchased    GroupByField = "ownerPurchased"
+	GroupByFieldParentItemId      GroupByField = "parentItemId"
+	GroupByFieldPosition          GroupByField = "position"
+	GroupByFieldPriceCents        GroupByField = "priceCents"
+	GroupByFieldProductUrl        GroupByField = "productUrl"
+	GroupByFieldQuantity          GroupByField = "quantity"
+	GroupByFieldQuantityUnlimited GroupByField = "quantityUnlimited"
+	GroupByFieldRegistryId        GroupByField = "registryId"
+	GroupByFieldTitle             GroupByField = "title"
 )
 
 // ValidGroupByFields returns all valid group-by fields
 func ValidGroupByFields() []GroupByField {
 	return []GroupByField{
+		GroupByFieldCategory,
 		GroupByFieldCurrency,
 		GroupByFieldDescription,
 		GroupByFieldImageUrl,
+		GroupByFieldNoSubstitutes,
 		GroupByFieldNotes,
 		GroupByFieldOwnerPurchased,
+		GroupByFieldParentItemId,
 		GroupByFieldPosition,
 		GroupByFieldPriceCents,
 		GroupByFieldProductUrl,
 		GroupByFieldQuantity,
+		GroupByFieldQuantityUnlimited,
 		GroupByFieldRegistryId,
 		GroupByFieldTitle,
 	}
@@ -262,17 +270,21 @@ type AggregateOptions struct {
 // AggregateResultRow holds a single aggregation result row with a partial model structure
 type AggregateResultRow struct {
 	// Group-by fields (original types)
-	Currency       *string `json:"currency,omitempty"`
-	Description    *string `json:"description,omitempty"`
-	ImageUrl       *string `json:"imageUrl,omitempty"`
-	Notes          *string `json:"notes,omitempty"`
-	OwnerPurchased *bool   `json:"ownerPurchased,omitempty"`
-	Position       *int    `json:"position,omitempty"`
-	PriceCents     *int    `json:"priceCents,omitempty"`
-	ProductUrl     *string `json:"productUrl,omitempty"`
-	Quantity       *int    `json:"quantity,omitempty"`
-	RegistryId     *string `json:"registryId,omitempty"`
-	Title          *string `json:"title,omitempty"`
+	Category          *string `json:"category,omitempty"`
+	Currency          *string `json:"currency,omitempty"`
+	Description       *string `json:"description,omitempty"`
+	ImageUrl          *string `json:"imageUrl,omitempty"`
+	NoSubstitutes     *bool   `json:"noSubstitutes,omitempty"`
+	Notes             *string `json:"notes,omitempty"`
+	OwnerPurchased    *bool   `json:"ownerPurchased,omitempty"`
+	ParentItemId      *string `json:"parentItemId,omitempty"`
+	Position          *int    `json:"position,omitempty"`
+	PriceCents        *int    `json:"priceCents,omitempty"`
+	ProductUrl        *string `json:"productUrl,omitempty"`
+	Quantity          *int    `json:"quantity,omitempty"`
+	QuantityUnlimited *bool   `json:"quantityUnlimited,omitempty"`
+	RegistryId        *string `json:"registryId,omitempty"`
+	Title             *string `json:"title,omitempty"`
 	// Aggregate fields - always float64 since they're results of sum/avg/etc
 	// Ref field Registry
 	Registry *registry.Model `json:"registry,omitempty"`

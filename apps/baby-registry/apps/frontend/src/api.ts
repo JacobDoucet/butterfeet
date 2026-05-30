@@ -67,6 +67,10 @@ export interface RegistryItem {
   priceCents?: number;
   currency?: string;
   quantity?: number;
+  quantityUnlimited?: boolean;
+  category?: string;
+  noSubstitutes?: boolean;
+  parentItemId?: string;
   ownerPurchased?: boolean;
   notes?: string;
   position?: number;

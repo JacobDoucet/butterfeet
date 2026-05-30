@@ -130,32 +130,122 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; BabyRegistryBot/1.0)")
-	req.Header.Set("Accept", "text/html,application/xhtml+xml")
+	// Use a real-browser User-Agent + common headers. Many shopping sites
+	// (Etsy, John Lewis, Mamas & Papas, etc.) sit behind bot-detection
+	// services that return 403 for plain HTTP clients.
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "en-GB,en;q=0.9")
+	req.Header.Set("Sec-Fetch-Dest", "document")
+	req.Header.Set("Sec-Fetch-Mode", "navigate")
+	req.Header.Set("Sec-Fetch-Site", "none")
+	req.Header.Set("Sec-Fetch-User", "?1")
+	req.Header.Set("Upgrade-Insecure-Requests", "1")
 
 	resp, err := h.client.Do(req)
 	if err != nil {
-		http.Error(w, "fetch error: "+err.Error(), http.StatusBadGateway)
+		writeResult(w, fallbackResult(target, parsed))
 		return
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 4*1024*1024))
 	if err != nil {
-		http.Error(w, "read error", http.StatusBadGateway)
+		writeResult(w, fallbackResult(target, parsed))
+		return
+	}
+
+	if resp.StatusCode >= 400 || looksBlocked(body) {
+		writeResult(w, fallbackResult(target, parsed))
 		return
 	}
 
 	res, err := parseHTML(string(body), parsed)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		// Couldn't extract a title — fall back to slug-derived metadata
+		// rather than a hard error so the user still gets a head start.
+		writeResult(w, fallbackResult(target, parsed))
 		return
 	}
 	res.ProductUrl = target
 	res.Source = detectSource(parsed.Host)
 
+	writeResult(w, res)
+}
+
+func writeResult(w http.ResponseWriter, res Result) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(res)
+}
+
+// looksBlocked returns true when the response body looks like an
+// anti-bot challenge page (DataDome, Cloudflare, PerimeterX, etc.).
+func looksBlocked(body []byte) bool {
+	if len(body) < 8 {
+		return true
+	}
+	s := strings.ToLower(string(body[:min(len(body), 4096)]))
+	for _, needle := range []string{
+		"captcha-delivery.com",
+		"please enable js and disable any ad blocker",
+		"px-captcha",
+		"cf-browser-verification",
+		"just a moment...",
+		"attention required! | cloudflare",
+		"access denied",
+	} {
+		if strings.Contains(s, needle) {
+			return true
+		}
+	}
+	return false
+}
+
+// fallbackResult derives a best-effort Result from the URL alone when
+// the page can't be fetched or parsed (bot protection, JS-only render, etc.).
+func fallbackResult(target string, parsed *url.URL) Result {
+	return Result{
+		Title:      titleFromURL(parsed),
+		ProductUrl: target,
+		Source:     detectSource(parsed.Host),
+	}
+}
+
+// titleFromURL extracts a readable title from a URL path. For Etsy
+// listings (`/listing/{id}/{slug}`), the last slug segment is used.
+// Falls back to the last non-numeric path segment otherwise.
+func titleFromURL(u *url.URL) string {
+	segments := strings.Split(strings.Trim(u.Path, "/"), "/")
+	for i := len(segments) - 1; i >= 0; i-- {
+		seg := strings.TrimSpace(segments[i])
+		if seg == "" {
+			continue
+		}
+		// Strip extensions and query-ish suffixes
+		if dot := strings.LastIndex(seg, "."); dot > 0 {
+			seg = seg[:dot]
+		}
+		// Skip pure-numeric ids (e.g., Etsy listing id).
+		if _, err := strconv.Atoi(seg); err == nil {
+			continue
+		}
+		seg = strings.ReplaceAll(seg, "-", " ")
+		seg = strings.ReplaceAll(seg, "_", " ")
+		seg = strings.Join(strings.Fields(seg), " ")
+		if seg == "" {
+			continue
+		}
+		// Title-case each word.
+		words := strings.Fields(seg)
+		for j, w := range words {
+			if len(w) == 0 {
+				continue
+			}
+			words[j] = strings.ToUpper(w[:1]) + strings.ToLower(w[1:])
+		}
+		return strings.Join(words, " ")
+	}
+	return ""
 }
 
 func parseHTML(body string, pageURL *url.URL) (Result, error) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   Container,
@@ -21,10 +21,12 @@ import {
   Tabs,
   Tab,
   Box,
+  FormControlLabel,
+  Checkbox,
+  Autocomplete,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import EditIcon from '@mui/icons-material/EditOutlined';
 import Inventory2Icon from '@mui/icons-material/Inventory2Outlined';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -85,9 +87,8 @@ export default function RegistryEditor() {
 
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [editTab, setEditTab] = useState<'details' | 'substitutes' | 'fulfillment'>('details');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [fulfillmentOpen, setFulfillmentOpen] = useState(false);
-  const [fulfillmentItemId, setFulfillmentItemId] = useState<string | null>(null);
   const [fulfillmentStatus, setFulfillmentStatus] = useState<ReservationStatus>('Purchased');
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [url, setUrl] = useState('');
@@ -97,8 +98,20 @@ export default function RegistryEditor() {
   const [imageUrl, setImageUrl] = useState('');
   const [source, setSource] = useState('');
   const [quantity, setQuantity] = useState('1');
+  const [quantityUnlimited, setQuantityUnlimited] = useState(false);
+  const [category, setCategory] = useState('');
+  const [noSubstitutes, setNoSubstitutes] = useState(false);
+  const [parentItemId, setParentItemId] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const modalPaperSx = {
+    height: '80vh',
+    maxHeight: '80vh',
+    display: 'flex',
+    flexDirection: 'column',
+  } as const;
+
+  const suppressEditResetRef = useRef(false);
 
   const reset = () => {
     setUrl('');
@@ -107,12 +120,17 @@ export default function RegistryEditor() {
     setImageUrl('');
     setSource('');
     setQuantity('1');
+    setQuantityUnlimited(false);
+    setCategory('');
+    setNoSubstitutes(false);
+    setParentItemId('');
     setNotes('');
     setEditingId(null);
     setError(null);
   };
 
   const beginEdit = (it: RegistryItem) => {
+    setEditTab('details');
     setEditingId(it.id);
     setUrl(it.productUrl || '');
     setTitle(it.title || '');
@@ -120,9 +138,22 @@ export default function RegistryEditor() {
     setImageUrl(it.imageUrl || '');
     setSource(it.source || '');
     setQuantity(String(it.quantity || 1));
+    setQuantityUnlimited(!!it.quantityUnlimited);
+    setCategory(it.category || '');
+    setNoSubstitutes(!!it.noSubstitutes);
+    setParentItemId(it.parentItemId || '');
     setNotes(it.notes || '');
+    setFulfillmentStatus('Purchased');
     setError(null);
     setEditOpen(true);
+  };
+
+  const beginAddAlternative = (rootId: string) => {
+    suppressEditResetRef.current = true;
+    setEditOpen(false);
+    reset();
+    setParentItemId(rootId);
+    setOpen(true);
   };
 
   const doScrape = async () => {
@@ -142,7 +173,7 @@ export default function RegistryEditor() {
 
   const createItemM = useMutation({
     mutationFn: async () => {
-      const qty = Math.max(1, parseInt(quantity || '1', 10) || 1);
+      const qty = quantityUnlimited ? 0 : Math.max(1, parseInt(quantity || '1', 10) || 1);
       return items.create({
         registryId: reg!.id,
         title,
@@ -151,13 +182,16 @@ export default function RegistryEditor() {
         productUrl: url,
         source,
         quantity: qty,
+        quantityUnlimited,
+        category: category.trim(),
+        noSubstitutes,
+        parentItemId: parentItemId || undefined,
         notes,
       });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['items', reg?.id] });
       setOpen(false);
-      reset();
     },
     onError: (err) => setError((err as Error).message),
   });
@@ -170,7 +204,7 @@ export default function RegistryEditor() {
   const updateItemM = useMutation({
     mutationFn: async () => {
       if (!editingId) return;
-      const qty = Math.max(1, parseInt(quantity || '1', 10) || 1);
+      const qty = quantityUnlimited ? 0 : Math.max(1, parseInt(quantity || '1', 10) || 1);
       return items.update(editingId, {
         title,
         description,
@@ -178,13 +212,16 @@ export default function RegistryEditor() {
         productUrl: url,
         source,
         quantity: qty,
+        quantityUnlimited,
+        category: category.trim(),
+        noSubstitutes,
+        parentItemId: parentItemId || undefined,
         notes,
       });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['items', reg?.id] });
       setEditOpen(false);
-      reset();
     },
     onError: (err) => setError((err as Error).message),
   });
@@ -216,9 +253,6 @@ export default function RegistryEditor() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['reservations', reg?.id] });
       qc.invalidateQueries({ queryKey: ['items', reg?.id] });
-      setFulfillmentOpen(false);
-      setFulfillmentItemId(null);
-      setFulfillmentStatus('Purchased');
     },
     onError: (err) => setError((err as Error).message),
   });
@@ -246,8 +280,40 @@ export default function RegistryEditor() {
     (acc[r.itemId] ??= []).push(r);
     return acc;
   }, {});
-  const fulfillmentItem = list.find((it) => it.id === fulfillmentItemId) ?? null;
-  const fulfillmentActiveReservations = (fulfillmentItem ? reservationsByItem[fulfillmentItem.id] ?? [] : [])
+  const itemById = list.reduce<Record<string, RegistryItem>>((acc, it) => {
+    acc[it.id] = it;
+    return acc;
+  }, {});
+  const categoryOptions = Array.from(new Set(list.map((it) => (it.category || '').trim()).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b),
+  );
+  const alternativesByRootId = list.reduce<Record<string, RegistryItem[]>>((acc, it) => {
+    if (it.parentItemId && itemById[it.parentItemId]) {
+      (acc[it.parentItemId] ??= []).push(it);
+    }
+    return acc;
+  }, {});
+  const groupRootId = (it: RegistryItem) => (it.parentItemId && itemById[it.parentItemId] ? it.parentItemId : it.id);
+  const optionsByRootId = list.reduce<Record<string, number>>((acc, it) => {
+    const rootId = groupRootId(it);
+    acc[rootId] = (acc[rootId] ?? 0) + 1;
+    return acc;
+  }, {});
+  const topLevelItems = list.filter((it) => !it.parentItemId || !itemById[it.parentItemId]);
+  const editingItem = list.find((it) => it.id === editingId) ?? null;
+  const editRootId = editingItem ? groupRootId(editingItem) : null;
+  const editRootItem = editRootId ? itemById[editRootId] ?? null : null;
+  const editAlternatives = editRootId
+    ? list.filter((x) => x.parentItemId === editRootId)
+    : [];
+  const editOptionCount = editRootId ? optionsByRootId[editRootId] ?? 1 : 1;
+  const editOptionItems = editRootId
+    ? list.filter((it) => it.id === editRootId || it.parentItemId === editRootId)
+    : editingItem ? [editingItem] : [];
+  const editGroupActiveReservations = editOptionItems
+    .flatMap((it) => reservationsByItem[it.id] ?? [])
+    .filter((r) => r.status !== 'Cancelled');
+  const editActiveReservations = (editingItem ? reservationsByItem[editingItem.id] ?? [] : [])
     .filter((r) => r.status !== 'Cancelled');
 
   return (
@@ -260,7 +326,7 @@ export default function RegistryEditor() {
           </Typography>
         </Stack>
         {activeTab === 'items' && (
-          <Button variant="contained" onClick={() => setOpen(true)}>Add item</Button>
+          <Button variant="contained" onClick={() => { reset(); setOpen(true); }}>Add item</Button>
         )}
       </Stack>
 
@@ -281,17 +347,30 @@ export default function RegistryEditor() {
       {activeTab === 'access' && <PrivacyPanel reg={reg} section="access" />}
 
       {activeTab === 'items' && <Grid container spacing={2}>
-        {list.map((it) => {
-          const itemReservations = reservationsByItem[it.id] ?? [];
-          const activeReservations = itemReservations.filter((r) => r.status !== 'Cancelled');
+        {topLevelItems.map((it) => {
+          const optionItems = [it, ...(alternativesByRootId[it.id] ?? [])];
+          const itemReservations = optionItems.flatMap((opt) => reservationsByItem[opt.id] ?? []);
           const activeCount = itemReservations
             .filter((r) => r.status !== 'Cancelled')
             .reduce((sum, r) => sum + (r.quantity ?? 1), 0);
           const requested = it.quantity ?? 1;
-          const fulfilled = activeCount >= requested;
+          const isUnlimited = !!it.quantityUnlimited;
+          const fulfilled = !isUnlimited && activeCount >= requested;
+          const optionCount = optionItems.length;
           return (
             <Grid item xs={12} sm={6} md={4} key={it.id}>
-              <Card>
+              <Card
+                sx={{ cursor: 'pointer' }}
+                onClick={() => beginEdit(it)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    beginEdit(it);
+                  }
+                }}
+              >
                 {it.imageUrl && (
                   <CardMedia component="img" image={it.imageUrl} sx={{ aspectRatio: '1', objectFit: 'contain', bgcolor: '#f4ede3' }} />
                 )}
@@ -311,57 +390,27 @@ export default function RegistryEditor() {
                   </Typography>
                   <Stack direction="row" spacing={1} sx={{ my: 1, flexWrap: 'wrap', rowGap: 1 }}>
                     {it.source && <Chip size="small" label={it.source} />}
+                    {it.category && <Chip size="small" variant="outlined" label={it.category} />}
+                    {optionCount > 1 && <Chip size="small" variant="outlined" label={`${optionCount} options`} />}
+                    {it.noSubstitutes && <Chip size="small" variant="outlined" label="No substitutes" />}
                     <Chip
                       size="small"
                       color={fulfilled ? 'success' : activeCount > 0 ? 'warning' : 'default'}
                       variant={activeCount > 0 ? 'filled' : 'outlined'}
                       label={
-                        fulfilled
-                          ? 'Reserved'
-                          : activeCount > 0
-                          ? `${activeCount} / ${requested} reserved`
-                          : 'Unclaimed'
+                        isUnlimited
+                          ? `${activeCount} / ∞ reserved`
+                          : `${activeCount} / ${requested} reserved`
                       }
                     />
                   </Stack>
-                  <Stack direction="row" spacing={1}>
-                    {it.productUrl && (
-                      <Button size="small" component="a" href={it.productUrl} target="_blank" rel="noreferrer">
-                        Open
-                      </Button>
-                    )}
-                    <Tooltip title="Edit item details">
-                      <IconButton size="small" onClick={() => beginEdit(it)} aria-label="edit item">
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Inventory2Icon />}
-                      onClick={() => {
-                        setFulfillmentItemId(it.id);
-                        setFulfillmentStatus('Purchased');
-                        setError(null);
-                        setFulfillmentOpen(true);
-                      }}
-                    >
-                      Fulfillment
-                    </Button>
-                    <IconButton
-                      size="small"
-                      onClick={() => setDeleteTarget({ kind: 'item', id: it.id, title: it.title })}
-                      aria-label="delete"
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Stack>
-
                   {itemReservations.length > 0 && (
                     <Accordion
                       disableGutters
                       elevation={0}
                       sx={{ mt: 2, bgcolor: 'transparent', '&:before': { display: 'none' } }}
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
                     >
                       <AccordionSummary
                         expandIcon={<ExpandMoreIcon />}
@@ -377,6 +426,7 @@ export default function RegistryEditor() {
                             <ReservationRow
                               key={r.id}
                               reservation={r}
+                              optionLabel={r.itemId !== it.id ? (itemById[r.itemId]?.title ?? undefined) : undefined}
                               onSetStatus={(status) => setStatusM.mutate({ id: r.id, status })}
                               onDelete={() => {
                                 const who = r.isAnonymous
@@ -402,12 +452,24 @@ export default function RegistryEditor() {
         )}
       </Grid>}
 
-      <Dialog open={open} onClose={() => { setOpen(false); reset(); }} fullWidth maxWidth="sm">
+      <Dialog open={open} onClose={() => setOpen(false)} TransitionProps={{ onExited: () => reset() }} fullWidth maxWidth="sm" PaperProps={{ sx: modalPaperSx }}>
         <DialogTitle>Add item</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+        <DialogContent sx={{ flex: 1, overflow: 'hidden' }}>
+          <Grid
+            container
+            spacing={2}
+            sx={{
+              mt: 0.5,
+              height: '100%',
+              minHeight: 0,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              scrollbarGutter: 'stable',
+              pr: 1,
+            }}
+          >
             <Grid item xs={12} md={5}>
-              <Stack spacing={1.25}>
+              <Stack spacing={1.25} sx={{ minWidth: 0 }}>
                 <Card
                   variant="outlined"
                   sx={{
@@ -433,18 +495,56 @@ export default function RegistryEditor() {
                 </Typography>
               </Stack>
             </Grid>
-            <Grid item xs={12} md={7}>
-              <Stack spacing={2}>
+            <Grid item xs={12} md={7} sx={{ minWidth: 0 }}>
+              <Stack spacing={2} sx={{ minWidth: 0 }}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <TextField fullWidth label="Product URL" value={url} onChange={(e) => setUrl(e.target.value)} />
                   <Button variant="outlined" onClick={doScrape} disabled={!url || scraping} sx={{ minWidth: 110 }}>
                     {scraping ? <CircularProgress size={20} /> : 'Fetch'}
                   </Button>
                 </Stack>
+                {url.trim() && (
+                  <Button variant="text" component="a" href={url} target="_blank" rel="noreferrer" sx={{ alignSelf: 'flex-start' }}>
+                    View product page
+                  </Button>
+                )}
                 <TextField fullWidth label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
                 <TextField fullWidth label="Description" value={description} onChange={(e) => setDescription(e.target.value)} multiline minRows={2} />
                 <TextField fullWidth label="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
-                <TextField fullWidth label="Quantity" type="number" inputProps={{ min: 1, step: 1 }} value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+                <FormControlLabel
+                  control={<Checkbox checked={quantityUnlimited} onChange={(e) => setQuantityUnlimited(e.target.checked)} />}
+                  label="Allow unlimited reservations"
+                />
+                {!quantityUnlimited && (
+                  <TextField fullWidth label="Quantity" type="number" inputProps={{ min: 1, step: 1 }} value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+                )}
+                <Autocomplete
+                  freeSolo
+                  options={categoryOptions}
+                  value={category}
+                  inputValue={category}
+                  onInputChange={(_, value) => setCategory(value)}
+                  onChange={(_, value) => setCategory(typeof value === 'string' ? value : value || '')}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      label="Category"
+                      placeholder="Select existing or create new"
+                    />
+                  )}
+                />
+                {parentItemId && itemById[parentItemId] && (
+                  <Alert severity="info">
+                    Adding as an alternative under <strong>{itemById[parentItemId].title}</strong>.
+                  </Alert>
+                )}
+                {!parentItemId && (
+                  <FormControlLabel
+                    control={<Checkbox checked={noSubstitutes} onChange={(e) => setNoSubstitutes(e.target.checked)} />}
+                    label="No substitutes"
+                  />
+                )}
                 <TextField fullWidth label="Source" value={source} onChange={(e) => setSource(e.target.value)} />
                 <TextField fullWidth label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} />
                 {error && <Alert severity="error">{error}</Alert>}
@@ -452,130 +552,274 @@ export default function RegistryEditor() {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => { setOpen(false); reset(); }}>Cancel</Button>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
+          <Button onClick={() => setOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={() => createItemM.mutate()} disabled={!title}>
             Add
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={editOpen} onClose={() => { setEditOpen(false); reset(); }} fullWidth maxWidth="sm">
-        <DialogTitle>Edit item</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 0.5 }}>
-            <Grid item xs={12} md={5}>
-              <Stack spacing={1.25}>
-                <Card
-                  variant="outlined"
-                  sx={{
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                    bgcolor: '#f6efe6',
-                    minHeight: 220,
-                  }}
-                >
-                  {imageUrl ? (
-                    <CardMedia component="img" image={imageUrl} sx={{ aspectRatio: '1 / 1', objectFit: 'contain' }} />
-                  ) : (
-                    <Stack sx={{ aspectRatio: '1 / 1' }} alignItems="center" justifyContent="center" spacing={0.5}>
-                      <Inventory2Icon color="disabled" />
-                      <Typography variant="body2" color="text.secondary">
-                        Image preview
-                      </Typography>
-                    </Stack>
-                  )}
-                </Card>
-                <Typography variant="caption" color="text.secondary">
-                  Preview updates as you fetch or paste an image URL.
-                </Typography>
-              </Stack>
-            </Grid>
-            <Grid item xs={12} md={7}>
-              <Stack spacing={2}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <TextField fullWidth label="Product URL" value={url} onChange={(e) => setUrl(e.target.value)} />
-                  <Button variant="outlined" onClick={doScrape} disabled={!url || scraping} sx={{ minWidth: 110 }}>
-                    {scraping ? <CircularProgress size={20} /> : 'Fetch'}
-                  </Button>
-                </Stack>
-                <TextField fullWidth label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-                <TextField fullWidth label="Description" value={description} onChange={(e) => setDescription(e.target.value)} multiline minRows={2} />
-                <TextField fullWidth label="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
-                <TextField fullWidth label="Quantity" type="number" inputProps={{ min: 1, step: 1 }} value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-                <TextField fullWidth label="Source" value={source} onChange={(e) => setSource(e.target.value)} />
-                <TextField fullWidth label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} />
-                {error && <Alert severity="error">{error}</Alert>}
-              </Stack>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => { setEditOpen(false); reset(); }}>Cancel</Button>
-          <Button variant="contained" onClick={() => updateItemM.mutate()} disabled={!title || !editingId || updateItemM.isPending}>
-            Save changes
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       <Dialog
-        open={fulfillmentOpen}
-        onClose={() => {
-          setFulfillmentOpen(false);
-          setFulfillmentItemId(null);
-          setFulfillmentStatus('Purchased');
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        TransitionProps={{
+          onExited: () => {
+            if (suppressEditResetRef.current) {
+              suppressEditResetRef.current = false;
+            } else {
+              reset();
+            }
+          },
         }}
         fullWidth
-        maxWidth="sm"
+        maxWidth="md"
+        PaperProps={{ sx: { ...modalPaperSx, width: 'min(960px, calc(100vw - 32px))' } }}
       >
-        <DialogTitle>Update fulfillment status</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            {fulfillmentItem && (
-              <Typography variant="subtitle2" color="text.secondary">
-                {fulfillmentItem.title}
-              </Typography>
-            )}
-            <Alert severity="info">
-              {fulfillmentActiveReservations.length > 0
-                ? `This will update ${fulfillmentActiveReservations.length} active reservation${fulfillmentActiveReservations.length === 1 ? '' : 's'} for this item.`
-                : 'No active reservations found. Saving will create an owner reservation so status stays consistent.'}
-            </Alert>
-            <Select
-              value={fulfillmentStatus}
-              onChange={(e) => setFulfillmentStatus(e.target.value as ReservationStatus)}
+        <DialogTitle>Edit item</DialogTitle>
+        <DialogContent sx={{ flex: 1, overflow: 'hidden' }}>
+          <Stack spacing={2} sx={{ mt: 1, height: '100%', minHeight: 0 }}>
+            <Tabs
+              value={editTab}
+              onChange={(_, value) => {
+                setEditTab(value);
+                if (value === 'fulfillment' && editActiveReservations.length > 0) {
+                  setFulfillmentStatus(editActiveReservations[0].status);
+                }
+              }}
+              variant="fullWidth"
             >
-              <MenuItem value="Reserved">Reserved</MenuItem>
-              <MenuItem value="Purchased">Purchased</MenuItem>
-              <MenuItem value="Received">Received</MenuItem>
-              <MenuItem value="Cancelled">Cancelled</MenuItem>
-            </Select>
-            {error && <Alert severity="error">{error}</Alert>}
+              <Tab value="details" label="Details" />
+              <Tab value="substitutes" label="Substitutes" />
+              <Tab value="fulfillment" label="Fulfillment" />
+            </Tabs>
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                scrollbarGutter: 'stable',
+                pt: 1,
+                pr: 1,
+                pb: 0.5,
+              }}
+            >
+              {editTab === 'details' && (
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ minWidth: 0 }}>
+                  <Box sx={{ width: { xs: '100%', md: '40%' }, minWidth: 0 }}>
+                    <Stack spacing={1.25} sx={{ minWidth: 0 }}>
+                      <Card
+                        variant="outlined"
+                        sx={{
+                          borderRadius: 2,
+                          overflow: 'hidden',
+                          bgcolor: '#f6efe6',
+                          minHeight: 220,
+                        }}
+                      >
+                        {imageUrl ? (
+                          <CardMedia component="img" image={imageUrl} sx={{ aspectRatio: '1 / 1', objectFit: 'contain' }} />
+                        ) : (
+                          <Stack sx={{ aspectRatio: '1 / 1' }} alignItems="center" justifyContent="center" spacing={0.5}>
+                            <Inventory2Icon color="disabled" />
+                            <Typography variant="body2" color="text.secondary">
+                              Image preview
+                            </Typography>
+                          </Stack>
+                        )}
+                      </Card>
+                      <Typography variant="caption" color="text.secondary">
+                        Preview updates as you fetch or paste an image URL.
+                      </Typography>
+                    </Stack>
+                  </Box>
+                  <Box sx={{ width: { xs: '100%', md: '60%' }, minWidth: 0 }}>
+                    <Stack spacing={2} sx={{ minWidth: 0 }}>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                        <TextField fullWidth label="Product URL" value={url} onChange={(e) => setUrl(e.target.value)} />
+                        <Button variant="outlined" onClick={doScrape} disabled={!url || scraping} sx={{ minWidth: 110 }}>
+                          {scraping ? <CircularProgress size={20} /> : 'Fetch'}
+                        </Button>
+                      </Stack>
+                      {url.trim() && (
+                        <Button variant="text" component="a" href={url} target="_blank" rel="noreferrer" sx={{ alignSelf: 'flex-start' }}>
+                          View product page
+                        </Button>
+                      )}
+                      <TextField fullWidth label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                      <TextField fullWidth label="Description" value={description} onChange={(e) => setDescription(e.target.value)} multiline minRows={2} />
+                      <TextField fullWidth label="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+                      <FormControlLabel
+                        control={<Checkbox checked={quantityUnlimited} onChange={(e) => setQuantityUnlimited(e.target.checked)} />}
+                        label="Allow unlimited reservations"
+                      />
+                      {!quantityUnlimited && (
+                        <TextField fullWidth label="Quantity" type="number" inputProps={{ min: 1, step: 1 }} value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+                      )}
+                      <Autocomplete
+                        freeSolo
+                        options={categoryOptions}
+                        value={category}
+                        inputValue={category}
+                        onInputChange={(_, value) => setCategory(value)}
+                        onChange={(_, value) => setCategory(typeof value === 'string' ? value : value || '')}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            fullWidth
+                            label="Category"
+                            placeholder="Select existing or create new"
+                          />
+                        )}
+                      />
+                      <TextField fullWidth label="Source" value={source} onChange={(e) => setSource(e.target.value)} />
+                      <TextField fullWidth label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} />
+                    </Stack>
+                  </Box>
+                </Stack>
+              )}
+
+              {editTab === 'substitutes' && (
+                <Stack spacing={2}>
+                <Alert severity="info">
+                  Can't find the exact one? Add similar options here so your guests can pick whichever version works best for them.
+                </Alert>
+                {editRootItem && (
+                  <Typography variant="body2" color="text.secondary">
+                    Top-level item: <strong>{editRootItem.title}</strong> ({editOptionCount} option{editOptionCount === 1 ? '' : 's'})
+                  </Typography>
+                )}
+                {!parentItemId ? (
+                  <FormControlLabel
+                    control={<Checkbox checked={noSubstitutes} onChange={(e) => setNoSubstitutes(e.target.checked)} />}
+                    label="No substitutes"
+                  />
+                ) : (
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    {editRootItem && (
+                      <Button variant="text" onClick={() => beginEdit(editRootItem)}>
+                        Open top-level item
+                      </Button>
+                    )}
+                    <Button variant="text" color="warning" onClick={() => setParentItemId('')}>
+                      Make this item top-level
+                    </Button>
+                  </Stack>
+                )}
+                {editRootId && (
+                  <Button variant="outlined" onClick={() => beginAddAlternative(editRootId)}>
+                    Add alternative
+                  </Button>
+                )}
+                {editAlternatives.length > 0 ? (
+                  <Stack spacing={1}>
+                    <Typography variant="caption" color="text.secondary">Current alternatives</Typography>
+                    {editAlternatives.map((alt) => (
+                      <Stack key={alt.id} direction="row" alignItems="center" spacing={1}>
+                        <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                          {alt.title}
+                        </Typography>
+                        <Button size="small" variant="text" onClick={() => beginEdit(alt)}>
+                          Manage
+                        </Button>
+                      </Stack>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">No alternatives yet.</Typography>
+                )}
+                </Stack>
+              )}
+
+              {editTab === 'fulfillment' && (
+                <Stack spacing={2}>
+                  <Alert severity="info">
+                    {editActiveReservations.length > 0
+                      ? `This will update ${editActiveReservations.length} active reservation${editActiveReservations.length === 1 ? '' : 's'} for this item.`
+                      : 'No active reservations found. Saving will create an owner reservation so status stays consistent.'}
+                  </Alert>
+                  <Select
+                    value={fulfillmentStatus}
+                    onChange={(e) => setFulfillmentStatus(e.target.value as ReservationStatus)}
+                  >
+                    <MenuItem value="Reserved">Reserved</MenuItem>
+                    <MenuItem value="Purchased">Purchased</MenuItem>
+                    <MenuItem value="Received">Received</MenuItem>
+                    <MenuItem value="Cancelled">Cancelled</MenuItem>
+                  </Select>
+                  {editGroupActiveReservations.length > 0 && (
+                    <Stack spacing={0}>
+                      <Typography variant="overline" color="text.secondary">
+                        Who's buying this
+                      </Typography>
+                      <Stack divider={<Divider flexItem />}>
+                        {editGroupActiveReservations.map((r) => {
+                          const reservedItem = itemById[r.itemId];
+                          const optionLabel =
+                            reservedItem && reservedItem.parentItemId
+                              ? reservedItem.title ?? undefined
+                              : undefined;
+                          return (
+                            <ReservationRow
+                              key={r.id}
+                              reservation={r}
+                              optionLabel={optionLabel}
+                              onSetStatus={(status) => setStatusM.mutate({ id: r.id, status })}
+                              onDelete={() => {
+                                const who = r.isAnonymous
+                                  ? 'Anonymous'
+                                  : r.reserverName?.trim() || r.contactEmail?.trim() || 'Someone';
+                                setDeleteTarget({ kind: 'reservation', id: r.id, title: who });
+                              }}
+                            />
+                          );
+                        })}
+                      </Stack>
+                    </Stack>
+                  )}
+                </Stack>
+              )}
+
+              {error && <Alert severity="error">{error}</Alert>}
+            </Box>
           </Stack>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
           <Button
+            color="error"
             onClick={() => {
-              setFulfillmentOpen(false);
-              setFulfillmentItemId(null);
-              setFulfillmentStatus('Purchased');
+              if (!editingId) return;
+              setEditOpen(false);
+              setDeleteTarget({ kind: 'item', id: editingId, title: title.trim() || 'this item' });
             }}
+            disabled={!editingId}
           >
-            Cancel
+            Delete item
           </Button>
+          <Box sx={{ flexGrow: 1 }} />
+          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
           <Button
             variant="contained"
-            disabled={!fulfillmentItem || markPurchasedM.isPending}
             onClick={() => {
-              if (!fulfillmentItem) return;
-              markPurchasedM.mutate({
-                item: fulfillmentItem,
-                activeReservations: fulfillmentActiveReservations,
-                status: fulfillmentStatus,
-              });
+              if (editTab === 'fulfillment') {
+                if (!editingItem) return;
+                markPurchasedM.mutate({
+                  item: editingItem,
+                  activeReservations: editActiveReservations,
+                  status: fulfillmentStatus,
+                });
+                return;
+              }
+              updateItemM.mutate();
             }}
+            disabled={
+              editTab === 'fulfillment'
+                ? !editingItem || markPurchasedM.isPending
+                : !title || !editingId || updateItemM.isPending
+            }
           >
-            Save status
+            {editTab === 'fulfillment' ? 'Save status' : 'Save changes'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -602,10 +846,12 @@ export default function RegistryEditor() {
 
 function ReservationRow({
   reservation,
+  optionLabel,
   onSetStatus,
   onDelete,
 }: {
   reservation: Reservation;
+  optionLabel?: string;
   onSetStatus: (status: ReservationStatus) => void;
   onDelete: () => void;
 }) {
@@ -620,6 +866,11 @@ function ReservationRow({
           {who}
           {qty > 1 ? ` · ×${qty}` : ''}
         </Typography>
+        {optionLabel && (
+          <Typography variant="caption" color="primary.main" noWrap>
+            {optionLabel}
+          </Typography>
+        )}
         {!reservation.isAnonymous && reservation.contactEmail && (
           <Typography variant="caption" color="text.secondary" noWrap>
             {reservation.contactEmail}

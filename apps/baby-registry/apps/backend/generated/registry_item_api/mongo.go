@@ -221,15 +221,22 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 			AggregateKeys: r.AggregateKeys,
 		}
 		// Copy group-by fields (with type conversion for refs)
+		row.Category = r.Category
 		row.Currency = r.Currency
 		row.Description = r.Description
 		row.ImageUrl = r.ImageUrl
+		row.NoSubstitutes = r.NoSubstitutes
 		row.Notes = r.Notes
 		row.OwnerPurchased = r.OwnerPurchased
+		if r.ParentItemId != nil {
+			s := r.ParentItemId.Hex()
+			row.ParentItemId = &s
+		}
 		row.Position = r.Position
 		row.PriceCents = r.PriceCents
 		row.ProductUrl = r.ProductUrl
 		row.Quantity = r.Quantity
+		row.QuantityUnlimited = r.QuantityUnlimited
 		if r.RegistryId != nil {
 			s := r.RegistryId.Hex()
 			row.RegistryId = &s

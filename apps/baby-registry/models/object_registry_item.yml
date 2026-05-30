@@ -21,6 +21,14 @@ objects:
         type: string
       - name: quantity
         type: int
+      - name: quantityUnlimited
+        type: bool
+      - name: category
+        type: string
+      - name: noSubstitutes
+        type: bool
+      - name: parentItemId
+        type: Ref<RegistryItem>
       - name: ownerPurchased
         type: bool
       - name: notes

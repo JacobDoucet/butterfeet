@@ -75,17 +75,21 @@ type AggregateOptions struct {
 // AggregateResultRow holds a single aggregation result row with flat structure
 type AggregateResultRow struct {
 	// Group-by fields (original types)
-	Currency       *string             `bson:"currency" json:"currency,omitempty"`
-	Description    *string             `bson:"description" json:"description,omitempty"`
-	ImageUrl       *string             `bson:"imageUrl" json:"imageUrl,omitempty"`
-	Notes          *string             `bson:"notes" json:"notes,omitempty"`
-	OwnerPurchased *bool               `bson:"ownerPurchased" json:"ownerPurchased,omitempty"`
-	Position       *int                `bson:"position" json:"position,omitempty"`
-	PriceCents     *int                `bson:"priceCents" json:"priceCents,omitempty"`
-	ProductUrl     *string             `bson:"productUrl" json:"productUrl,omitempty"`
-	Quantity       *int                `bson:"quantity" json:"quantity,omitempty"`
-	RegistryId     *primitive.ObjectID `bson:"registryId" json:"registryId,omitempty"`
-	Title          *string             `bson:"title" json:"title,omitempty"`
+	Category          *string             `bson:"category" json:"category,omitempty"`
+	Currency          *string             `bson:"currency" json:"currency,omitempty"`
+	Description       *string             `bson:"description" json:"description,omitempty"`
+	ImageUrl          *string             `bson:"imageUrl" json:"imageUrl,omitempty"`
+	NoSubstitutes     *bool               `bson:"noSubstitutes" json:"noSubstitutes,omitempty"`
+	Notes             *string             `bson:"notes" json:"notes,omitempty"`
+	OwnerPurchased    *bool               `bson:"ownerPurchased" json:"ownerPurchased,omitempty"`
+	ParentItemId      *primitive.ObjectID `bson:"parentItemId" json:"parentItemId,omitempty"`
+	Position          *int                `bson:"position" json:"position,omitempty"`
+	PriceCents        *int                `bson:"priceCents" json:"priceCents,omitempty"`
+	ProductUrl        *string             `bson:"productUrl" json:"productUrl,omitempty"`
+	Quantity          *int                `bson:"quantity" json:"quantity,omitempty"`
+	QuantityUnlimited *bool               `bson:"quantityUnlimited" json:"quantityUnlimited,omitempty"`
+	RegistryId        *primitive.ObjectID `bson:"registryId" json:"registryId,omitempty"`
+	Title             *string             `bson:"title" json:"title,omitempty"`
 	// Aggregate fields - always float64 since they're results of sum/avg/etc
 	// Ref field Registry
 	Registry *registry.MongoRecord `bson:"registry,omitempty" json:"registry,omitempty"`

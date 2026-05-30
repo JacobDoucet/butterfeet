@@ -9,16 +9,20 @@ import (
 
 type MongoRecord struct {
 	Id                 *primitive.ObjectID      `bson:"_id,omitempty"`
+	Category           *string                  `bson:"category,omitempty"`
 	Created            *actor_trace.MongoRecord `bson:"created,omitempty"`
 	Currency           *string                  `bson:"currency,omitempty"`
 	Description        *string                  `bson:"description,omitempty"`
 	ImageUrl           *string                  `bson:"imageUrl,omitempty"`
+	NoSubstitutes      *bool                    `bson:"noSubstitutes,omitempty"`
 	Notes              *string                  `bson:"notes,omitempty"`
 	OwnerPurchased     *bool                    `bson:"ownerPurchased,omitempty"`
+	ParentItemId       *primitive.ObjectID      `bson:"parentItemId,omitempty"`
 	Position           *int                     `bson:"position,omitempty"`
 	PriceCents         *int                     `bson:"priceCents,omitempty"`
 	ProductUrl         *string                  `bson:"productUrl,omitempty"`
 	Quantity           *int                     `bson:"quantity,omitempty"`
+	QuantityUnlimited  *bool                    `bson:"quantityUnlimited,omitempty"`
 	RegistryId         *primitive.ObjectID      `bson:"registryId,omitempty"`
 	Source             *enum_item_source.Value  `bson:"source,omitempty"`
 	Title              *string                  `bson:"title,omitempty"`
@@ -35,6 +39,10 @@ func (r *MongoRecord) ToModel() (Model, error) {
 	if r.Id != nil {
 		elemid0 := r.Id.Hex()
 		m.Id = elemid0
+	}
+	if r.Category != nil {
+		elemcategory0 := r.Category
+		m.Category = *elemcategory0
 	}
 	if r.Created != nil {
 		elemcreated0, err := r.Created.ToModel()
@@ -55,6 +63,10 @@ func (r *MongoRecord) ToModel() (Model, error) {
 		elemimageUrl0 := r.ImageUrl
 		m.ImageUrl = *elemimageUrl0
 	}
+	if r.NoSubstitutes != nil {
+		elemnoSubstitutes0 := r.NoSubstitutes
+		m.NoSubstitutes = *elemnoSubstitutes0
+	}
 	if r.Notes != nil {
 		elemnotes0 := r.Notes
 		m.Notes = *elemnotes0
@@ -62,6 +74,10 @@ func (r *MongoRecord) ToModel() (Model, error) {
 	if r.OwnerPurchased != nil {
 		elemownerPurchased0 := r.OwnerPurchased
 		m.OwnerPurchased = *elemownerPurchased0
+	}
+	if r.ParentItemId != nil {
+		elemparentItemId0 := r.ParentItemId.Hex()
+		m.ParentItemId = elemparentItemId0
 	}
 	if r.Position != nil {
 		elemposition0 := r.Position
@@ -78,6 +94,10 @@ func (r *MongoRecord) ToModel() (Model, error) {
 	if r.Quantity != nil {
 		elemquantity0 := r.Quantity
 		m.Quantity = *elemquantity0
+	}
+	if r.QuantityUnlimited != nil {
+		elemquantityUnlimited0 := r.QuantityUnlimited
+		m.QuantityUnlimited = *elemquantityUnlimited0
 	}
 	if r.RegistryId != nil {
 		elemregistryId0 := r.RegistryId.Hex()
@@ -118,6 +138,18 @@ type MongoWhereClause struct {
 	IdIn     *[]primitive.ObjectID
 	IdNin    *[]primitive.ObjectID
 	IdExists *bool
+	// category (string) search options
+	CategoryEq     *string
+	CategoryNe     *string
+	CategoryGt     *string
+	CategoryGte    *string
+	CategoryLt     *string
+	CategoryLte    *string
+	CategoryIn     *[]string
+	CategoryNin    *[]string
+	CategoryExists *bool
+	CategoryLike   *string
+	CategoryNlike  *string
 	// created (ActorTrace) search options
 	Created *actor_trace.MongoWhereClause
 	// currency (string) search options
@@ -156,6 +188,16 @@ type MongoWhereClause struct {
 	ImageUrlExists *bool
 	ImageUrlLike   *string
 	ImageUrlNlike  *string
+	// noSubstitutes (bool) search options
+	NoSubstitutesEq     *bool
+	NoSubstitutesNe     *bool
+	NoSubstitutesGt     *bool
+	NoSubstitutesGte    *bool
+	NoSubstitutesLt     *bool
+	NoSubstitutesLte    *bool
+	NoSubstitutesIn     *[]bool
+	NoSubstitutesNin    *[]bool
+	NoSubstitutesExists *bool
 	// notes (string) search options
 	NotesEq     *string
 	NotesNe     *string
@@ -178,6 +220,11 @@ type MongoWhereClause struct {
 	OwnerPurchasedIn     *[]bool
 	OwnerPurchasedNin    *[]bool
 	OwnerPurchasedExists *bool
+	// parentItemId (Ref<RegistryItem>) search options
+	ParentItemIdEq     *primitive.ObjectID
+	ParentItemIdIn     *[]primitive.ObjectID
+	ParentItemIdNin    *[]primitive.ObjectID
+	ParentItemIdExists *bool
 	// position (int) search options
 	PositionEq     *int
 	PositionNe     *int
@@ -220,6 +267,16 @@ type MongoWhereClause struct {
 	QuantityIn     *[]int
 	QuantityNin    *[]int
 	QuantityExists *bool
+	// quantityUnlimited (bool) search options
+	QuantityUnlimitedEq     *bool
+	QuantityUnlimitedNe     *bool
+	QuantityUnlimitedGt     *bool
+	QuantityUnlimitedGte    *bool
+	QuantityUnlimitedLt     *bool
+	QuantityUnlimitedLte    *bool
+	QuantityUnlimitedIn     *[]bool
+	QuantityUnlimitedNin    *[]bool
+	QuantityUnlimitedExists *bool
 	// registryId (ParentRef<Registry>) search options
 	RegistryIdEq     *primitive.ObjectID
 	RegistryIdIn     *[]primitive.ObjectID
@@ -290,6 +347,61 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 	if o.IdExists != nil {
 		query := bson.M{}
 		query["_id"] = bson.M{"$exists": *o.IdExists}
+		and = append(and, query)
+	}
+	if o.CategoryEq != nil {
+		query := bson.M{}
+		query["category"] = o.CategoryEq
+		and = append(and, query)
+	}
+	if o.CategoryNe != nil {
+		query := bson.M{}
+		query["category"] = bson.M{"$ne": o.CategoryNe}
+		and = append(and, query)
+	}
+	if o.CategoryGt != nil {
+		query := bson.M{}
+		query["category"] = bson.M{"$gt": o.CategoryGt}
+		and = append(and, query)
+	}
+	if o.CategoryGte != nil {
+		query := bson.M{}
+		query["category"] = bson.M{"$gte": o.CategoryGte}
+		and = append(and, query)
+	}
+	if o.CategoryLt != nil {
+		query := bson.M{}
+		query["category"] = bson.M{"$lt": o.CategoryLt}
+		and = append(and, query)
+	}
+	if o.CategoryLte != nil {
+		query := bson.M{}
+		query["category"] = bson.M{"$lte": o.CategoryLte}
+		and = append(and, query)
+	}
+	if o.CategoryIn != nil {
+		query := bson.M{}
+		query["category"] = bson.M{"$in": o.CategoryIn}
+		and = append(and, query)
+	}
+	if o.CategoryNin != nil {
+		query := bson.M{}
+		query["category"] = bson.M{"$nin": o.CategoryNin}
+		and = append(and, query)
+	}
+	if o.CategoryExists != nil {
+		query := bson.M{}
+		query["category"] = bson.M{"$exists": *o.CategoryExists}
+		and = append(and, query)
+	}
+	if o.CategoryLike != nil {
+		query := bson.M{}
+		query["category"] = bson.M{"$regex": o.CategoryLike, "$options": "i"}
+		and = append(and, query)
+	}
+	if o.CategoryNlike != nil {
+		query := bson.M{}
+		query["category"] = bson.M{"$not": bson.M{"$regex": o.CategoryNlike, "$options": "i"}}
 		and = append(and, query)
 	}
 	if o.Created != nil {
@@ -474,6 +586,51 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 		query["imageUrl"] = bson.M{"$not": bson.M{"$regex": o.ImageUrlNlike, "$options": "i"}}
 		and = append(and, query)
 	}
+	if o.NoSubstitutesEq != nil {
+		query := bson.M{}
+		query["noSubstitutes"] = o.NoSubstitutesEq
+		and = append(and, query)
+	}
+	if o.NoSubstitutesNe != nil {
+		query := bson.M{}
+		query["noSubstitutes"] = bson.M{"$ne": o.NoSubstitutesNe}
+		and = append(and, query)
+	}
+	if o.NoSubstitutesGt != nil {
+		query := bson.M{}
+		query["noSubstitutes"] = bson.M{"$gt": o.NoSubstitutesGt}
+		and = append(and, query)
+	}
+	if o.NoSubstitutesGte != nil {
+		query := bson.M{}
+		query["noSubstitutes"] = bson.M{"$gte": o.NoSubstitutesGte}
+		and = append(and, query)
+	}
+	if o.NoSubstitutesLt != nil {
+		query := bson.M{}
+		query["noSubstitutes"] = bson.M{"$lt": o.NoSubstitutesLt}
+		and = append(and, query)
+	}
+	if o.NoSubstitutesLte != nil {
+		query := bson.M{}
+		query["noSubstitutes"] = bson.M{"$lte": o.NoSubstitutesLte}
+		and = append(and, query)
+	}
+	if o.NoSubstitutesIn != nil {
+		query := bson.M{}
+		query["noSubstitutes"] = bson.M{"$in": o.NoSubstitutesIn}
+		and = append(and, query)
+	}
+	if o.NoSubstitutesNin != nil {
+		query := bson.M{}
+		query["noSubstitutes"] = bson.M{"$nin": o.NoSubstitutesNin}
+		and = append(and, query)
+	}
+	if o.NoSubstitutesExists != nil {
+		query := bson.M{}
+		query["noSubstitutes"] = bson.M{"$exists": *o.NoSubstitutesExists}
+		and = append(and, query)
+	}
 	if o.NotesEq != nil {
 		query := bson.M{}
 		query["notes"] = o.NotesEq
@@ -572,6 +729,26 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 	if o.OwnerPurchasedExists != nil {
 		query := bson.M{}
 		query["ownerPurchased"] = bson.M{"$exists": *o.OwnerPurchasedExists}
+		and = append(and, query)
+	}
+	if o.ParentItemIdEq != nil {
+		query := bson.M{}
+		query["parentItemId"] = o.ParentItemIdEq
+		and = append(and, query)
+	}
+	if o.ParentItemIdIn != nil {
+		query := bson.M{}
+		query["parentItemId"] = bson.M{"$in": o.ParentItemIdIn}
+		and = append(and, query)
+	}
+	if o.ParentItemIdNin != nil {
+		query := bson.M{}
+		query["parentItemId"] = bson.M{"$nin": o.ParentItemIdNin}
+		and = append(and, query)
+	}
+	if o.ParentItemIdExists != nil {
+		query := bson.M{}
+		query["parentItemId"] = bson.M{"$exists": *o.ParentItemIdExists}
 		and = append(and, query)
 	}
 	if o.PositionEq != nil {
@@ -762,6 +939,51 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 	if o.QuantityExists != nil {
 		query := bson.M{}
 		query["quantity"] = bson.M{"$exists": *o.QuantityExists}
+		and = append(and, query)
+	}
+	if o.QuantityUnlimitedEq != nil {
+		query := bson.M{}
+		query["quantityUnlimited"] = o.QuantityUnlimitedEq
+		and = append(and, query)
+	}
+	if o.QuantityUnlimitedNe != nil {
+		query := bson.M{}
+		query["quantityUnlimited"] = bson.M{"$ne": o.QuantityUnlimitedNe}
+		and = append(and, query)
+	}
+	if o.QuantityUnlimitedGt != nil {
+		query := bson.M{}
+		query["quantityUnlimited"] = bson.M{"$gt": o.QuantityUnlimitedGt}
+		and = append(and, query)
+	}
+	if o.QuantityUnlimitedGte != nil {
+		query := bson.M{}
+		query["quantityUnlimited"] = bson.M{"$gte": o.QuantityUnlimitedGte}
+		and = append(and, query)
+	}
+	if o.QuantityUnlimitedLt != nil {
+		query := bson.M{}
+		query["quantityUnlimited"] = bson.M{"$lt": o.QuantityUnlimitedLt}
+		and = append(and, query)
+	}
+	if o.QuantityUnlimitedLte != nil {
+		query := bson.M{}
+		query["quantityUnlimited"] = bson.M{"$lte": o.QuantityUnlimitedLte}
+		and = append(and, query)
+	}
+	if o.QuantityUnlimitedIn != nil {
+		query := bson.M{}
+		query["quantityUnlimited"] = bson.M{"$in": o.QuantityUnlimitedIn}
+		and = append(and, query)
+	}
+	if o.QuantityUnlimitedNin != nil {
+		query := bson.M{}
+		query["quantityUnlimited"] = bson.M{"$nin": o.QuantityUnlimitedNin}
+		and = append(and, query)
+	}
+	if o.QuantityUnlimitedExists != nil {
+		query := bson.M{}
+		query["quantityUnlimited"] = bson.M{"$exists": *o.QuantityUnlimitedExists}
 		and = append(and, query)
 	}
 	if o.RegistryIdEq != nil {

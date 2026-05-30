@@ -139,15 +139,19 @@ export type RegistryItemAggregateField = typeof RegistryItemAggregateFields[keyo
 
 // Type-safe group-by fields
 export const RegistryItemGroupByFields = {
+    Category: 'category',
     Currency: 'currency',
     Description: 'description',
     ImageUrl: 'imageUrl',
+    NoSubstitutes: 'noSubstitutes',
     Notes: 'notes',
     OwnerPurchased: 'ownerPurchased',
+    ParentItemId: 'parentItemId',
     Position: 'position',
     PriceCents: 'priceCents',
     ProductUrl: 'productUrl',
     Quantity: 'quantity',
+    QuantityUnlimited: 'quantityUnlimited',
     RegistryId: 'registryId',
     Title: 'title',
 } as const;
@@ -163,15 +167,19 @@ export type AggregateFieldSpec = {
 // Aggregate result row with partial model fields and metadata
 export type RegistryItemAggregateResultRow = {
     // Group-by fields (original types)
+    category?: string | null;
     currency?: string | null;
     description?: string | null;
     imageUrl?: string | null;
+    noSubstitutes?: boolean | null;
     notes?: string | null;
     ownerPurchased?: boolean | null;
+    parentItemId?: string | null;
     position?: number | null;
     priceCents?: number | null;
     productUrl?: string | null;
     quantity?: number | null;
+    quantityUnlimited?: boolean | null;
     registryId?: string | null;
     title?: string | null;
     // Aggregate fields - always numbers since they're results of sum/avg/etc

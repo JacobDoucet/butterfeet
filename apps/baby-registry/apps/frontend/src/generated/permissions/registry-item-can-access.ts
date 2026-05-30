@@ -7,17 +7,21 @@ import { ActorCanAccessFunc } from './actor';
 
 type canAccessRegistryItem<T = RegistryItem> = ActorCanAccessFunc<T> & {
     field: {
-        id: ActorCanAccessFunc<RegistryItem>; 
+        id: ActorCanAccessFunc<RegistryItem>;
+        category: ActorCanAccessFunc<RegistryItem>; 
         created: ReturnType<typeof NewCanReadActorTrace<RegistryItem>>,
         currency: ActorCanAccessFunc<RegistryItem>;
         description: ActorCanAccessFunc<RegistryItem>;
         imageUrl: ActorCanAccessFunc<RegistryItem>;
+        noSubstitutes: ActorCanAccessFunc<RegistryItem>;
         notes: ActorCanAccessFunc<RegistryItem>;
         ownerPurchased: ActorCanAccessFunc<RegistryItem>;
+        parentItemId: ActorCanAccessFunc<RegistryItem>;
         position: ActorCanAccessFunc<RegistryItem>;
         priceCents: ActorCanAccessFunc<RegistryItem>;
         productUrl: ActorCanAccessFunc<RegistryItem>;
         quantity: ActorCanAccessFunc<RegistryItem>;
+        quantityUnlimited: ActorCanAccessFunc<RegistryItem>;
         registryId: ActorCanAccessFunc<RegistryItem>;
         source: ActorCanAccessFunc<RegistryItem>;
         title: ActorCanAccessFunc<RegistryItem>; 
@@ -62,16 +66,20 @@ export function NewCanReadRegistryItem<T = RegistryItem>(canAccessObj: ActorCanA
         {
             field: {
                 id: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
+                category: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 created:  NewCanReadActorTrace( (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true),
                 currency: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 description: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 imageUrl: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
+                noSubstitutes: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 notes: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 ownerPurchased: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
+                parentItemId: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 position: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 priceCents: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 productUrl: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 quantity: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
+                quantityUnlimited: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 registryId: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 source: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 title: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
@@ -90,16 +98,20 @@ export function NewCanWriteRegistryItem<T = RegistryItem>(canAccessObj: ActorCan
         {
             field: {
                 id: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
+                category: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 created:  NewCanWriteActorTrace( (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true),
                 currency: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 description: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 imageUrl: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
+                noSubstitutes: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 notes: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 ownerPurchased: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
+                parentItemId: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 position: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 priceCents: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 productUrl: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 quantity: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
+                quantityUnlimited: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 registryId: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 source: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,
                 title: (_actorRoles: ActorRole[], _obj?: RegistryItem) =>  true,

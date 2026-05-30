@@ -33,6 +33,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   };
 
   const hideHeaderActions = location.pathname.startsWith('/r/');
+  const hideLogo = location.pathname === '/';
   const toolbarSx = hideHeaderActions
     ? { gap: 2, minHeight: { xs: 64, sm: 68 }, justifyContent: 'center' }
     : { gap: 2 };
@@ -45,7 +46,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             component={Link}
             to="/"
             variant="h6"
-            sx={{ textDecoration: 'none', color: 'inherit', fontWeight: 700, display: 'flex', alignItems: 'center' }}
+            sx={{ textDecoration: 'none', color: 'inherit', fontWeight: 700, display: hideLogo ? 'none' : 'flex', alignItems: 'center' }}
           >
             <BrandLogo variant="lockup" height={35} markScale={1.12} wordmarkScale={1.1} />
           </Typography>
@@ -67,11 +68,13 @@ function Shell({ children }: { children: React.ReactNode }) {
         </Toolbar>
       </AppBar>
       <Box sx={{ flexGrow: 1 }}>{children}</Box>
-      <Box component="footer" sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>
-        <Container>
-          <Typography variant="body2">made with care for new parents</Typography>
-        </Container>
-      </Box>
+      {!hideHeaderActions && (
+        <Box component="footer" sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>
+          <Container>
+            <Typography variant="body2">made with care for new parents</Typography>
+          </Container>
+        </Box>
+      )}
     </Box>
   );
 }

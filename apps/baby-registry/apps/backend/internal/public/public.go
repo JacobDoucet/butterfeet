@@ -73,6 +73,10 @@ type publicItem struct {
 	PriceCents  int    `json:"priceCents"`
 	Currency    string `json:"currency"`
 	Quantity    int    `json:"quantity"`
+	QuantityUnlimited bool   `json:"quantityUnlimited"`
+	Category    string `json:"category"`
+	NoSubstitutes bool `json:"noSubstitutes"`
+	ParentItemId string `json:"parentItemId,omitempty"`
 	Notes       string `json:"notes"`
 	Position    int    `json:"position"`
 	Reserved    int    `json:"reserved"`
@@ -168,20 +172,31 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "lookup error", http.StatusInternalServerError)
 		return
 	}
-	reservedByItem := map[string]int{}
+	itemByID := map[string]registryitemapi.Model{}
+	for _, it := range itemsResult.Data {
+		itemByID[it.Id] = it
+	}
+
+	reservedByGroup := map[string]int{}
 	for _, rsv := range resvResult.Data {
 		if rsv.Status == enum_reservation_status.Cancelled {
+			continue
+		}
+		it, ok := itemByID[rsv.ItemId]
+		if !ok {
 			continue
 		}
 		q := rsv.Quantity
 		if q <= 0 {
 			q = 1
 		}
-		reservedByItem[rsv.ItemId] += q
+		groupID := groupRootID(it, itemByID)
+		reservedByGroup[groupID] += q
 	}
 
 	publicItems := make([]publicItem, 0, len(itemsResult.Data))
 	for _, it := range itemsResult.Data {
+		groupID := groupRootID(it, itemByID)
 		publicItems = append(publicItems, publicItem{
 			Id:          it.Id,
 			Title:       it.Title,
@@ -192,9 +207,13 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 			PriceCents:  it.PriceCents,
 			Currency:    it.Currency,
 			Quantity:    it.Quantity,
+			QuantityUnlimited: it.QuantityUnlimited,
+			Category:    it.Category,
+			NoSubstitutes: it.NoSubstitutes,
+			ParentItemId: it.ParentItemId,
 			Notes:       it.Notes,
 			Position:    it.Position,
-			Reserved:    reservedByItem[it.Id],
+			Reserved:    reservedByGroup[groupID],
 		})
 	}
 
@@ -274,6 +293,24 @@ func (h *Handler) handleItemRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	itemsResult, _, err := h.client.RegistryItem().Search(r.Context(), super, registry_item.WhereClause{
+		RegistryIdEq: &item.RegistryId,
+	}, registryitemapi.QueryOptions{Limit: 500})
+	if err != nil {
+		http.Error(w, "lookup error", http.StatusInternalServerError)
+		return
+	}
+
+	itemByID := map[string]registryitemapi.Model{}
+	for _, it := range itemsResult.Data {
+		itemByID[it.Id] = it
+	}
+	groupID := groupRootID(item, itemByID)
+	rootItem, ok := itemByID[groupID]
+	if !ok {
+		rootItem = item
+	}
+
 	// Gate: reserver must be email-verified for this registry. Approved guest
 	// access is not required to reserve an item; it only controls address access.
 	var buyerEmail string
@@ -287,6 +324,42 @@ func (h *Handler) handleItemRoute(w http.ResponseWriter, r *http.Request) {
 	}
 	if buyerEmail == "" {
 		buyerEmail = strings.TrimSpace(body.ContactEmail)
+	}
+
+	if !rootItem.QuantityUnlimited {
+		resvResult, _, err := h.client.Reservation().Search(r.Context(), super, reservation.WhereClause{
+			RegistryIdEq: &item.RegistryId,
+		}, reservationapi.QueryOptions{Limit: 1000})
+		if err != nil {
+			http.Error(w, "lookup error", http.StatusInternalServerError)
+			return
+		}
+
+		reservedByGroup := map[string]int{}
+		for _, rsv := range resvResult.Data {
+			if rsv.Status == enum_reservation_status.Cancelled {
+				continue
+			}
+			it, ok := itemByID[rsv.ItemId]
+			if !ok {
+				continue
+			}
+			q := rsv.Quantity
+			if q <= 0 {
+				q = 1
+			}
+			reservedByGroup[groupRootID(it, itemByID)] += q
+		}
+
+		remaining := rootItem.Quantity - reservedByGroup[groupID]
+		if remaining <= 0 {
+			http.Error(w, "item is fully reserved", http.StatusConflict)
+			return
+		}
+		if body.Quantity > remaining {
+			http.Error(w, fmt.Sprintf("only %d remaining", remaining), http.StatusConflict)
+			return
+		}
 	}
 
 	_, _, err = h.client.Reservation().Create(r.Context(), super, reservation.Model{
@@ -370,6 +443,20 @@ func fallbackString(value, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+func groupRootID(item registryitemapi.Model, byID map[string]registryitemapi.Model) string {
+	if item.ParentItemId == "" {
+		return item.Id
+	}
+	parent, ok := byID[item.ParentItemId]
+	if !ok {
+		return item.Id
+	}
+	if parent.ParentItemId != "" {
+		return groupRootID(parent, byID)
+	}
+	return parent.Id
 }
 
 func (h *Handler) resolveApprovedGuest(ctx context.Context, super permissions.Actor, registryId, email string) (*registryapprovedguestapi.Model, error) {

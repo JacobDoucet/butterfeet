@@ -30,6 +30,18 @@ export type RegistryItemSearchQuery = {
     idIn?: string[];
     idNin?: string[];
     idExists?: boolean;
+    // category (string) search options
+    categoryEq?: string;
+    categoryNe?: string;
+    categoryGt?: string;
+    categoryGte?: string;
+    categoryLt?: string;
+    categoryLte?: string;
+    categoryIn?: string[];
+    categoryNin?: string[];
+    categoryExists?: boolean;
+    categoryLike?: string;
+    categoryNlike?: string;
     // created (ActorTrace) search options
     created?: ActorTraceSearchQuery;
     // currency (string) search options
@@ -68,6 +80,16 @@ export type RegistryItemSearchQuery = {
     imageUrlExists?: boolean;
     imageUrlLike?: string;
     imageUrlNlike?: string;
+    // noSubstitutes (bool) search options
+    noSubstitutesEq?: boolean;
+    noSubstitutesNe?: boolean;
+    noSubstitutesGt?: boolean;
+    noSubstitutesGte?: boolean;
+    noSubstitutesLt?: boolean;
+    noSubstitutesLte?: boolean;
+    noSubstitutesIn?: boolean[];
+    noSubstitutesNin?: boolean[];
+    noSubstitutesExists?: boolean;
     // notes (string) search options
     notesEq?: string;
     notesNe?: string;
@@ -90,6 +112,11 @@ export type RegistryItemSearchQuery = {
     ownerPurchasedIn?: boolean[];
     ownerPurchasedNin?: boolean[];
     ownerPurchasedExists?: boolean;
+    // parentItemId (Ref<RegistryItem>) search options
+    parentItemIdEq?: string;
+    parentItemIdIn?: string[];
+    parentItemIdNin?: string[];
+    parentItemIdExists?: boolean;
     // position (int) search options
     positionEq?: number;
     positionNe?: number;
@@ -132,6 +159,16 @@ export type RegistryItemSearchQuery = {
     quantityIn?: number[];
     quantityNin?: number[];
     quantityExists?: boolean;
+    // quantityUnlimited (bool) search options
+    quantityUnlimitedEq?: boolean;
+    quantityUnlimitedNe?: boolean;
+    quantityUnlimitedGt?: boolean;
+    quantityUnlimitedGte?: boolean;
+    quantityUnlimitedLt?: boolean;
+    quantityUnlimitedLte?: boolean;
+    quantityUnlimitedIn?: boolean[];
+    quantityUnlimitedNin?: boolean[];
+    quantityUnlimitedExists?: boolean;
     // registryId (ParentRef<Registry>) search options
     registryIdEq?: string;
     registryIdIn?: string[];
