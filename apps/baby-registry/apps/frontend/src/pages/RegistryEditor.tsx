@@ -42,6 +42,7 @@ import {
 import { registries, items, scrape, reservations, type RegistryItem, type Registry, type Reservation, type ReservationStatus } from '../api';
 import PrivacyPanel from './PrivacyPanel';
 import CsvImportDialog from '../components/CsvImportDialog';
+import ItemCard from '../components/ItemCard';
 
 type DeleteTarget =
   | { kind: 'item'; id: string; title: string }
@@ -262,6 +263,7 @@ export default function RegistryEditor() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['reservations', reg?.id] });
       qc.invalidateQueries({ queryKey: ['items', reg?.id] });
+      setEditOpen(false);
     },
     onError: (err) => setError((err as Error).message),
   });
@@ -308,9 +310,23 @@ export default function RegistryEditor() {
     acc[rootId] = (acc[rootId] ?? 0) + 1;
     return acc;
   }, {});
+  const isItemFulfilled = (it: RegistryItem) => {
+    if (it.quantityUnlimited) return false;
+    const opts = [it, ...(alternativesByRootId[it.id] ?? [])];
+    const active = opts
+      .flatMap((o) => reservationsByItem[o.id] ?? [])
+      .filter((r) => r.status !== 'Cancelled')
+      .reduce((sum, r) => sum + (r.quantity ?? 1), 0);
+    return active >= (it.quantity ?? 1);
+  };
   const topLevelItems = list
     .filter((it) => !it.parentItemId || !itemById[it.parentItemId])
-    .sort((a, b) => (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' }));
+    .sort((a, b) => {
+      const aFulfilled = isItemFulfilled(a);
+      const bFulfilled = isItemFulfilled(b);
+      if (aFulfilled !== bFulfilled) return aFulfilled ? 1 : -1;
+      return (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' });
+    });
   const editingItem = list.find((it) => it.id === editingId) ?? null;
   const editRootId = editingItem ? groupRootId(editingItem) : null;
   const editRootItem = editRootId ? itemById[editRootId] ?? null : null;
@@ -377,91 +393,90 @@ export default function RegistryEditor() {
           const isUnlimited = !!it.quantityUnlimited;
           const fulfilled = !isUnlimited && activeCount >= requested;
           const optionCount = optionItems.length;
+          // Unified badge logic
+          let badgeColor = 'default';
+          if (fulfilled && activeCount > 0) badgeColor = 'success.main';
+          else if (activeCount > 0) badgeColor = 'warning.main';
+          else badgeColor = 'grey.400';
+          const badgeText = isUnlimited
+            ? `${activeCount} / ∞ reserved`
+            : `${activeCount} / ${requested} reserved`;
+          const topRightOverlay = (
+            <Box
+              sx={{
+                bgcolor: badgeColor,
+                color: badgeColor === 'grey.400' ? 'text.secondary' : '#fff',
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 5,
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                letterSpacing: 0.3,
+                boxShadow: badgeColor !== 'grey.400' ? '0 2px 6px rgba(0,0,0,0.15)' : undefined,
+                border: badgeColor === 'grey.400' ? '1.5px solid #bbb' : undefined,
+                opacity: badgeColor === 'grey.400' ? 0.85 : 1,
+              }}
+            >
+              {badgeText}
+            </Box>
+          );
           return (
-            <Grid item xs={12} sm={6} md={4} key={it.id} sx={{ display: 'flex' }}>
-              <Card
-                sx={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', width: '100%' }}
+            <Grid item xs={12} sm={6} md={4} lg={3} key={it.id} sx={{ display: 'flex', width: '100%' }}>
+              <ItemCard
+                imageUrl={it.imageUrl}
+                imageBgColor={it.imageBgColor}
+                title={it.title}
                 onClick={() => beginEdit(it)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    beginEdit(it);
-                  }
-                }}
-              >
-                {it.imageUrl && (
-                  <CardMedia component="img" image={it.imageUrl} sx={{ aspectRatio: '1', objectFit: 'contain', bgcolor: it.imageBgColor || '#ffffff' }} />
-                )}
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography
-                    variant="subtitle1"
-                    sx={{
-                      fontWeight: 600,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                    }}
-                  >
-                    {it.title}
-                  </Typography>
+                dimTitle={fulfilled}
+                imageFilter={fulfilled ? 'grayscale(0.4)' : undefined}
+                topRightOverlay={topRightOverlay}
+                belowTitle={
                   <Stack direction="row" spacing={1} sx={{ my: 1, flexWrap: 'wrap', rowGap: 1 }}>
                     {it.source && <Chip size="small" label={it.source} />}
                     {it.category && <Chip size="small" variant="outlined" label={it.category} />}
                     {optionCount > 1 && <Chip size="small" variant="outlined" label={`${optionCount} options`} />}
                     {it.noSubstitutes && <Chip size="small" variant="outlined" label="No substitutes" />}
-                    <Chip
-                      size="small"
-                      color={fulfilled ? 'success' : activeCount > 0 ? 'warning' : 'default'}
-                      variant={activeCount > 0 ? 'filled' : 'outlined'}
-                      label={
-                        isUnlimited
-                          ? `${activeCount} / ∞ reserved`
-                          : `${activeCount} / ${requested} reserved`
-                      }
-                    />
                   </Stack>
-                  {itemReservations.length > 0 && (
-                    <Accordion
-                      disableGutters
-                      elevation={0}
-                      sx={{ mt: 2, bgcolor: 'transparent', '&:before': { display: 'none' } }}
-                      onClick={(e) => e.stopPropagation()}
-                      onKeyDown={(e) => e.stopPropagation()}
-                    >
-                      <AccordionSummary
-                        expandIcon={<ExpandMoreIcon />}
-                        sx={{ px: 0, minHeight: 0, '& .MuiAccordionSummary-content': { my: 0.5 } }}
+                }
+                footer={
+                  itemReservations.length > 0 ? (
+                    <Box sx={{ width: '100%' }} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                      <Accordion
+                        disableGutters
+                        elevation={0}
+                        sx={{ bgcolor: 'transparent', '&:before': { display: 'none' }, width: '100%' }}
                       >
-                        <Typography variant="caption" color="text.secondary">
-                          {itemReservations.length} reservation{itemReservations.length === 1 ? '' : 's'}
-                        </Typography>
-                      </AccordionSummary>
-                      <AccordionDetails sx={{ px: 0, pt: 0 }}>
-                        <Stack spacing={1} divider={<Divider flexItem />}>
-                          {itemReservations.map((r) => (
-                            <ReservationRow
-                              key={r.id}
-                              reservation={r}
-                              optionLabel={r.itemId !== it.id ? (itemById[r.itemId]?.title ?? undefined) : undefined}
-                              onSetStatus={(status) => setStatusM.mutate({ id: r.id, status })}
-                              onDelete={() => {
-                                const who = r.isAnonymous
-                                  ? 'Anonymous'
-                                  : r.reserverName?.trim() || r.contactEmail?.trim() || 'Someone';
-                                setDeleteTarget({ kind: 'reservation', id: r.id, title: who });
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                      </AccordionDetails>
-                    </Accordion>
-                  )}
-                </CardContent>
-              </Card>
+                        <AccordionSummary
+                          expandIcon={<ExpandMoreIcon />}
+                          sx={{ px: 0, minHeight: 0, '& .MuiAccordionSummary-content': { my: 0.5 } }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            Reservations
+                          </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ px: 0, pt: 0 }}>
+                          <Stack spacing={1} divider={<Divider flexItem />}>
+                            {itemReservations.map((r) => (
+                              <ReservationRow
+                                key={r.id}
+                                reservation={r}
+                                optionLabel={r.itemId !== it.id ? (itemById[r.itemId]?.title ?? undefined) : undefined}
+                                onSetStatus={(status) => setStatusM.mutate({ id: r.id, status })}
+                                onDelete={() => {
+                                  const who = r.isAnonymous
+                                    ? 'Anonymous'
+                                    : r.reserverName?.trim() || r.contactEmail?.trim() || 'Someone';
+                                  setDeleteTarget({ kind: 'reservation', id: r.id, title: who });
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                        </AccordionDetails>
+                      </Accordion>
+                    </Box>
+                  ) : undefined
+                }
+              />
             </Grid>
           );
         })}
@@ -778,6 +793,11 @@ export default function RegistryEditor() {
 
               {editTab === 'fulfillment' && (
                 <Stack spacing={2}>
+                  {editActiveReservations.length === 0 && (
+                    <Alert severity="success">
+                      <strong>Status: Available</strong> — This item has no active reservations and is available for fulfillment.
+                    </Alert>
+                  )}
                   <Alert severity="info">
                     {editActiveReservations.length > 0
                       ? `This will update ${editActiveReservations.length} active reservation${editActiveReservations.length === 1 ? '' : 's'} for this item.`
