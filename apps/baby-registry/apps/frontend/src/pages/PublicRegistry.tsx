@@ -24,6 +24,8 @@ import {
   MenuItem,
   Tabs,
   Tab,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -114,6 +116,8 @@ export default function PublicRegistry() {
     display: 'flex',
     flexDirection: 'column',
   } as const;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Reset selected option whenever a new card is opened
   useEffect(() => {
@@ -707,6 +711,7 @@ export default function PublicRegistry() {
           scroll="paper"
           fullWidth
           maxWidth="md"
+          fullScreen={isMobile}
           TransitionProps={{
             onExited: () => {
               targetSnapshotRef.current = null;
@@ -714,26 +719,26 @@ export default function PublicRegistry() {
               setAccessNote('');
             },
           }}
-          PaperProps={{ sx: { ...modalPaperSx, width: 'min(960px, calc(100vw - 32px))' } }}
+          PaperProps={{ sx: { ...modalPaperSx, width: { xs: '100%', sm: 'min(960px, calc(100vw - 32px))' } } }}
         >
-          <DialogTitle sx={{ pb: 1 }}>
+          <DialogTitle sx={{ pb: 1, px: { xs: 2, sm: 3 }, pt: { xs: 1.5, sm: 2 } }}>
             {reservedId && (
               <Typography variant="overline" color="text.secondary" sx={{ display: 'block', lineHeight: 1, mb: 1 }}>
                 Held for you
               </Typography>
             )}
             {targetOptions.length === 1 && targetOptions[0] ? (
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+              <Stack direction="row" spacing={2} alignItems="center">
                 <Box
                   sx={{
-                    width: { xs: '100%', sm: 120 },
+                    width: { xs: 64, sm: 120 },
+                    height: { xs: 64, sm: 120 },
                     flexShrink: 0,
                     bgcolor: targetOptions[0].imageBgColor || '#ffffff',
                     borderRadius: 2,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    aspectRatio: { xs: '16 / 9', sm: '1 / 1' },
                     overflow: 'hidden',
                   }}
                 >
@@ -749,11 +754,22 @@ export default function PublicRegistry() {
                   )}
                 </Box>
                 <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                     {targetOptions[0].title}
                   </Typography>
                   {targetOptions[0].description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', fontWeight: 400 }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        whiteSpace: 'pre-wrap',
+                        fontWeight: 400,
+                        display: '-webkit-box',
+                        WebkitLineClamp: { xs: 2, sm: 'unset' },
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    >
                       {targetOptions[0].description}
                     </Typography>
                   )}
