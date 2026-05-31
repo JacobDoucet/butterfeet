@@ -47,7 +47,6 @@ func (b Brand) Render(e Email) string {
 		app = "Stork Nest"
 	}
 	base := strings.TrimRight(b.AppBaseURL, "/")
-	markSrc := base + "/brand/stork-nest-mark-192.png"
 
 	heading := Esc(e.Heading)
 	intro := escapeWithBreaks(e.Intro)
@@ -86,12 +85,11 @@ func (b Brand) Render(e Email) string {
   <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" border="0" style="background:%s;">
     <tr><td align="center" style="padding:32px 16px;">
       <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%%;">
-        <tr><td align="center" style="padding-bottom:24px;">
-          <a href="%s" style="text-decoration:none;color:%s;display:inline-block;">
-            <img src="%s" alt="%s" width="56" height="56" style="display:block;margin:0 auto 8px auto;border:0;outline:none;width:56px;height:56px;">
-            <div style="font-weight:700;letter-spacing:0.12em;text-transform:uppercase;font-size:12px;color:%s;">%s</div>
-          </a>
-        </td></tr>
+				<tr><td align="center" style="padding-bottom:24px;">
+					<a href="%s" style="text-decoration:none;color:%s;display:inline-block;">
+						<div style="font-weight:700;letter-spacing:0.12em;text-transform:uppercase;font-size:14px;color:%s;">%s</div>
+					</a>
+				</td></tr>
         <tr><td style="background:%s;border:1px solid %s;border-radius:18px;overflow:hidden;">
           <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" border="0">
             <tr><td style="padding:32px 32px 12px 32px;">
@@ -115,7 +113,6 @@ func (b Brand) Render(e Email) string {
 		preheader,
 		brandBg,
 		base, brandText,
-		markSrc, Esc(app),
 		brandPrimary, Esc(app),
 		brandSurface, brandBorder,
 		brandText, heading,
