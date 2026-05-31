@@ -32,6 +32,7 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/buyer"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/public"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/registryadmin"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/reminders"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/scrape"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/shipping"
@@ -122,10 +123,11 @@ func main() {
 
 	publicHandler := public.NewHandler(apiClient, db, mailSvc, appBaseURL)
 	buyerSvc := buyer.NewService(buyer.Config{
-		DB:        db,
-		JWTSecret: []byte(jwtSecret),
-		Prod:      isProd,
-		Mailer:    mailSvc,
+		DB:         db,
+		JWTSecret:  []byte(jwtSecret),
+		Prod:       isProd,
+		Mailer:     mailSvc,
+		AppBaseURL: appBaseURL,
 	})
 	publicHandler.SetBuyerResolver(buyerSvc.ResolveBuyer)
 	buyerSvc.Register(publicHandler.Mux())
@@ -133,6 +135,9 @@ func main() {
 
 	shippingHandler := shipping.NewHandler(apiClient, shipping.ActorResolver(resolveActor), mailSvc, appBaseURL)
 	root.Handle("/api/shipping/", http.StripPrefix("/api/shipping", shippingHandler))
+
+	registryAdminHandler := registryadmin.NewHandler(apiClient, db, registryadmin.ActorResolver(resolveActor))
+	root.Handle("/api/registry-admin/", http.StripPrefix("/api/registry-admin", registryAdminHandler))
 
 	// Mount forge mux behind /api (owner-authenticated CRUD).
 	amazonTag := getEnv("AMAZON_UK_ASSOCIATE_TAG", "butterfeetlab-21")

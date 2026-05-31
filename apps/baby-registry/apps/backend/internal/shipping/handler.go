@@ -563,6 +563,7 @@ func (h *Handler) sendBuyerApprovedNotification(ownerId, registryTitle, buyerEma
 
 		link := h.appBaseURL + "/ship#tok=" + rawToken
 
+		brand := mailer.Brand{AppName: "Stork Nest", AppBaseURL: h.appBaseURL}
 		err := h.mailer.Send(ctx, mailer.Message{
 			To:      buyerEmail,
 			Subject: "Your shipping address request was approved",
@@ -571,6 +572,14 @@ func (h *Handler) sendBuyerApprovedNotification(ownerId, registryTitle, buyerEma
 				"View the address here (link expires " + expiresAt.UTC().Format("Jan 2, 2006 15:04 UTC") + "):\n" +
 				link + "\n\n" +
 				"Keep this link private — anyone with it can view the address until it expires.\n",
+			HTML: brand.Render(mailer.Email{
+				Preheader: "Your address request was approved.",
+				Heading:   "Address request approved",
+				Intro:     "Hi " + greeting + ",\n\n" + ownerName + " approved your request to view the shipping address for the \"" + registryTitle + "\" registry.",
+				CTAText:   "View the address",
+				CTAHref:   link,
+				Footnote:  "Link expires " + expiresAt.UTC().Format("Jan 2, 2006 15:04 UTC") + ". Keep it private — anyone with it can view the address until it expires.",
+			}),
 		})
 		if err != nil {
 			log.Error().Err(err).Str("ownerId", ownerId).Str("to", buyerEmail).Msg("buyer approved notification send failed")

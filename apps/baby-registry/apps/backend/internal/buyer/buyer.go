@@ -32,10 +32,11 @@ const (
 )
 
 type Config struct {
-	DB        *mongo.Database
-	JWTSecret []byte
-	Prod      bool
-	Mailer    mailer.Mailer
+	DB         *mongo.Database
+	JWTSecret  []byte
+	Prod       bool
+	Mailer     mailer.Mailer
+	AppBaseURL string
 }
 
 type Service struct {
@@ -303,11 +304,20 @@ func sha256Hex(s string) string {
 func (s *Service) sendOTP(email, slug, code string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	brand := mailer.Brand{AppName: "Stork Nest", AppBaseURL: s.cfg.AppBaseURL}
+	html := brand.Render(mailer.Email{
+		Preheader: "Your one-time verification code expires in 15 minutes.",
+		Heading:   "Verify your email",
+		Intro:     "Enter this 6-digit code to confirm your email for the \"" + slug + "\" registry.",
+		BodyHTML: `<div style="margin:20px 0;padding:18px 16px;background:#fbf7f2;border:1px solid #ecdfce;border-radius:14px;text-align:center;font-size:30px;letter-spacing:8px;font-weight:700;color:#2d2a26;">` +
+			mailer.Esc(code) + `</div>`,
+		Footnote: "If you didn't request this, you can safely ignore this email.",
+	})
 	err := s.cfg.Mailer.Send(ctx, mailer.Message{
 		To:      email,
 		Subject: "Your Stork Nest verification code",
 		Text:    "Your verification code for the \"" + slug + "\" registry is: " + code + "\n\nIt expires in 15 minutes.",
-		HTML:    `<p>Your verification code for the <strong>` + slug + `</strong> registry is:</p><p style="font-size:24px;letter-spacing:4px;font-weight:bold">` + code + `</p><p style="color:#666;font-size:12px">Expires in 15 minutes.</p>`,
+		HTML:    html,
 	})
 	if err != nil {
 		log.Error().Err(err).Str("email", email).Str("slug", slug).Msg("buyer OTP email failed")

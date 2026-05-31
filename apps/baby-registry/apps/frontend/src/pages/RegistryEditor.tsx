@@ -27,6 +27,7 @@ import {
   Snackbar,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
+import EditIcon from '@mui/icons-material/EditOutlined';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Inventory2Icon from '@mui/icons-material/Inventory2Outlined';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -58,6 +59,11 @@ export default function RegistryEditor() {
   const [csvImportSnack, setCsvImportSnack] = useState<string | null>(null);
   const [itemSearch, setItemSearch] = useState('');
   const [itemCategoryFilter, setItemCategoryFilter] = useState<string>('__all__');
+  const [renameCatOpen, setRenameCatOpen] = useState(false);
+  const [renameCatFrom, setRenameCatFrom] = useState('');
+  const [renameCatTo, setRenameCatTo] = useState('');
+  const [renameCatError, setRenameCatError] = useState<string | null>(null);
+  const [renameCatSnack, setRenameCatSnack] = useState<string | null>(null);
 
   const regsQ = useQuery({
     queryKey: ['registries'],
@@ -92,6 +98,25 @@ export default function RegistryEditor() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['reservations', reg?.id] });
       qc.invalidateQueries({ queryKey: ['items', reg?.id] });
+    },
+  });
+
+  const renameCategoryM = useMutation({
+    mutationFn: ({ from, to }: { from: string; to: string }) =>
+      items.renameCategory(reg!.id, from, to),
+    onSuccess: (res, vars) => {
+      qc.invalidateQueries({ queryKey: ['items', reg?.id] });
+      if (res.modifiedCount > 0) {
+        const to = vars.to.trim();
+        setItemCategoryFilter(to === '' ? '__uncategorised__' : to);
+      } else {
+        setItemCategoryFilter('__all__');
+      }
+      setRenameCatOpen(false);
+      setRenameCatSnack(`Updated ${res.modifiedCount} item${res.modifiedCount === 1 ? '' : 's'}.`);
+    },
+    onError: (err: unknown) => {
+      setRenameCatError(err instanceof Error ? err.message : 'Rename failed');
     },
   });
 
@@ -428,6 +453,25 @@ export default function RegistryEditor() {
             ))}
             <MenuItem value="__uncategorised__">Uncategorised</MenuItem>
           </Select>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<EditIcon fontSize="small" />}
+            disabled={itemCategories.length === 0}
+            onClick={() => {
+              const preset =
+                itemCategoryFilter !== '__all__' && itemCategoryFilter !== '__uncategorised__'
+                  ? itemCategoryFilter
+                  : itemCategories[0] ?? '';
+              setRenameCatFrom(preset);
+              setRenameCatTo(preset);
+              setRenameCatError(null);
+              setRenameCatOpen(true);
+            }}
+            sx={{ whiteSpace: 'nowrap' }}
+          >
+            Rename category
+          </Button>
         </Stack>
       )}
 
@@ -978,6 +1022,59 @@ export default function RegistryEditor() {
         onClose={() => setCsvImportSnack(null)}
         message={csvImportSnack ?? ''}
       />
+      <Snackbar
+        open={!!renameCatSnack}
+        autoHideDuration={4000}
+        onClose={() => setRenameCatSnack(null)}
+        message={renameCatSnack ?? ''}
+      />
+      <Dialog open={renameCatOpen} onClose={() => setRenameCatOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle>Rename category</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Autocomplete
+              freeSolo
+              options={itemCategories}
+              value={renameCatFrom}
+              inputValue={renameCatFrom}
+              onInputChange={(_, v) => setRenameCatFrom(v)}
+              onChange={(_, v) => setRenameCatFrom(typeof v === 'string' ? v : v ?? '')}
+              renderInput={(params) => (
+                <TextField {...params} label="Current category" autoFocus />
+              )}
+            />
+            <Autocomplete
+              freeSolo
+              options={itemCategories}
+              value={renameCatTo}
+              inputValue={renameCatTo}
+              onInputChange={(_, v) => setRenameCatTo(v)}
+              onChange={(_, v) => setRenameCatTo(typeof v === 'string' ? v : v ?? '')}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="New category"
+                  helperText="Leave blank to clear the category on matching items."
+                />
+              )}
+            />
+            {renameCatError && <Alert severity="error">{renameCatError}</Alert>}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRenameCatOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            disabled={renameCategoryM.isPending || renameCatFrom.trim() === renameCatTo.trim()}
+            onClick={() => {
+              setRenameCatError(null);
+              renameCategoryM.mutate({ from: renameCatFrom.trim(), to: renameCatTo.trim() });
+            }}
+          >
+            {renameCategoryM.isPending ? 'Renaming…' : 'Rename'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

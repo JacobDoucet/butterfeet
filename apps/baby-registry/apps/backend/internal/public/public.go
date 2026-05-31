@@ -73,6 +73,35 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mux.ServeHTTP(w, r)
 }
 
+func (h *Handler) brand() mailer.Brand {
+	return mailer.Brand{AppName: "Stork Nest", AppBaseURL: h.appBaseURL}
+}
+
+func reservationDetailsHTML(quantity int, buyerEmail, message string) string {
+	var b strings.Builder
+	b.WriteString(`<div style="margin:18px 0;padding:16px 18px;background:#fbf7f2;border:1px solid #ecdfce;border-radius:14px;">`)
+	if quantity > 1 {
+		fmt.Fprintf(&b, `<div style="font-size:13px;color:#6b665f;margin-bottom:4px;">Quantity</div><div style="font-size:15px;font-weight:600;margin-bottom:10px;">%d</div>`, quantity)
+	}
+	if buyerEmail != "" {
+		fmt.Fprintf(&b, `<div style="font-size:13px;color:#6b665f;margin-bottom:4px;">Buyer email</div><div style="font-size:15px;margin-bottom:10px;">%s</div>`, mailer.Esc(buyerEmail))
+	}
+	if message != "" {
+		fmt.Fprintf(&b, `<div style="font-size:13px;color:#6b665f;margin-bottom:4px;">Message</div><div style="font-size:15px;white-space:pre-wrap;">%s</div>`, mailer.Esc(message))
+	}
+	b.WriteString(`</div>`)
+	return b.String()
+}
+
+func requestNoteHTML(note string) string {
+	note = strings.TrimSpace(note)
+	if note == "" {
+		return ""
+	}
+	return `<div style="margin:18px 0;padding:16px 18px;background:#fbf7f2;border:1px solid #ecdfce;border-radius:14px;"><div style="font-size:13px;color:#6b665f;margin-bottom:4px;">Their message</div><div style="font-size:15px;white-space:pre-wrap;">` +
+		mailer.Esc(note) + `</div></div>`
+}
+
 func firstNonEmpty(values ...string) string {
 	for _, v := range values {
 		if strings.TrimSpace(v) != "" {
@@ -571,7 +600,7 @@ func (h *Handler) handleItemReserve(w http.ResponseWriter, r *http.Request, item
 		return
 	}
 
-	h.sendOwnerReservationNotification(reg.OwnerId, reg.Title, item.Title, body.Quantity, name, body.IsAnonymous, buyerEmail, strings.TrimSpace(body.Message))
+	h.sendOwnerReservationNotification(reg.OwnerId, reg.Slug, reg.Title, item.Title, body.Quantity, name, body.IsAnonymous, buyerEmail, strings.TrimSpace(body.Message))
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "id": created.Id})
@@ -646,7 +675,7 @@ func (h *Handler) handleReservationRoute(w http.ResponseWriter, r *http.Request)
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "status": next})
 }
 
-func (h *Handler) sendOwnerReservationNotification(ownerID, registryTitle, itemTitle string, quantity int, reserverName string, isAnonymous bool, buyerEmail, message string) {
+func (h *Handler) sendOwnerReservationNotification(ownerID, registrySlug, registryTitle, itemTitle string, quantity int, reserverName string, isAnonymous bool, buyerEmail, message string) {
 	if h.mailer == nil || ownerID == "" {
 		return
 	}
@@ -694,6 +723,14 @@ func (h *Handler) sendOwnerReservationNotification(ownerID, registryTitle, itemT
 				fallbackString(strings.TrimSpace(buyerEmail), "not available"),
 				messageLine,
 			),
+			HTML: h.brand().Render(mailer.Email{
+				Preheader: buyerName + " claimed \"" + itemTitle + "\".",
+				Heading:   "Someone claimed a gift",
+				Intro:     "Hi " + ownerName + ",\n\n" + buyerName + " marked \"" + itemTitle + "\" as claimed on your \"" + registryTitle + "\" registry.",
+				BodyHTML:  reservationDetailsHTML(quantity, fallbackString(strings.TrimSpace(buyerEmail), "not available"), message),
+				CTAText:   "Open your registry",
+				CTAHref:   h.appBaseURL + "/owner/r/" + registrySlug,
+			}),
 		})
 		if err != nil {
 			log.Error().Err(err).Str("ownerId", ownerID).Str("email", owner.Email).Msg("owner reservation notification send failed")
@@ -1009,6 +1046,15 @@ func (h *Handler) sendOwnerAddressRequestNotification(ownerID, registryTitle, re
 				noteLine,
 				dashboardLink,
 			),
+			HTML: h.brand().Render(mailer.Email{
+				Preheader: displayName + " requested your shipping address.",
+				Heading:   "Address request",
+				Intro:     "Hi " + ownerName + ",\n\n" + displayName + " (" + fallbackString(strings.TrimSpace(buyerEmail), "email not available") + ") requested your shipping address for your \"" + registryTitle + "\" registry.",
+				BodyHTML:  requestNoteHTML(note),
+				CTAText:   "Review the request",
+				CTAHref:   dashboardLink,
+				Footnote:  "If you approve, we'll generate a private link for them to view the address. They won't see it until you do.",
+			}),
 		})
 		if err != nil {
 			log.Error().Err(err).Str("ownerId", ownerID).Str("email", owner.Email).Msg("owner address-request notification send failed")
@@ -1170,6 +1216,15 @@ func (h *Handler) sendOwnerRegistryAccessNotification(ownerID, registryTitle, re
 				noteLine,
 				dashboardLink,
 			),
+			HTML: h.brand().Render(mailer.Email{
+				Preheader: displayName + " wants to view your registry.",
+				Heading:   "Access request",
+				Intro:     "Hi " + ownerName + ",\n\n" + displayName + " (" + fallbackString(strings.TrimSpace(buyerEmail), "email not available") + ") is asking for access to view your \"" + registryTitle + "\" registry.",
+				BodyHTML:  requestNoteHTML(note),
+				CTAText:   "Review the request",
+				CTAHref:   dashboardLink,
+				Footnote:  "They will not see any of your registry contents until you approve them.",
+			}),
 		})
 		if err != nil {
 			log.Error().Err(err).Str("ownerId", ownerID).Str("email", owner.Email).Msg("owner registry-access notification send failed")

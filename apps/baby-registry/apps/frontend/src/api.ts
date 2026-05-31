@@ -170,6 +170,12 @@ export const items = {
   update: (id: string, body: Partial<RegistryItem>) =>
     api.patch<MutationResult<RegistryItem>>('/api/registry-items/update', { data: { id, ...body } }).then((r) => r.data),
   remove: (id: string) => api.del<void>(`/api/registry-items/delete/${id}`),
+  renameCategory: (registryId: string, oldCategory: string, newCategory: string) =>
+    api.post<{ ok: boolean; modifiedCount: number }>('/api/registry-admin/rename-category', {
+      registryId,
+      oldCategory,
+      newCategory,
+    }),
 };
 
 export type ReservationStatus = 'Reserved' | 'Purchased' | 'Received' | 'Cancelled';

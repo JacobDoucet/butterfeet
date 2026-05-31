@@ -318,11 +318,20 @@ func randomToken(n int) (string, error) {
 func (s *Service) sendMagicLink(email, link string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	brand := mailer.Brand{AppName: "Stork Nest", AppBaseURL: s.cfg.AppBaseURL}
+	html := brand.Render(mailer.Email{
+		Preheader: "Tap to sign in to your Stork Nest registry. Expires in 15 minutes.",
+		Heading:   "Sign in to Stork Nest",
+		Intro:     "Tap the button below to sign in. The link expires in 15 minutes.",
+		CTAText:   "Sign in",
+		CTAHref:   link,
+		Footnote:  "If you didn't request this, you can safely ignore this email.",
+	})
 	err := s.cfg.Mailer.Send(ctx, mailer.Message{
 		To:      email,
 		Subject: "Your Stork Nest sign-in link",
 		Text:    "Tap the link below to sign in to your Stork Nest registry. It expires in 15 minutes.\n\n" + link + "\n\nIf you didn't request this, you can ignore this message.",
-		HTML:    `<p>Tap the link below to sign in to your Stork Nest registry. It expires in 15 minutes.</p><p><a href="` + link + `">Sign in to Stork Nest</a></p><p style="color:#666;font-size:12px">If you didn't request this, you can ignore this message.</p>`,
+		HTML:    html,
 	})
 	if err != nil {
 		log.Error().Err(err).Str("email", email).Msg("magic link email failed")

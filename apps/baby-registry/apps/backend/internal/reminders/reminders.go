@@ -117,6 +117,7 @@ func scan(ctx context.Context, cfg Config, base string) {
 		link := base + "/r/" + reg.Slug
 		expiresIn := time.Until(rsv.ExpiresAt).Round(time.Minute)
 
+		brand := mailer.Brand{AppName: "Stork Nest", AppBaseURL: base}
 		sendCtx, sendCancel := context.WithTimeout(ctx, 10*time.Second)
 		err = cfg.Mailer.Send(sendCtx, mailer.Message{
 			To:      email,
@@ -129,12 +130,15 @@ func scan(ctx context.Context, cfg Config, base string) {
 					"reservation so another guest can grab it.\n\n%s\n",
 				item.Title, reg.Title, formatDuration(expiresIn), link,
 			),
-			HTML: fmt.Sprintf(
-				`<p>Hi,</p><p>You reserved <strong>%s</strong> on the <strong>%s</strong> registry but haven't confirmed yet. We're holding it for you for about %s longer.</p>`+
-					`<p>If you've completed your purchase, head back and click <strong>"I've bought this"</strong>. If you changed your mind, please release the reservation so another guest can grab it.</p>`+
-					`<p><a href="%s">Open the registry</a></p>`,
-				htmlEscape(item.Title), htmlEscape(reg.Title), formatDuration(expiresIn), link,
-			),
+			HTML: brand.Render(mailer.Email{
+				Preheader: "We're still holding your reserved gift.",
+				Heading:   "Still buying " + item.Title + "?",
+				Intro: "You reserved \"" + item.Title + "\" on the \"" + reg.Title + "\" registry but haven't confirmed yet. " +
+					"We're holding it for you for about " + formatDuration(expiresIn) + " longer.",
+				BodyHTML: `<p style="margin:16px 0 0 0;">If you've completed your purchase, open the registry and tap <strong>I've bought this</strong>. If you changed your mind, please release the reservation so another guest can grab it.</p>`,
+				CTAText:  "Open the registry",
+				CTAHref:  link,
+			}),
 		})
 		sendCancel()
 		if err != nil {
@@ -166,9 +170,4 @@ func formatDuration(d time.Duration) string {
 		return fmt.Sprintf("%dh", h)
 	}
 	return fmt.Sprintf("%dm", m)
-}
-
-func htmlEscape(s string) string {
-	r := strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;", "\"", "&quot;")
-	return r.Replace(s)
 }
