@@ -467,16 +467,18 @@ export default function PublicRegistry() {
         </Container>
       </Box>
 
-      <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
+      <Container maxWidth="lg" sx={{ pt: { xs: 1, md: 2 }, pb: { xs: 4, md: 6 } }}>
         {categories.length > 0 && (
           <Box
             sx={{
               mb: 4,
               position: 'sticky',
-              top: { xs: 104, sm: 108 },
+              top: { xs: 64, sm: 68 },
               zIndex: 3,
               borderRadius: 0,
-              px: 1,
+              mx: 'calc(50% - 50vw)',
+              px: 'calc(50vw - 50%)',
+              pt: '24px',
               bgcolor: 'transparent',
               backdropFilter: 'blur(14px) saturate(140%)',
               WebkitBackdropFilter: 'blur(14px) saturate(140%)',
