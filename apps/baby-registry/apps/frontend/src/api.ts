@@ -190,7 +190,7 @@ export interface Reservation {
   contactEmail?: string;
   quantity?: number;
   status: ReservationStatus;
-  created?: string;
+  created?: { actorId?: string; actorName?: string; actorType?: string; at?: string };
 }
 
 export const reservations = {

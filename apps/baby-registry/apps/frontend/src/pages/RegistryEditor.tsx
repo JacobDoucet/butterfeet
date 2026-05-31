@@ -28,19 +28,16 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import EditIcon from '@mui/icons-material/EditOutlined';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Inventory2Icon from '@mui/icons-material/Inventory2Outlined';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Divider,
   MenuItem,
   Select,
   Tooltip,
 } from '@mui/material';
 import { registries, items, scrape, reservations, type RegistryItem, type Registry, type Reservation, type ReservationStatus } from '../api';
+import { format, formatDistanceToNowStrict, isToday, isYesterday } from 'date-fns';
 import { useSetActiveThemeColor } from '../activeTheme';
 import PrivacyPanel from './PrivacyPanel';
 import BasicInfoPanel from './BasicInfoPanel';
@@ -54,7 +51,7 @@ type DeleteTarget =
 export default function RegistryEditor() {
   const { slug = '' } = useParams();
   const qc = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'items' | 'details' | 'shipping' | 'access'>('items');
+  const [activeTab, setActiveTab] = useState<'items' | 'purchases' | 'details' | 'shipping' | 'access'>('items');
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [csvImportSnack, setCsvImportSnack] = useState<string | null>(null);
   const [itemSearch, setItemSearch] = useState('');
@@ -421,6 +418,7 @@ export default function RegistryEditor() {
           scrollButtons="auto"
         >
           <Tab value="items" label="Items" />
+          <Tab value="purchases" label="Purchases" />
           <Tab value="details" label="Details" />
           <Tab value="shipping" label="Shipping" />
           <Tab value="access" label="Privacy" />
@@ -430,6 +428,23 @@ export default function RegistryEditor() {
       {activeTab === 'details' && <BasicInfoPanel reg={reg} />}
       {activeTab === 'shipping' && <PrivacyPanel reg={reg} section="shipping" />}
       {activeTab === 'access' && <PrivacyPanel reg={reg} section="access" />}
+      {activeTab === 'purchases' && (
+        <PurchasesPanel
+          reservations={allReservations}
+          itemById={itemById}
+          onOpenItem={(itemId) => {
+            const it = itemById[itemId];
+            if (it) beginEdit(it);
+          }}
+          onSetStatus={(id, status) => setStatusM.mutate({ id, status })}
+          onDelete={(r) => {
+            const who = r.isAnonymous
+              ? 'Anonymous'
+              : r.reserverName?.trim() || r.contactEmail?.trim() || 'Someone';
+            setDeleteTarget({ kind: 'reservation', id: r.id, title: who });
+          }}
+        />
+      )}
 
       {activeTab === 'items' && (
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
@@ -530,44 +545,6 @@ export default function RegistryEditor() {
                     {optionCount > 1 && <Chip size="small" variant="outlined" label={`${optionCount} options`} />}
                     {it.noSubstitutes && <Chip size="small" variant="outlined" label="No substitutes" />}
                   </Stack>
-                }
-                footer={
-                  itemReservations.length > 0 ? (
-                    <Box sx={{ width: '100%' }} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-                      <Accordion
-                        disableGutters
-                        elevation={0}
-                        sx={{ bgcolor: 'transparent', '&:before': { display: 'none' }, width: '100%' }}
-                      >
-                        <AccordionSummary
-                          expandIcon={<ExpandMoreIcon />}
-                          sx={{ px: 0, minHeight: 0, '& .MuiAccordionSummary-content': { my: 0.5 } }}
-                        >
-                          <Typography variant="caption" color="text.secondary">
-                            Reservations
-                          </Typography>
-                        </AccordionSummary>
-                        <AccordionDetails sx={{ px: 0, pt: 0 }}>
-                          <Stack spacing={1} divider={<Divider flexItem />}>
-                            {itemReservations.map((r) => (
-                              <ReservationRow
-                                key={r.id}
-                                reservation={r}
-                                optionLabel={r.itemId !== it.id ? (itemById[r.itemId]?.title ?? undefined) : undefined}
-                                onSetStatus={(status) => setStatusM.mutate({ id: r.id, status })}
-                                onDelete={() => {
-                                  const who = r.isAnonymous
-                                    ? 'Anonymous'
-                                    : r.reserverName?.trim() || r.contactEmail?.trim() || 'Someone';
-                                  setDeleteTarget({ kind: 'reservation', id: r.id, title: who });
-                                }}
-                              />
-                            ))}
-                          </Stack>
-                        </AccordionDetails>
-                      </Accordion>
-                    </Box>
-                  ) : undefined
                 }
               />
             </Grid>
@@ -1137,6 +1114,192 @@ function ReservationRow({
           <DeleteIcon fontSize="small" />
         </IconButton>
       </Tooltip>
+    </Stack>
+  );
+}
+
+function PurchasesPanel({
+  reservations: allReservations,
+  itemById,
+  onOpenItem,
+  onSetStatus,
+  onDelete,
+}: {
+  reservations: Reservation[];
+  itemById: Record<string, RegistryItem>;
+  onOpenItem: (itemId: string) => void;
+  onSetStatus: (id: string, status: ReservationStatus) => void;
+  onDelete: (reservation: Reservation) => void;
+}) {
+  const [statusFilter, setStatusFilter] = useState<'all' | ReservationStatus>('all');
+
+  const statusStyle: Record<ReservationStatus, { bg: string; fg: string; border: string }> = {
+    Reserved:  { bg: '#FFF4E5', fg: '#8A4B00', border: '#FFB85C' },
+    Purchased: { bg: '#E3F2FD', fg: '#0D3C61', border: '#64B5F6' },
+    Received:  { bg: '#E8F5E9', fg: '#1B5E20', border: '#66BB6A' },
+    Cancelled: { bg: '#F5F5F5', fg: '#616161', border: '#BDBDBD' },
+  };
+
+  const counts = allReservations.reduce<Record<ReservationStatus, number>>(
+    (acc, r) => {
+      acc[r.status] = (acc[r.status] ?? 0) + 1;
+      return acc;
+    },
+    { Reserved: 0, Purchased: 0, Received: 0, Cancelled: 0 },
+  );
+
+  const purchases = allReservations
+    .filter((r) => (statusFilter === 'all' ? true : r.status === statusFilter))
+    .slice()
+    .sort((a, b) => String(b.created?.at ?? '').localeCompare(String(a.created?.at ?? '')));
+
+  return (
+    <Stack spacing={2}>
+      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
+        <Chip
+          label={`All (${allReservations.length})`}
+          onClick={() => setStatusFilter('all')}
+          color={statusFilter === 'all' ? 'primary' : 'default'}
+          variant={statusFilter === 'all' ? 'filled' : 'outlined'}
+        />
+        {(['Reserved', 'Purchased', 'Received', 'Cancelled'] as ReservationStatus[]).map((s) => {
+          const style = statusStyle[s];
+          const active = statusFilter === s;
+          return (
+            <Chip
+              key={s}
+              label={`${s} (${counts[s]})`}
+              onClick={() => setStatusFilter(s)}
+              sx={{
+                bgcolor: active ? style.bg : 'transparent',
+                color: style.fg,
+                borderColor: style.border,
+                border: '1px solid',
+                fontWeight: active ? 600 : 400,
+              }}
+            />
+          );
+        })}
+      </Stack>
+
+      {purchases.length === 0 ? (
+        <Typography color="text.secondary">
+          {statusFilter === 'all' ? 'No reservations yet.' : `No ${statusFilter.toLowerCase()} reservations.`}
+        </Typography>
+      ) : (
+        purchases.map((r) => {
+        const item = itemById[r.itemId];
+        const who = r.isAnonymous
+          ? 'Anonymous'
+          : r.reserverName?.trim() || r.contactEmail?.trim() || 'Someone';
+        const qty = r.quantity ?? 1;
+        const style = statusStyle[r.status];
+        return (
+          <Card
+            key={r.id}
+            variant="outlined"
+            sx={{ borderLeft: '4px solid', borderLeftColor: style.border }}
+          >
+            <CardContent>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                {item?.imageUrl && (
+                  <Box
+                    onClick={() => onOpenItem(r.itemId)}
+                    sx={{
+                      width: 96,
+                      height: 96,
+                      flexShrink: 0,
+                      borderRadius: 1,
+                      overflow: 'hidden',
+                      bgcolor: item.imageBgColor || 'grey.100',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={item.imageUrl}
+                      alt=""
+                      sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
+                  </Box>
+                )}
+                <Stack sx={{ flex: 1, minWidth: 0 }} spacing={0.5}>
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 600, cursor: item ? 'pointer' : 'default' }}
+                      onClick={() => item && onOpenItem(r.itemId)}
+                    >
+                      {item?.title || 'Unknown item'}
+                    </Typography>
+                    {qty > 1 && <Chip size="small" label={`×${qty}`} />}
+                  </Stack>
+                  <Typography variant="body2">
+                    <strong>{who}</strong>
+                    {!r.isAnonymous && r.contactEmail && (
+                      <Typography component="span" variant="body2" color="text.secondary">
+                        {' '}· {r.contactEmail}
+                      </Typography>
+                    )}
+                  </Typography>
+                  {r.message && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}
+                    >
+                      “{r.message}”
+                    </Typography>
+                  )}
+                  {r.created?.at && (() => {
+                    const d = new Date(r.created!.at!);
+                    if (isNaN(d.getTime())) return null;
+                    const relative = formatDistanceToNowStrict(d, { addSuffix: true });
+                    let absolute: string;
+                    if (isToday(d)) absolute = `Today at ${format(d, 'h:mm a')}`;
+                    else if (isYesterday(d)) absolute = `Yesterday at ${format(d, 'h:mm a')}`;
+                    else absolute = format(d, 'MMM d, yyyy · h:mm a');
+                    return (
+                      <Tooltip title={absolute}>
+                        <Typography variant="caption" color="text.secondary">
+                          {absolute} · {relative}
+                        </Typography>
+                      </Tooltip>
+                    );
+                  })()}
+                </Stack>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>
+                  <Select
+                    size="small"
+                    value={r.status}
+                    onChange={(e) => onSetStatus(r.id, e.target.value as ReservationStatus)}
+                    sx={{
+                      minWidth: 130,
+                      bgcolor: style.bg,
+                      color: style.fg,
+                      fontWeight: 600,
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: style.border },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: style.border },
+                      '& .MuiSelect-icon': { color: style.fg },
+                    }}
+                  >
+                    <MenuItem value="Reserved">Reserved</MenuItem>
+                    <MenuItem value="Purchased">Purchased</MenuItem>
+                    <MenuItem value="Received">Received</MenuItem>
+                    <MenuItem value="Cancelled">Cancelled</MenuItem>
+                  </Select>
+                  <Tooltip title="Delete reservation">
+                    <IconButton size="small" onClick={() => onDelete(r)} aria-label="delete reservation">
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
+        );
+      })
+      )}
     </Stack>
   );
 }
