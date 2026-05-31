@@ -463,6 +463,8 @@ export default function PublicRegistry() {
     <Box
       sx={{
         minHeight: '100%',
+        overflowX: 'hidden',
+        maxWidth: '100vw',
         ...(reg.themeColor
           ? { bgcolor: reg.themeColor }
           : {
@@ -719,7 +721,7 @@ export default function PublicRegistry() {
               setAccessNote('');
             },
           }}
-          PaperProps={{ sx: { ...modalPaperSx, width: { xs: '100%', sm: 'min(960px, calc(100vw - 32px))' } } }}
+          PaperProps={{ sx: { ...modalPaperSx, width: { xs: '100%', sm: 'min(960px, calc(100vw - 32px))' }, maxWidth: '100vw' } }}
         >
           <DialogTitle sx={{ pb: 1, px: { xs: 2, sm: 3 }, pt: { xs: 1.5, sm: 2 } }}>
             {reservedId && (
@@ -763,6 +765,7 @@ export default function PublicRegistry() {
                       color="text.secondary"
                       sx={{
                         whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
                         fontWeight: 400,
                         display: '-webkit-box',
                         WebkitLineClamp: { xs: 2, sm: 'unset' },
