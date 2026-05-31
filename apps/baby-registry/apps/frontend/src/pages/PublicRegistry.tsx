@@ -26,12 +26,13 @@ import {
   Tab,
 } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { pub, buyer, isGatedRegistry, type GatedRegistry, type RegistryAccessRequestStatus } from '../api';
+import { pub, buyer, isGatedRegistry, type RegistryAccessRequestStatus } from '../api';
 import { useSetActiveThemeColor } from '../activeTheme';
 import ItemCard from '../components/ItemCard';
+import RetailerReminderDialog from '../components/public/RetailerReminderDialog';
+import BuyerVerifyGate from '../components/public/BuyerVerifyGate';
+import RegistryAccessGate from '../components/public/RegistryAccessGate';
 
 type ClickableItem = {
   id: string;
@@ -1069,304 +1070,22 @@ export default function PublicRegistry() {
 
         <Snackbar open={!!snack} autoHideDuration={4000} onClose={() => setSnack(null)} message={snack ?? ''} />
 
-        <Dialog
+        <RetailerReminderDialog
           open={retailerReminderOpen}
           onClose={() => setRetailerReminderOpen(false)}
-          maxWidth="xs"
-          fullWidth
-        >
-          <DialogTitle sx={{ fontWeight: 700 }}>Come back to confirm</DialogTitle>
-          <DialogContent>
-            <Stack spacing={1.5} sx={{ mt: 0.5 }}>
-              <Typography variant="body2">
-                We'll open the retailer in a new tab and hold this gift for you for 24 hours.
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                Keep this tab open. Once you've completed checkout, come back here and tap
-                “I've bought this” so the parents know it's on the way.
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                If you change your mind, just release the reservation so another guest can grab it.
-              </Typography>
-            </Stack>
-          </DialogContent>
-          <DialogActions sx={{ px: 3, py: 2 }}>
-            <Button onClick={() => setRetailerReminderOpen(false)}>Not yet</Button>
-            <Button
-              variant="contained"
-              sx={{ color: '#fff' }}
-              onClick={() => {
-                const effectiveOpt = itemById[selectedOptionId ?? target ?? ''] ?? targetOptions[0];
-                const href = purchaseHref(effectiveOpt);
-                if (href) {
-                  window.open(href, '_blank', 'noopener,noreferrer');
-                  if (effectiveOpt) trackPurchaseClick(effectiveOpt);
-                }
-                setRetailerReminderOpen(false);
-                reserveM.mutate();
-              }}
-            >
-              Got it - open retailer
-            </Button>
-          </DialogActions>
-        </Dialog>
+          onConfirm={() => {
+            const effectiveOpt = itemById[selectedOptionId ?? target ?? ''] ?? targetOptions[0];
+            const href = purchaseHref(effectiveOpt);
+            if (href) {
+              window.open(href, '_blank', 'noopener,noreferrer');
+              if (effectiveOpt) trackPurchaseClick(effectiveOpt);
+            }
+            setRetailerReminderOpen(false);
+            reserveM.mutate();
+          }}
+        />
       </Container>
     </Box>
   );
 }
 
-function BuyerVerifyGate({ slug, onVerified }: { slug: string; onVerified: () => void }) {
-  const [step, setStep] = useState<'email' | 'code'>('email');
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const [err, setErr] = useState<string | null>(null);
-
-  const requestM = useMutation({
-    mutationFn: () => buyer.request(slug, email.trim(), name.trim() || undefined),
-    onSuccess: () => {
-      setErr(null);
-      setStep('code');
-    },
-    onError: (e) => setErr((e as Error).message),
-  });
-  const confirmM = useMutation({
-    mutationFn: () => buyer.confirm(slug, email.trim(), code.trim()),
-    onSuccess: () => {
-      setErr(null);
-      onVerified();
-    },
-    onError: (e) => setErr((e as Error).message),
-  });
-
-  return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Card>
-        <CardContent>
-          <Stack alignItems="center" spacing={1} sx={{ mb: 3 }}>
-            <MarkEmailReadIcon color="primary" sx={{ fontSize: 40 }} />
-            <Typography variant="h5" textAlign="center">
-              Verify your email to view this registry
-            </Typography>
-            <Typography variant="body2" color="text.secondary" textAlign="center">
-              We send a 6-digit code to your inbox so the parents know who's coming to their gift list.
-              No account, no marketing.
-            </Typography>
-          </Stack>
-
-          {step === 'email' && (
-            <Stack spacing={2}>
-              <TextField
-                label="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoFocus
-                fullWidth
-                helperText="So the parents know who reserved each gift."
-              />
-              <TextField
-                label="Your email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                fullWidth
-              />
-              {err && <Alert severity="error">{err}</Alert>}
-              <Button
-                variant="contained"
-                size="large"
-                onClick={() => requestM.mutate()}
-                disabled={!email.trim() || !name.trim() || requestM.isPending}
-              >
-                {requestM.isPending ? <CircularProgress size={20} /> : 'Send code'}
-              </Button>
-            </Stack>
-          )}
-
-          {step === 'code' && (
-            <Stack spacing={2}>
-              <Typography variant="body2" color="text.secondary">
-                We sent a code to <strong>{email}</strong>. It expires in 15 minutes.
-              </Typography>
-              <TextField
-                label="6-digit code"
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                autoFocus
-                fullWidth
-                inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', style: { letterSpacing: 6, fontSize: 22, textAlign: 'center' } }}
-              />
-              {err && <Alert severity="error">{err}</Alert>}
-              <Stack direction="row" spacing={1}>
-                <Button variant="text" onClick={() => { setStep('email'); setCode(''); setErr(null); }}>
-                  Use a different email
-                </Button>
-                <Box sx={{ flex: 1 }} />
-                <Button
-                  variant="contained"
-                  onClick={() => confirmM.mutate()}
-                  disabled={code.length !== 6 || confirmM.isPending}
-                >
-                  {confirmM.isPending ? <CircularProgress size={20} /> : 'Verify'}
-                </Button>
-              </Stack>
-              <Button
-                size="small"
-                variant="text"
-                onClick={() => requestM.mutate()}
-                disabled={requestM.isPending}
-              >
-                Resend code
-              </Button>
-            </Stack>
-          )}
-        </CardContent>
-      </Card>
-    </Container>
-  );
-}
-
-function RegistryAccessGate({
-  slug,
-  viewerEmail,
-  gated,
-  onSubmitted,
-}: {
-  slug: string;
-  viewerEmail: string;
-  gated: GatedRegistry;
-  onSubmitted: () => void;
-}) {
-  const initialStatus: RegistryAccessRequestStatus = gated.accessRequestStatus;
-  const [name, setName] = useState('');
-  const [note, setNote] = useState('');
-  const [status, setStatus] = useState<RegistryAccessRequestStatus>(initialStatus);
-  const [err, setErr] = useState<string | null>(null);
-
-  const requestM = useMutation({
-    mutationFn: () =>
-      pub.requestRegistryAccess({ slug, name: name.trim() || undefined, note: note.trim() || undefined }),
-    onSuccess: (res) => {
-      setErr(null);
-      const next: RegistryAccessRequestStatus =
-        res.status === 'pending' ? 'pending' : res.status === 'rejected' ? 'rejected' : 'pending';
-      setStatus(next);
-      if (res.status === 'approved') onSubmitted();
-    },
-    onError: (e) => setErr((e as Error).message),
-  });
-
-  const parentsLabel = gated.ownerDisplayName?.trim() || gated.parentNames?.trim() || 'the parents';
-  const titleLabel = gated.title || 'their registry';
-
-  return (
-    <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
-      <Card sx={{ overflow: 'hidden' }}>
-        {gated.coverImageUrl && (
-          <Box
-            sx={{
-              height: 140,
-              backgroundImage: `url(${gated.coverImageUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          />
-        )}
-        <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
-          <Stack alignItems="center" spacing={1.5} sx={{ mb: 3, textAlign: 'center' }}>
-            <Box
-              sx={{
-                width: 56,
-                height: 56,
-                borderRadius: '50%',
-                bgcolor: status === 'pending' ? 'secondary.light' : 'primary.light',
-                color: status === 'pending' ? 'secondary.dark' : 'primary.dark',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mb: 0.5,
-              }}
-            >
-              {status === 'pending' ? (
-                <CheckCircleOutlineIcon sx={{ fontSize: 32 }} />
-              ) : (
-                <LockOutlinedIcon sx={{ fontSize: 30 }} />
-              )}
-            </Box>
-            <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 1.4 }}>
-              {titleLabel}
-            </Typography>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              {status === 'pending'
-                ? "You're on the list"
-                : status === 'rejected'
-                ? 'Access not available'
-                : `Ask ${parentsLabel} for access`}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 380 }}>
-              {status === 'pending' ? (
-                <>
-                  We've let {parentsLabel} know you'd like to view their registry. You'll get an email at{' '}
-                  <strong>{viewerEmail}</strong> as soon as they approve.
-                </>
-              ) : status === 'rejected' ? (
-                <>
-                  {parentsLabel} have chosen to keep this registry private. If you think this is a mistake, please
-                  reach out to them directly.
-                </>
-              ) : (
-                <>
-                  This registry is private. Send a short note to {parentsLabel} and they'll let you in. You're
-                  verified as <strong>{viewerEmail}</strong>.
-                </>
-              )}
-            </Typography>
-          </Stack>
-
-          {status === 'none' && (
-            <Stack spacing={2}>
-              <TextField
-                label="Your name (optional)"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="So they know who's asking"
-                fullWidth
-              />
-              <TextField
-                label="A short note (optional)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="e.g. Auntie Em — congrats on the new baby!"
-                multiline
-                minRows={3}
-                fullWidth
-              />
-              {err && <Alert severity="error">{err}</Alert>}
-              <Button
-                variant="contained"
-                size="large"
-                onClick={() => requestM.mutate()}
-                disabled={requestM.isPending}
-                sx={{ py: 1.4 }}
-              >
-                {requestM.isPending ? <CircularProgress size={20} /> : 'Request access'}
-              </Button>
-              <Typography variant="caption" color="text.secondary" textAlign="center">
-                Nothing on the registry is shared with anyone until {parentsLabel} approve you.
-              </Typography>
-            </Stack>
-          )}
-
-          {status === 'pending' && (
-            <Stack spacing={1.5} alignItems="center">
-              <Chip label="Awaiting approval" color="secondary" sx={{ fontWeight: 600 }} />
-              <Typography variant="caption" color="text.secondary" textAlign="center" sx={{ maxWidth: 320 }}>
-                You can close this page and come back later — the link will work the moment access is granted.
-              </Typography>
-            </Stack>
-          )}
-        </CardContent>
-      </Card>
-    </Container>
-  );
-}

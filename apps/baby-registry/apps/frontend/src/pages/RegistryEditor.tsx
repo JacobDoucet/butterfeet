@@ -23,30 +23,27 @@ import {
   Box,
   FormControlLabel,
   Checkbox,
-  Autocomplete,
   Snackbar,
+  Divider,
+  MenuItem,
+  Select,
+  Autocomplete,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import EditIcon from '@mui/icons-material/EditOutlined';
 import Inventory2Icon from '@mui/icons-material/Inventory2Outlined';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Divider,
-  MenuItem,
-  Select,
-  Tooltip,
-} from '@mui/material';
 import { registries, items, scrape, reservations, type RegistryItem, type Registry, type Reservation, type ReservationStatus } from '../api';
-import { format, formatDistanceToNowStrict, isToday, isYesterday } from 'date-fns';
 import { useSetActiveThemeColor } from '../activeTheme';
 import PrivacyPanel from './PrivacyPanel';
 import BasicInfoPanel from './BasicInfoPanel';
 import CsvImportDialog from '../components/CsvImportDialog';
 import ItemCard from '../components/ItemCard';
-
-type DeleteTarget =
-  | { kind: 'item'; id: string; title: string }
-  | { kind: 'reservation'; id: string; title: string };
+import PurchasesPanel from '../components/editor/PurchasesPanel';
+import ReservationRow from '../components/editor/ReservationRow';
+import CategoryRenameDialog from '../components/editor/CategoryRenameDialog';
+import DeleteConfirmDialog, { type DeleteTarget } from '../components/editor/DeleteConfirmDialog';
 
 export default function RegistryEditor() {
   const { slug = '' } = useParams();
@@ -418,10 +415,16 @@ export default function RegistryEditor() {
           scrollButtons="auto"
         >
           <Tab value="items" label="Items" />
-          <Tab value="purchases" label="Purchases" />
+          <Tab value="purchases" label="Reservations" />
           <Tab value="details" label="Details" />
           <Tab value="shipping" label="Shipping" />
-          <Tab value="access" label="Privacy" />
+          <Tab
+            value="access"
+            label="Privacy"
+            icon={<LockOutlinedIcon fontSize="small" />}
+            iconPosition="start"
+            sx={{ ml: 'auto', minHeight: 48 }}
+          />
         </Tabs>
       </Box>
 
@@ -963,22 +966,11 @@ export default function RegistryEditor() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>Confirm deletion</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary">
-            {deleteTarget?.kind === 'item'
-              ? `Delete item "${deleteTarget.title}"? This cannot be undone.`
-              : `Delete reservation from "${deleteTarget?.title}"? This cannot be undone.`}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
-          <Button variant="contained" color="error" onClick={confirmDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <DeleteConfirmDialog
+        target={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
       {reg && (
         <CsvImportDialog
           open={csvImportOpen}
@@ -1005,301 +997,22 @@ export default function RegistryEditor() {
         onClose={() => setRenameCatSnack(null)}
         message={renameCatSnack ?? ''}
       />
-      <Dialog open={renameCatOpen} onClose={() => setRenameCatOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle>Rename category</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <Autocomplete
-              freeSolo
-              options={itemCategories}
-              value={renameCatFrom}
-              inputValue={renameCatFrom}
-              onInputChange={(_, v) => setRenameCatFrom(v)}
-              onChange={(_, v) => setRenameCatFrom(typeof v === 'string' ? v : v ?? '')}
-              renderInput={(params) => (
-                <TextField {...params} label="Current category" autoFocus />
-              )}
-            />
-            <Autocomplete
-              freeSolo
-              options={itemCategories}
-              value={renameCatTo}
-              inputValue={renameCatTo}
-              onInputChange={(_, v) => setRenameCatTo(v)}
-              onChange={(_, v) => setRenameCatTo(typeof v === 'string' ? v : v ?? '')}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="New category"
-                  helperText="Leave blank to clear the category on matching items."
-                />
-              )}
-            />
-            {renameCatError && <Alert severity="error">{renameCatError}</Alert>}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRenameCatOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            disabled={renameCategoryM.isPending || renameCatFrom.trim() === renameCatTo.trim()}
-            onClick={() => {
-              setRenameCatError(null);
-              renameCategoryM.mutate({ from: renameCatFrom.trim(), to: renameCatTo.trim() });
-            }}
-          >
-            {renameCategoryM.isPending ? 'Renaming…' : 'Rename'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <CategoryRenameDialog
+        open={renameCatOpen}
+        onClose={() => setRenameCatOpen(false)}
+        categories={itemCategories}
+        from={renameCatFrom}
+        to={renameCatTo}
+        onFromChange={setRenameCatFrom}
+        onToChange={setRenameCatTo}
+        error={renameCatError}
+        pending={renameCategoryM.isPending}
+        onSubmit={() => {
+          setRenameCatError(null);
+          renameCategoryM.mutate({ from: renameCatFrom.trim(), to: renameCatTo.trim() });
+        }}
+      />
     </Container>
   );
 }
 
-function ReservationRow({
-  reservation,
-  optionLabel,
-  onSetStatus,
-  onDelete,
-}: {
-  reservation: Reservation;
-  optionLabel?: string;
-  onSetStatus: (status: ReservationStatus) => void;
-  onDelete: () => void;
-}) {
-  const who = reservation.isAnonymous
-    ? 'Anonymous'
-    : reservation.reserverName?.trim() || reservation.contactEmail?.trim() || 'Someone';
-  const qty = reservation.quantity ?? 1;
-  return (
-    <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ py: 1 }}>
-      <Stack sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="body2" sx={{ fontWeight: 500 }} noWrap>
-          {who}
-          {qty > 1 ? ` · ×${qty}` : ''}
-        </Typography>
-        {optionLabel && (
-          <Typography variant="caption" color="primary.main" noWrap>
-            {optionLabel}
-          </Typography>
-        )}
-        {!reservation.isAnonymous && reservation.contactEmail && (
-          <Typography variant="caption" color="text.secondary" noWrap>
-            {reservation.contactEmail}
-          </Typography>
-        )}
-        {reservation.message && (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: 'block', whiteSpace: 'pre-wrap', mt: 0.5 }}
-          >
-            “{reservation.message}”
-          </Typography>
-        )}
-      </Stack>
-      <Select
-        size="small"
-        value={reservation.status}
-        onChange={(e) => onSetStatus(e.target.value as ReservationStatus)}
-        sx={{ minWidth: 130 }}
-      >
-        <MenuItem value="Reserved">Reserved</MenuItem>
-        <MenuItem value="Purchased">Purchased</MenuItem>
-        <MenuItem value="Received">Received</MenuItem>
-        <MenuItem value="Cancelled">Cancelled</MenuItem>
-      </Select>
-      <Tooltip title="Delete reservation">
-        <IconButton size="small" onClick={onDelete} aria-label="delete reservation">
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    </Stack>
-  );
-}
-
-function PurchasesPanel({
-  reservations: allReservations,
-  itemById,
-  onOpenItem,
-  onSetStatus,
-  onDelete,
-}: {
-  reservations: Reservation[];
-  itemById: Record<string, RegistryItem>;
-  onOpenItem: (itemId: string) => void;
-  onSetStatus: (id: string, status: ReservationStatus) => void;
-  onDelete: (reservation: Reservation) => void;
-}) {
-  const [statusFilter, setStatusFilter] = useState<'all' | ReservationStatus>('all');
-
-  const statusStyle: Record<ReservationStatus, { bg: string; fg: string; border: string }> = {
-    Reserved:  { bg: '#FFF4E5', fg: '#8A4B00', border: '#FFB85C' },
-    Purchased: { bg: '#E3F2FD', fg: '#0D3C61', border: '#64B5F6' },
-    Received:  { bg: '#E8F5E9', fg: '#1B5E20', border: '#66BB6A' },
-    Cancelled: { bg: '#F5F5F5', fg: '#616161', border: '#BDBDBD' },
-  };
-
-  const counts = allReservations.reduce<Record<ReservationStatus, number>>(
-    (acc, r) => {
-      acc[r.status] = (acc[r.status] ?? 0) + 1;
-      return acc;
-    },
-    { Reserved: 0, Purchased: 0, Received: 0, Cancelled: 0 },
-  );
-
-  const purchases = allReservations
-    .filter((r) => (statusFilter === 'all' ? true : r.status === statusFilter))
-    .slice()
-    .sort((a, b) => String(b.created?.at ?? '').localeCompare(String(a.created?.at ?? '')));
-
-  return (
-    <Stack spacing={2}>
-      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
-        <Chip
-          label={`All (${allReservations.length})`}
-          onClick={() => setStatusFilter('all')}
-          color={statusFilter === 'all' ? 'primary' : 'default'}
-          variant={statusFilter === 'all' ? 'filled' : 'outlined'}
-        />
-        {(['Reserved', 'Purchased', 'Received', 'Cancelled'] as ReservationStatus[]).map((s) => {
-          const style = statusStyle[s];
-          const active = statusFilter === s;
-          return (
-            <Chip
-              key={s}
-              label={`${s} (${counts[s]})`}
-              onClick={() => setStatusFilter(s)}
-              sx={{
-                bgcolor: active ? style.bg : 'transparent',
-                color: style.fg,
-                borderColor: style.border,
-                border: '1px solid',
-                fontWeight: active ? 600 : 400,
-              }}
-            />
-          );
-        })}
-      </Stack>
-
-      {purchases.length === 0 ? (
-        <Typography color="text.secondary">
-          {statusFilter === 'all' ? 'No reservations yet.' : `No ${statusFilter.toLowerCase()} reservations.`}
-        </Typography>
-      ) : (
-        purchases.map((r) => {
-        const item = itemById[r.itemId];
-        const who = r.isAnonymous
-          ? 'Anonymous'
-          : r.reserverName?.trim() || r.contactEmail?.trim() || 'Someone';
-        const qty = r.quantity ?? 1;
-        const style = statusStyle[r.status];
-        return (
-          <Card
-            key={r.id}
-            variant="outlined"
-            sx={{ borderLeft: '4px solid', borderLeftColor: style.border }}
-          >
-            <CardContent>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                {item?.imageUrl && (
-                  <Box
-                    onClick={() => onOpenItem(r.itemId)}
-                    sx={{
-                      width: 96,
-                      height: 96,
-                      flexShrink: 0,
-                      borderRadius: 1,
-                      overflow: 'hidden',
-                      bgcolor: item.imageBgColor || 'grey.100',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <Box
-                      component="img"
-                      src={item.imageUrl}
-                      alt=""
-                      sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                    />
-                  </Box>
-                )}
-                <Stack sx={{ flex: 1, minWidth: 0 }} spacing={0.5}>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 600, cursor: item ? 'pointer' : 'default' }}
-                      onClick={() => item && onOpenItem(r.itemId)}
-                    >
-                      {item?.title || 'Unknown item'}
-                    </Typography>
-                    {qty > 1 && <Chip size="small" label={`×${qty}`} />}
-                  </Stack>
-                  <Typography variant="body2">
-                    <strong>{who}</strong>
-                    {!r.isAnonymous && r.contactEmail && (
-                      <Typography component="span" variant="body2" color="text.secondary">
-                        {' '}· {r.contactEmail}
-                      </Typography>
-                    )}
-                  </Typography>
-                  {r.message && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}
-                    >
-                      “{r.message}”
-                    </Typography>
-                  )}
-                  {r.created?.at && (() => {
-                    const d = new Date(r.created!.at!);
-                    if (isNaN(d.getTime())) return null;
-                    const relative = formatDistanceToNowStrict(d, { addSuffix: true });
-                    let absolute: string;
-                    if (isToday(d)) absolute = `Today at ${format(d, 'h:mm a')}`;
-                    else if (isYesterday(d)) absolute = `Yesterday at ${format(d, 'h:mm a')}`;
-                    else absolute = format(d, 'MMM d, yyyy · h:mm a');
-                    return (
-                      <Tooltip title={absolute}>
-                        <Typography variant="caption" color="text.secondary">
-                          {absolute} · {relative}
-                        </Typography>
-                      </Tooltip>
-                    );
-                  })()}
-                </Stack>
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>
-                  <Select
-                    size="small"
-                    value={r.status}
-                    onChange={(e) => onSetStatus(r.id, e.target.value as ReservationStatus)}
-                    sx={{
-                      minWidth: 130,
-                      bgcolor: style.bg,
-                      color: style.fg,
-                      fontWeight: 600,
-                      '& .MuiOutlinedInput-notchedOutline': { borderColor: style.border },
-                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: style.border },
-                      '& .MuiSelect-icon': { color: style.fg },
-                    }}
-                  >
-                    <MenuItem value="Reserved">Reserved</MenuItem>
-                    <MenuItem value="Purchased">Purchased</MenuItem>
-                    <MenuItem value="Received">Received</MenuItem>
-                    <MenuItem value="Cancelled">Cancelled</MenuItem>
-                  </Select>
-                  <Tooltip title="Delete reservation">
-                    <IconButton size="small" onClick={() => onDelete(r)} aria-label="delete reservation">
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Stack>
-              </Stack>
-            </CardContent>
-          </Card>
-        );
-      })
-      )}
-    </Stack>
-  );
-}
