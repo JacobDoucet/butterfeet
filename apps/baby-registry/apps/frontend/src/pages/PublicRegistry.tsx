@@ -93,6 +93,7 @@ export default function PublicRegistry() {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('__all__');
   const [reservedId, setReservedId] = useState<string | null>(null);
+  const [retailerReminderOpen, setRetailerReminderOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
   const [accessNote, setAccessNote] = useState('');
@@ -148,16 +149,6 @@ export default function PublicRegistry() {
     },
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['public', slug] });
-      const data = regQ.data;
-      if (data && !isGatedRegistry(data)) {
-        const rootItem = data.items.find((it) => it.id === target);
-        const effectiveId = selectedOptionId ?? target;
-        const purchasedItem = data.items.find((it) => it.id === effectiveId) ?? rootItem;
-        const href = purchaseHref(purchasedItem ?? rootItem ?? undefined);
-        if (href) {
-          window.open(href, '_blank', 'noopener,noreferrer');
-        }
-      }
       if (res?.id) {
         setReservedId(res.id);
       }
@@ -191,6 +182,7 @@ export default function PublicRegistry() {
     setError(null);
     setReserveQtyMode('one');
     setReserveQty('1');
+    setRetailerReminderOpen(false);
   };
 
   const confirmRsvM = useMutation({
@@ -724,12 +716,53 @@ export default function PublicRegistry() {
           PaperProps={{ sx: { ...modalPaperSx, width: 'min(960px, calc(100vw - 32px))' } }}
         >
           <DialogTitle sx={{ pb: 1 }}>
-            <Typography variant="overline" color="text.secondary" sx={{ display: 'block', lineHeight: 1, mb: 0.5 }}>
-              {reservedId ? 'Held for you' : 'Get this gift'}
-            </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-              {targetRootItem?.title ?? 'Item details'}
-            </Typography>
+            {reservedId && (
+              <Typography variant="overline" color="text.secondary" sx={{ display: 'block', lineHeight: 1, mb: 1 }}>
+                Held for you
+              </Typography>
+            )}
+            {targetOptions.length === 1 && targetOptions[0] ? (
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                <Box
+                  sx={{
+                    width: { xs: '100%', sm: 120 },
+                    flexShrink: 0,
+                    bgcolor: targetOptions[0].imageBgColor || '#ffffff',
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    aspectRatio: { xs: '16 / 9', sm: '1 / 1' },
+                    overflow: 'hidden',
+                  }}
+                >
+                  {targetOptions[0].imageUrl ? (
+                    <Box
+                      component="img"
+                      src={targetOptions[0].imageUrl}
+                      alt={targetOptions[0].title}
+                      sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
+                  ) : (
+                    <Typography variant="caption" color="text.disabled">No image</Typography>
+                  )}
+                </Box>
+                <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                    {targetOptions[0].title}
+                  </Typography>
+                  {targetOptions[0].description && (
+                    <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', fontWeight: 400 }}>
+                      {targetOptions[0].description}
+                    </Typography>
+                  )}
+                </Stack>
+              </Stack>
+            ) : (
+              <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                {targetRootItem?.title ?? 'Item details'}
+              </Typography>
+            )}
           </DialogTitle>
           <DialogContent
             sx={{
@@ -791,49 +824,6 @@ export default function PublicRegistry() {
                 </>
               ) : (
                 <>
-              {targetOptions.length === 1 && targetOptions[0] && (
-                <Card variant="outlined" sx={{ borderRadius: 2 }}>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0} sx={{ overflow: 'hidden' }}>
-                    <Box
-                      sx={{
-                        width: { xs: '100%', sm: 160 },
-                        flexShrink: 0,
-                        bgcolor: targetOptions[0].imageBgColor || '#ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        aspectRatio: { xs: '16 / 9', sm: '1 / 1' },
-                        overflow: 'hidden',
-                      }}
-                    >
-                      {targetOptions[0].imageUrl ? (
-                        <Box
-                          component="img"
-                          src={targetOptions[0].imageUrl}
-                          alt={targetOptions[0].title}
-                          sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                        />
-                      ) : (
-                        <Typography variant="caption" color="text.disabled">No image</Typography>
-                      )}
-                    </Box>
-                    <Stack spacing={1} sx={{ p: 2, minWidth: 0, flex: 1 }}>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{ fontWeight: 700, lineHeight: 1.3, color: 'text.primary' }}
-                      >
-                        {targetOptions[0].title}
-                      </Typography>
-                      {targetOptions[0].description && (
-                        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                          {targetOptions[0].description}
-                        </Typography>
-                      )}
-                    </Stack>
-                  </Stack>
-                </Card>
-              )}
-
               {targetOptions.length > 1 && (
                 <Box>
                   <Typography variant="overline" color="text.secondary" sx={{ px: 0.5 }}>
@@ -938,101 +928,94 @@ export default function PublicRegistry() {
                 </Box>
               )}
 
-              {targetRootItem && (
+              {targetRootItem && !targetRootItem.quantityUnlimited && targetRemaining > 1 && (
                 <Typography variant="body2" color="text.secondary">
-                  {targetRootItem.quantityUnlimited
-                    ? 'No reservation limit for this item.'
-                    : `${targetRemaining} remaining out of ${targetRootItem.quantity || 1}.`}
+                  {targetRemaining} remaining out of {targetRootItem.quantity || 1}.
                 </Typography>
               )}
 
-              <Card variant="outlined" sx={{ borderRadius: 2 }}>
-                <CardContent sx={{ minWidth: 0 }}>
-                  <Stack spacing={2} sx={{ minWidth: 0 }}>
-                    <Typography variant="overline" color="text.secondary">Purchase details</Typography>
-                    {targetRootItem?.quantityUnlimited ? (
-                      <TextField
-                        label="Quantity you're buying"
-                        type="number"
-                        inputProps={{ min: 1, step: 1 }}
-                        value={reserveQty}
-                        onChange={(e) => setReserveQty(e.target.value)}
-                      />
-                    ) : targetRemaining > 1 ? (
-                      <Select value={reserveQtyMode} onChange={(e) => setReserveQtyMode(e.target.value as 'one' | 'all')}>
-                        <MenuItem value="one">Buy 1</MenuItem>
-                        <MenuItem value="all">Buy all remaining ({targetRemaining})</MenuItem>
-                      </Select>
-                    ) : null}
+              <Stack spacing={2} sx={{ minWidth: 0 }}>
+                {targetRootItem?.quantityUnlimited ? (
+                  <TextField
+                    label="Quantity you're buying"
+                    type="number"
+                    inputProps={{ min: 1, step: 1 }}
+                    value={reserveQty}
+                    onChange={(e) => setReserveQty(e.target.value)}
+                  />
+                ) : targetRemaining > 1 ? (
+                  <Select value={reserveQtyMode} onChange={(e) => setReserveQtyMode(e.target.value as 'one' | 'all')}>
+                    <MenuItem value="one">Buy 1</MenuItem>
+                    <MenuItem value="all">Buy all remaining ({targetRemaining})</MenuItem>
+                  </Select>
+                ) : null}
 
-                    {hasShippingAddress ? (
-                      <Box sx={{ p: 2, borderRadius: 1, bgcolor: 'action.hover' }}>
-                        <Typography variant="overline" color="text.secondary">Delivery address</Typography>
-                        {reg.shippingRecipientName && <Typography>{reg.shippingRecipientName}</Typography>}
-                        {reg.shippingLine1 && <Typography>{reg.shippingLine1}</Typography>}
-                        {reg.shippingLine2 && <Typography>{reg.shippingLine2}</Typography>}
-                        {(reg.shippingCity || reg.shippingRegion || reg.shippingPostalCode) && (
-                          <Typography>{[reg.shippingCity, reg.shippingRegion, reg.shippingPostalCode].filter(Boolean).join(' ')}</Typography>
-                        )}
-                        {reg.shippingCountry && <Typography>{reg.shippingCountry}</Typography>}
-                        {reg.shippingDeliveryNotes && (
-                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>
-                            Note: {reg.shippingDeliveryNotes}
-                          </Typography>
-                        )}
-                      </Box>
-                    ) : (
-                      <Alert severity="warning" sx={{ '& .MuiAlert-message': { width: '100%' } }}>
-                        <Stack spacing={1.5}>
-                          <Box>
-                            Delivery address is protected and not shown on the public registry page.
-                            You can ask the parents to send it to you privately.
-                          </Box>
-                          {accessRequested ? (
-                            <Box sx={{ fontSize: 14, color: 'text.secondary' }}>
-                              Request sent. We'll email <strong>{meQ.data?.email}</strong> a private link
-                              as soon as the parents approve.
-                            </Box>
-                          ) : (
-                            <>
-                              <TextField
-                                size="small"
-                                label="Add a short note (optional)"
-                                placeholder="Example: For the Pottery Barn glider I'm shipping next week."
-                                value={accessNote}
-                                onChange={(e) => setAccessNote(e.target.value)}
-                                multiline
-                                minRows={2}
-                                fullWidth
-                              />
-                              <Box>
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  onClick={() => requestAddressM.mutate()}
-                                  disabled={requestAddressM.isPending}
-                                >
-                                  {requestAddressM.isPending ? 'Sending\u2026' : 'Request shipping address'}
-                                </Button>
-                              </Box>
-                            </>
-                          )}
-                        </Stack>
-                      </Alert>
+                {hasShippingAddress ? (
+                  <Box sx={{ p: 2, borderRadius: 1, bgcolor: 'action.hover' }}>
+                    <Typography variant="overline" color="text.secondary">Delivery address</Typography>
+                    {reg.shippingRecipientName && <Typography>{reg.shippingRecipientName}</Typography>}
+                    {reg.shippingLine1 && <Typography>{reg.shippingLine1}</Typography>}
+                    {reg.shippingLine2 && <Typography>{reg.shippingLine2}</Typography>}
+                    {(reg.shippingCity || reg.shippingRegion || reg.shippingPostalCode) && (
+                      <Typography>{[reg.shippingCity, reg.shippingRegion, reg.shippingPostalCode].filter(Boolean).join(' ')}</Typography>
                     )}
+                    {reg.shippingCountry && <Typography>{reg.shippingCountry}</Typography>}
+                    {reg.shippingDeliveryNotes && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>
+                        Note: {reg.shippingDeliveryNotes}
+                      </Typography>
+                    )}
+                  </Box>
+                ) : (
+                  <Alert severity="warning" sx={{ '& .MuiAlert-message': { width: '100%' } }}>
+                    <Stack spacing={1.5}>
+                      <Box>
+                        Delivery address is protected and not shown on the public registry page.
+                        You can ask the parents to send it to you privately.
+                      </Box>
+                      {accessRequested ? (
+                        <Box sx={{ fontSize: 14, color: 'text.secondary' }}>
+                          Request sent. We'll email <strong>{meQ.data?.email}</strong> a private link
+                          as soon as the parents approve.
+                        </Box>
+                      ) : (
+                        <>
+                          <TextField
+                            size="small"
+                            label="Add a short note (optional)"
+                            placeholder="Example: For the Pottery Barn glider I'm shipping next week."
+                            value={accessNote}
+                            onChange={(e) => setAccessNote(e.target.value)}
+                            multiline
+                            minRows={2}
+                            fullWidth
+                          />
+                          <Box>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => requestAddressM.mutate()}
+                              disabled={requestAddressM.isPending}
+                            >
+                              {requestAddressM.isPending ? 'Sending\u2026' : 'Request shipping address'}
+                            </Button>
+                          </Box>
+                        </>
+                      )}
+                    </Stack>
+                  </Alert>
+                )}
 
-                    <TextField label="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
-                    <TextField
-                      label="Message to the parents (optional)"
-                      placeholder="Example: Ordered from Amazon, arrives next Tuesday."
-                      multiline
-                      minRows={3}
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                    />
-                  </Stack>
-                </CardContent>
-              </Card>
+                <TextField label="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
+                <TextField
+                  label="Message to the parents (optional)"
+                  placeholder="Example: Ordered from Amazon, arrives next Tuesday."
+                  multiline
+                  minRows={3}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+              </Stack>
               <Typography variant="caption" color="text.secondary">
                 Verified as <strong>{meQ.data?.email}</strong>. The parents will see this email so they can follow up.
               </Typography>
@@ -1065,7 +1048,15 @@ export default function PublicRegistry() {
                 <Button onClick={() => setTarget(null)}>Cancel</Button>
                 <Button
                   variant="contained"
-                  onClick={() => reserveM.mutate()}
+                  onClick={() => {
+                    const effectiveOpt = itemById[selectedOptionId ?? target ?? ''] ?? targetOptions[0];
+                    const href = purchaseHref(effectiveOpt);
+                    if (href) {
+                      setRetailerReminderOpen(true);
+                    } else {
+                      reserveM.mutate();
+                    }
+                  }}
                   disabled={!name.trim() || (!targetRootItem?.quantityUnlimited && targetRemaining <= 0) || reserveM.isPending}
                   sx={{ color: '#fff' }}
                 >
@@ -1077,6 +1068,48 @@ export default function PublicRegistry() {
         </Dialog>
 
         <Snackbar open={!!snack} autoHideDuration={4000} onClose={() => setSnack(null)} message={snack ?? ''} />
+
+        <Dialog
+          open={retailerReminderOpen}
+          onClose={() => setRetailerReminderOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 700 }}>Come back to confirm</DialogTitle>
+          <DialogContent>
+            <Stack spacing={1.5} sx={{ mt: 0.5 }}>
+              <Typography variant="body2">
+                We'll open the retailer in a new tab and hold this gift for you for 24 hours.
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                Keep this tab open. Once you've completed checkout, come back here and tap
+                “I've bought this” so the parents know it's on the way.
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                If you change your mind, just release the reservation so another guest can grab it.
+              </Typography>
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, py: 2 }}>
+            <Button onClick={() => setRetailerReminderOpen(false)}>Not yet</Button>
+            <Button
+              variant="contained"
+              sx={{ color: '#fff' }}
+              onClick={() => {
+                const effectiveOpt = itemById[selectedOptionId ?? target ?? ''] ?? targetOptions[0];
+                const href = purchaseHref(effectiveOpt);
+                if (href) {
+                  window.open(href, '_blank', 'noopener,noreferrer');
+                  if (effectiveOpt) trackPurchaseClick(effectiveOpt);
+                }
+                setRetailerReminderOpen(false);
+                reserveM.mutate();
+              }}
+            >
+              Got it - open retailer
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
   );
