@@ -76,6 +76,8 @@ func scan(ctx context.Context, cfg Config, base string) {
 	scanCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
+	sweepExpired(scanCtx, cfg, super, now)
+
 	// Find Reserved holds that are still valid (not expired) and were created
 	// more than `cfg.Threshold` ago.
 	resvResult, _, err := cfg.Client.Reservation().Search(scanCtx, super, reservation.WhereClause{
@@ -154,6 +156,30 @@ func scan(ctx context.Context, cfg Config, base string) {
 		} else {
 			log.Info().Str("reservationId", rsv.Id).Str("email", email).Msg("reservation reminder sent")
 		}
+	}
+}
+
+// sweepExpired deletes Reserved holds whose ExpiresAt has passed. Other
+// statuses (Purchased, Received, Cancelled) are preserved for history.
+func sweepExpired(ctx context.Context, cfg Config, actor permissions.Actor, now time.Time) {
+	status := enum_reservation_status.Reserved
+	expired, _, err := cfg.Client.Reservation().Search(ctx, actor, reservation.WhereClause{
+		StatusEq:     &status,
+		ExpiresAtLte: &now,
+	}, reservationapi.QueryOptions{Limit: 500})
+	if err != nil {
+		log.Error().Err(err).Msg("reminders sweep search failed")
+		return
+	}
+	for _, rsv := range expired.Data {
+		if rsv.ExpiresAt.IsZero() {
+			continue
+		}
+		if err := cfg.Client.Reservation().Delete(ctx, actor, rsv.Id); err != nil {
+			log.Error().Err(err).Str("reservationId", rsv.Id).Msg("expired reservation delete failed")
+			continue
+		}
+		log.Info().Str("reservationId", rsv.Id).Time("expiresAt", rsv.ExpiresAt).Msg("expired reservation removed")
 	}
 }
 
