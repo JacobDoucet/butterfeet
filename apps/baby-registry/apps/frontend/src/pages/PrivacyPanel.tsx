@@ -15,8 +15,6 @@ import {
   Chip,
   IconButton,
   Tooltip,
-  MenuItem,
-  Select,
   CircularProgress,
   Dialog,
   DialogTitle,
@@ -136,7 +134,7 @@ export default function PrivacyPanel({
         sx={{
           p: 2,
           borderRadius: 2,
-          bgcolor: shippingHidden ? 'background.default' : 'primary.light',
+          bgcolor: shippingHidden ? 'background.default' : 'primary.main',
           border: '1px solid',
           borderColor: shippingHidden ? 'divider' : 'primary.main',
         }}
@@ -144,13 +142,13 @@ export default function PrivacyPanel({
         <Stack direction="row" alignItems="flex-start" spacing={1.5}>
           <LockOutlinedIcon
             fontSize="small"
-            sx={{ color: shippingHidden ? 'text.secondary' : 'primary.dark', mt: 0.3 }}
+            sx={{ color: shippingHidden ? 'text.secondary' : '#fff', mt: 0.3 }}
           />
           <Box sx={{ flex: 1 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: shippingHidden ? undefined : '#fff' }}>
               Shipping address visibility
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{ color: shippingHidden ? 'text.secondary' : 'rgba(255,255,255,0.85)' }}>
               {shippingHidden
                 ? 'Hidden — no one can see your shipping address. Approved guests will need to message you for it.'
                 : 'Shown — approved guests can see your shipping address from the registry.'}
@@ -161,6 +159,18 @@ export default function PrivacyPanel({
             size="small"
             value={shippingHidden ? 'hide' : 'show'}
             onChange={(_, v) => v && setMode(v === 'show' ? 'ApprovedGuestsOnly' : 'Disabled')}
+            sx={{
+              '& .MuiToggleButton-root': {
+                color: '#fff',
+                borderColor: 'rgba(255,255,255,0.5)',
+                '&.Mui-selected': {
+                  color: 'primary.main',
+                  bgcolor: '#fff',
+                  '&:hover': { bgcolor: '#fff' },
+                },
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' },
+              },
+            }}
           >
             <ToggleButton value="show" sx={{ textTransform: 'none', px: 2 }}>Show</ToggleButton>
             <ToggleButton value="hide" sx={{ textTransform: 'none', px: 2 }}>Hide</ToggleButton>
@@ -197,7 +207,7 @@ export default function PrivacyPanel({
       {error && <Alert severity="error">{error}</Alert>}
 
       <Stack direction="row" justifyContent="flex-end">
-        <Button variant="contained" onClick={() => saveM.mutate()} disabled={saveM.isPending}>
+        <Button variant="contained" onClick={() => saveM.mutate()} disabled={saveM.isPending} sx={{ color: '#fff' }}>
           Save shipping settings
         </Button>
       </Stack>
@@ -210,7 +220,7 @@ export default function PrivacyPanel({
         sx={{
           p: 2,
           borderRadius: 2,
-          bgcolor: requireGuestApproval ? 'primary.light' : 'background.default',
+          bgcolor: requireGuestApproval ? 'primary.main' : 'background.default',
           border: '1px solid',
           borderColor: requireGuestApproval ? 'primary.main' : 'divider',
         }}
@@ -218,13 +228,13 @@ export default function PrivacyPanel({
         <Stack direction="row" alignItems="flex-start" spacing={1.5}>
           <LockOutlinedIcon
             fontSize="small"
-            sx={{ color: requireGuestApproval ? 'primary.dark' : 'text.secondary', mt: 0.3 }}
+            sx={{ color: requireGuestApproval ? '#fff' : 'text.secondary', mt: 0.3 }}
           />
           <Box sx={{ flex: 1 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: requireGuestApproval ? '#fff' : undefined }}>
               Require approval to view your registry
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{ color: requireGuestApproval ? 'rgba(255,255,255,0.85)' : 'text.secondary' }}>
               When on, guests must request access from you before they can see any of your registry. You decide who gets in.
             </Typography>
           </Box>
@@ -238,6 +248,20 @@ export default function PrivacyPanel({
               const next = v === 'on';
               setRequireGuestApproval(next);
               saveAccessM.mutate(next);
+            }}
+            sx={{
+              '& .MuiToggleButton-root': {
+                color: requireGuestApproval ? '#fff' : undefined,
+                borderColor: requireGuestApproval ? 'rgba(255,255,255,0.5)' : undefined,
+                '&.Mui-selected': requireGuestApproval
+                  ? {
+                      color: 'primary.main',
+                      bgcolor: '#fff',
+                      '&:hover': { bgcolor: '#fff' },
+                    }
+                  : undefined,
+                '&:hover': requireGuestApproval ? { bgcolor: 'rgba(255,255,255,0.12)' } : undefined,
+              },
             }}
           >
             <ToggleButton value="off" sx={{ textTransform: 'none', px: 2 }}>Off</ToggleButton>
@@ -546,15 +570,6 @@ function ApprovedGuestsSection({ registryId }: { registryId: string }) {
                 onChange={(e) => setName(e.target.value)}
                 sx={{ flex: 1 }}
               />
-              <Select
-                size="small"
-                value={accessLevel}
-                onChange={(e) => setAccessLevel(e.target.value as GuestAccessLevel)}
-                sx={{ minWidth: 200 }}
-              >
-                <MenuItem value="ViewShippingAddress">View shipping address</MenuItem>
-                <MenuItem value="ReserveOnly">Reserve only</MenuItem>
-              </Select>
               <Button
                 variant="outlined"
                 onClick={() => addM.mutate()}

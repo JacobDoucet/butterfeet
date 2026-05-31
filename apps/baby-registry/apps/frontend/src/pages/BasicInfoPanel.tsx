@@ -107,6 +107,7 @@ export default function BasicInfoPanel({ reg }: { reg: Registry }) {
           variant="contained"
           onClick={() => saveM.mutate()}
           disabled={saveM.isPending || !title.trim()}
+          sx={{ color: '#fff' }}
         >
           Save details
         </Button>
