@@ -265,7 +265,7 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if guest != nil && guest.Status == enum_guest_status.Active {
-			canViewShippingAddress = guest.AccessLevel == enum_guest_access_level.ViewShippingAddress
+			canViewShippingAddress = true
 		}
 	}
 
@@ -1155,7 +1155,7 @@ func (h *Handler) handleRegistryAccessRequest(w http.ResponseWriter, r *http.Req
 		EmailHash:   hash,
 		EmailEnc:    shipping.EncryptEmail(buyerEmail),
 		Name:        name,
-		AccessLevel: enum_guest_access_level.ReserveOnly,
+		AccessLevel: enum_guest_access_level.ViewShippingAddress,
 		Status:      enum_guest_status.Pending,
 	}, registry_approved_guest.NewProjection(true))
 	if err != nil {

@@ -405,9 +405,6 @@ function ApprovedGuestsSection({ registryId }: { registryId: string }) {
         <Typography variant="body2" sx={{ fontWeight: 500 }} noWrap>
           {g.name ? `${g.name} · ${g.email}` : g.email}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {g.accessLevel === 'ViewShippingAddress' ? 'Can view address' : 'Reserve only'}
-        </Typography>
       </Box>
       {g.status !== 'Pending' && (
         <Chip
