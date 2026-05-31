@@ -72,6 +72,7 @@ export default function PrivacyPanel({
 }) {
   const qc = useQueryClient();
   const [mode, setMode] = useState<AddressAccessMode>(reg.addressAccessMode ?? 'RequestApproval');
+  const [requireGuestApproval, setRequireGuestApproval] = useState<boolean>(!(reg.allowOpenAccess ?? false));
   const [recipientName, setRecipientName] = useState(reg.shippingRecipientName ?? '');
   const [line1, setLine1] = useState(reg.shippingLine1 ?? '');
   const [line2, setLine2] = useState(reg.shippingLine2 ?? '');
@@ -85,6 +86,7 @@ export default function PrivacyPanel({
 
   useEffect(() => {
     setMode(reg.addressAccessMode ?? 'RequestApproval');
+    setRequireGuestApproval(!(reg.allowOpenAccess ?? false));
     setRecipientName(reg.shippingRecipientName ?? '');
     setLine1(reg.shippingLine1 ?? '');
     setLine2(reg.shippingLine2 ?? '');
@@ -118,45 +120,67 @@ export default function PrivacyPanel({
     onError: (err) => setError((err as Error).message),
   });
 
+  const saveAccessM = useMutation({
+    mutationFn: (next: boolean) =>
+      registries.update(reg.id, { allowOpenAccess: !next }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['registries'] });
+    },
+    onError: (err) => setError((err as Error).message),
+  });
+
+  const shippingHidden = mode === 'Disabled';
   const shippingContent = (
     <Stack spacing={3}>
-      <Typography variant="body2" color="text.secondary">
-        Only people you approve can view your shipping address. Everyone else must request access first.
-        This address is never shown on your public registry page.
-      </Typography>
-
-      <Box>
-        <Typography variant="overline" color="text.secondary">Access mode</Typography>
-        <ToggleButtonGroup
-          exclusive
-          value={mode}
-          onChange={(_, v) => v && setMode(v as AddressAccessMode)}
-          sx={{ display: 'flex', flexWrap: 'wrap', mt: 1 }}
-        >
-          {MODES.map((m) => (
-            <ToggleButton key={m.value} value={m.value} sx={{ textTransform: 'none', px: 2 }}>
-              {m.label}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-          {MODES.find((m) => m.value === mode)?.help}
-        </Typography>
+      <Box
+        sx={{
+          p: 2,
+          borderRadius: 2,
+          bgcolor: shippingHidden ? 'background.default' : 'primary.light',
+          border: '1px solid',
+          borderColor: shippingHidden ? 'divider' : 'primary.main',
+        }}
+      >
+        <Stack direction="row" alignItems="flex-start" spacing={1.5}>
+          <LockOutlinedIcon
+            fontSize="small"
+            sx={{ color: shippingHidden ? 'text.secondary' : 'primary.dark', mt: 0.3 }}
+          />
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              Shipping address visibility
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {shippingHidden
+                ? 'Hidden — no one can see your shipping address. Approved guests will need to message you for it.'
+                : 'Shown — approved guests can see your shipping address from the registry.'}
+            </Typography>
+          </Box>
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={shippingHidden ? 'hide' : 'show'}
+            onChange={(_, v) => v && setMode(v === 'show' ? 'ApprovedGuestsOnly' : 'Disabled')}
+          >
+            <ToggleButton value="show" sx={{ textTransform: 'none', px: 2 }}>Show</ToggleButton>
+            <ToggleButton value="hide" sx={{ textTransform: 'none', px: 2 }}>Hide</ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
       </Box>
 
       <Box>
         <Typography variant="overline" color="text.secondary">Shipping address</Typography>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          <TextField label="Recipient name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} />
-          <TextField label="Address line 1" value={line1} onChange={(e) => setLine1(e.target.value)} />
-          <TextField label="Address line 2" value={line2} onChange={(e) => setLine2(e.target.value)} />
+        <Stack spacing={2} sx={{ mt: 1, opacity: shippingHidden ? 0.55 : 1 }}>
+          <TextField label="Recipient name" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} disabled={shippingHidden} />
+          <TextField label="Address line 1" value={line1} onChange={(e) => setLine1(e.target.value)} disabled={shippingHidden} />
+          <TextField label="Address line 2" value={line2} onChange={(e) => setLine2(e.target.value)} disabled={shippingHidden} />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField label="City" value={city} onChange={(e) => setCity(e.target.value)} sx={{ flex: 1 }} />
-            <TextField label="Region / State" value={region} onChange={(e) => setRegion(e.target.value)} sx={{ flex: 1 }} />
+            <TextField label="City" value={city} onChange={(e) => setCity(e.target.value)} sx={{ flex: 1 }} disabled={shippingHidden} />
+            <TextField label="Region / State" value={region} onChange={(e) => setRegion(e.target.value)} sx={{ flex: 1 }} disabled={shippingHidden} />
           </Stack>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField label="Postal code" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} sx={{ flex: 1 }} />
-            <TextField label="Country" value={country} onChange={(e) => setCountry(e.target.value)} sx={{ flex: 1 }} />
+            <TextField label="Postal code" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} sx={{ flex: 1 }} disabled={shippingHidden} />
+            <TextField label="Country" value={country} onChange={(e) => setCountry(e.target.value)} sx={{ flex: 1 }} disabled={shippingHidden} />
           </Stack>
           <TextField
             label="Delivery notes (optional)"
@@ -165,12 +189,12 @@ export default function PrivacyPanel({
             multiline
             minRows={2}
             helperText="Buzzer code, where to leave parcels, etc."
+            disabled={shippingHidden}
           />
         </Stack>
       </Box>
 
       {error && <Alert severity="error">{error}</Alert>}
-      {saved && <Alert severity="success">Saved.</Alert>}
 
       <Stack direction="row" justifyContent="flex-end">
         <Button variant="contained" onClick={() => saveM.mutate()} disabled={saveM.isPending}>
@@ -182,8 +206,45 @@ export default function PrivacyPanel({
 
   const accessContent = (
     <Stack spacing={3}>
-      <AddressRequestsSection registryId={reg.id} />
-      <Divider />
+      <Box
+        sx={{
+          p: 2,
+          borderRadius: 2,
+          bgcolor: requireGuestApproval ? 'primary.light' : 'background.default',
+          border: '1px solid',
+          borderColor: requireGuestApproval ? 'primary.main' : 'divider',
+        }}
+      >
+        <Stack direction="row" alignItems="flex-start" spacing={1.5}>
+          <LockOutlinedIcon
+            fontSize="small"
+            sx={{ color: requireGuestApproval ? 'primary.dark' : 'text.secondary', mt: 0.3 }}
+          />
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              Require approval to view your registry
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              When on, guests must request access from you before they can see any of your registry. You decide who gets in.
+            </Typography>
+          </Box>
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={requireGuestApproval ? 'on' : 'off'}
+            disabled={saveAccessM.isPending}
+            onChange={(_, v) => {
+              if (v == null) return;
+              const next = v === 'on';
+              setRequireGuestApproval(next);
+              saveAccessM.mutate(next);
+            }}
+          >
+            <ToggleButton value="off" sx={{ textTransform: 'none', px: 2 }}>Off</ToggleButton>
+            <ToggleButton value="on" sx={{ textTransform: 'none', px: 2 }}>On</ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
+      </Box>
       <ApprovedGuestsSection registryId={reg.id} />
     </Stack>
   );
@@ -280,9 +341,13 @@ function ApprovedGuestsSection({ registryId }: { registryId: string }) {
     confirmGuestAction?.action === 'revoke'
       ? 'Revoke this guest? They will lose active access until reactivated.'
       : confirmGuestAction?.action === 'block'
-      ? 'Block this guest? This prevents access until manually reactivated.'
+      ? confirmGuestAction.guest.status === 'Pending'
+        ? 'Decline this access request? They will not be allowed in until you reactivate them.'
+        : 'Block this guest? This prevents access until manually reactivated.'
       : confirmGuestAction?.action === 'reactivate'
-      ? 'Reactivate this guest? They will regain access immediately.'
+      ? confirmGuestAction.guest.status === 'Pending'
+        ? 'Approve this guest? They will be able to view your registry immediately.'
+        : 'Reactivate this guest? They will regain access immediately.'
       : confirmGuestAction?.action === 'remove'
       ? 'Remove this guest entry permanently?'
       : '';
@@ -297,54 +362,107 @@ function ApprovedGuestsSection({ registryId }: { registryId: string }) {
     setConfirmGuestAction(null);
   };
 
+  const pendingGuests = guests.filter((g) => g.status === 'Pending');
+  const otherGuests = guests.filter((g) => g.status !== 'Pending');
+
+  const renderGuestRow = (g: ApprovedGuest) => (
+    <Stack
+      key={g.id}
+      direction="row"
+      alignItems="center"
+      spacing={1}
+      sx={{
+        p: 1,
+        borderRadius: 1,
+        bgcolor: 'action.hover',
+      }}
+    >
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography variant="body2" sx={{ fontWeight: 500 }} noWrap>
+          {g.name ? `${g.name} · ${g.email}` : g.email}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {g.accessLevel === 'ViewShippingAddress' ? 'Can view address' : 'Reserve only'}
+        </Typography>
+      </Box>
+      {g.status !== 'Pending' && (
+        <Chip
+          size="small"
+          label={g.status}
+          color={
+            g.status === 'Active'
+              ? 'success'
+              : g.status === 'Blocked'
+              ? 'error'
+              : 'default'
+          }
+          variant={g.status === 'Active' ? 'filled' : 'outlined'}
+        />
+      )}
+      {g.status === 'Active' && (
+        <>
+          <Tooltip title="Generate share link">
+            <IconButton
+              size="small"
+              onClick={() => issueLinkM.mutate(g)}
+              disabled={issueLinkM.isPending}
+            >
+              <LinkIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Revoke">
+            <IconButton size="small" onClick={() => setConfirmGuestAction({ action: 'revoke', guest: g })}>
+              <UndoIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Block">
+            <IconButton size="small" onClick={() => setConfirmGuestAction({ action: 'block', guest: g })}>
+              <BlockIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </>
+      )}
+      {g.status === 'Pending' && (
+        <>
+          <Tooltip title="Approve">
+            <IconButton
+              size="small"
+              color="success"
+              onClick={() => setConfirmGuestAction({ action: 'reactivate', guest: g })}
+            >
+              <CheckCircleIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Decline">
+            <IconButton
+              size="small"
+              onClick={() => setConfirmGuestAction({ action: 'block', guest: g })}
+            >
+              <BlockIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </>
+      )}
+      {g.status !== 'Active' && g.status !== 'Pending' && (
+        <Tooltip title="Reactivate">
+          <IconButton
+            size="small"
+            onClick={() => setConfirmGuestAction({ action: 'reactivate', guest: g })}
+          >
+            <CheckCircleIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
+      <Tooltip title="Remove guest">
+        <IconButton size="small" color="error" onClick={() => setConfirmGuestAction({ action: 'remove', guest: g })}>
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    </Stack>
+  );
+
   return (
     <Box>
-      <Typography variant="overline" color="text.secondary">
-        Approved guests
-      </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-        People who can see your shipping address without asking. Used in “Approved guests only” mode, and
-        auto-approved in “Request approval” mode.
-      </Typography>
-
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={1}
-        sx={{ mb: 2 }}
-        alignItems={{ sm: 'center' }}
-      >
-        <TextField
-          size="small"
-          label="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          sx={{ flex: 2 }}
-        />
-        <TextField
-          size="small"
-          label="Name (optional)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          sx={{ flex: 1 }}
-        />
-        <Select
-          size="small"
-          value={accessLevel}
-          onChange={(e) => setAccessLevel(e.target.value as GuestAccessLevel)}
-          sx={{ minWidth: 200 }}
-        >
-          <MenuItem value="ViewShippingAddress">View shipping address</MenuItem>
-          <MenuItem value="ReserveOnly">Reserve only</MenuItem>
-        </Select>
-        <Button
-          variant="outlined"
-          onClick={() => addM.mutate()}
-          disabled={!email.trim() || addM.isPending}
-        >
-          Add
-        </Button>
-      </Stack>
-
       {err && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {err}
@@ -382,77 +500,78 @@ function ApprovedGuestsSection({ registryId }: { registryId: string }) {
 
       {guestsQ.isLoading ? (
         <CircularProgress size={20} />
-      ) : guests.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
-          No approved guests yet.
-        </Typography>
       ) : (
-        <Stack spacing={1}>
-          {guests.map((g) => (
+        <Stack spacing={3}>
+          <Box>
+            <Typography variant="overline" color="text.secondary">
+              Pending requests
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+              People who have asked to view your registry. Approve to let them in.
+            </Typography>
+            {pendingGuests.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                No pending requests.
+              </Typography>
+            ) : (
+              <Stack spacing={1}>{pendingGuests.map(renderGuestRow)}</Stack>
+            )}
+          </Box>
+
+          <Box>
+            <Typography variant="overline" color="text.secondary">
+              Approved guests
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+              People who can see your shipping address without asking.
+            </Typography>
+
             <Stack
-              key={g.id}
-              direction="row"
-              alignItems="center"
+              direction={{ xs: 'column', sm: 'row' }}
               spacing={1}
-              sx={{
-                p: 1,
-                borderRadius: 1,
-                bgcolor: 'action.hover',
-              }}
+              sx={{ mb: 2 }}
+              alignItems={{ sm: 'center' }}
             >
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="body2" sx={{ fontWeight: 500 }} noWrap>
-                  {g.name ? `${g.name} · ${g.email}` : g.email}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {g.accessLevel === 'ViewShippingAddress' ? 'Can view address' : 'Reserve only'}
-                </Typography>
-              </Box>
-              <Chip
+              <TextField
                 size="small"
-                label={g.status}
-                color={
-                  g.status === 'Active' ? 'success' : g.status === 'Blocked' ? 'error' : 'default'
-                }
-                variant={g.status === 'Active' ? 'filled' : 'outlined'}
+                label="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                sx={{ flex: 2 }}
               />
-              {g.status === 'Active' && (
-                <>
-                  <Tooltip title="Generate share link">
-                    <IconButton
-                      size="small"
-                      onClick={() => issueLinkM.mutate(g)}
-                      disabled={issueLinkM.isPending}
-                    >
-                      <LinkIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Revoke">
-                    <IconButton size="small" onClick={() => setConfirmGuestAction({ action: 'revoke', guest: g })}>
-                      <UndoIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Block">
-                    <IconButton size="small" onClick={() => setConfirmGuestAction({ action: 'block', guest: g })}>
-                      <BlockIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </>
-              )}
-              {g.status !== 'Active' && (
-                <Tooltip title="Reactivate">
-                  <IconButton size="small" onClick={() => setConfirmGuestAction({ action: 'reactivate', guest: g })}>
-                    <CheckCircleIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              )}
-              <Tooltip title="Remove guest">
-                <IconButton size="small" color="error" onClick={() => setConfirmGuestAction({ action: 'remove', guest: g })}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              <TextField
+                size="small"
+                label="Name (optional)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                sx={{ flex: 1 }}
+              />
+              <Select
+                size="small"
+                value={accessLevel}
+                onChange={(e) => setAccessLevel(e.target.value as GuestAccessLevel)}
+                sx={{ minWidth: 200 }}
+              >
+                <MenuItem value="ViewShippingAddress">View shipping address</MenuItem>
+                <MenuItem value="ReserveOnly">Reserve only</MenuItem>
+              </Select>
+              <Button
+                variant="outlined"
+                onClick={() => addM.mutate()}
+                disabled={!email.trim() || addM.isPending}
+              >
+                Add
+              </Button>
             </Stack>
-          ))}
+
+            {otherGuests.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                No approved guests yet.
+              </Typography>
+            ) : (
+              <Stack spacing={1}>{otherGuests.map(renderGuestRow)}</Stack>
+            )}
+          </Box>
         </Stack>
       )}
 

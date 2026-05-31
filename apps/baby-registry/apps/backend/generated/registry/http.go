@@ -9,6 +9,7 @@ import (
 type HTTPRecord struct {
 	Id                    *string                         `json:"id,omitempty"`
 	AddressAccessMode     *enum_address_access_mode.Value `json:"addressAccessMode,omitempty"`
+	AllowOpenAccess       *bool                           `json:"allowOpenAccess,omitempty"`
 	CoverImageUrl         *string                         `json:"coverImageUrl,omitempty"`
 	Created               *actor_trace.HTTPRecord         `json:"created,omitempty"`
 	DueDate               *time.Time                      `json:"dueDate,omitempty"`
@@ -41,6 +42,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 	if r.AddressAccessMode != nil {
 		elemaddressAccessMode0 := r.AddressAccessMode
 		m.AddressAccessMode = *elemaddressAccessMode0
+	}
+	if r.AllowOpenAccess != nil {
+		elemallowOpenAccess0 := r.AllowOpenAccess
+		m.AllowOpenAccess = *elemallowOpenAccess0
 	}
 	if r.CoverImageUrl != nil {
 		elemcoverImageUrl0 := r.CoverImageUrl
@@ -146,6 +151,9 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	if r.AddressAccessMode != nil {
 		p.AddressAccessMode = true
 	}
+	if r.AllowOpenAccess != nil {
+		p.AllowOpenAccess = true
+	}
 	if r.CoverImageUrl != nil {
 		p.CoverImageUrl = true
 	}
@@ -238,6 +246,16 @@ type HTTPWhereClause struct {
 	AddressAccessModeIn     *[]enum_address_access_mode.Value `json:"addressAccessModeIn,omitempty"`
 	AddressAccessModeNin    *[]enum_address_access_mode.Value `json:"addressAccessModeNin,omitempty"`
 	AddressAccessModeExists *bool                             `json:"addressAccessModeExists,omitempty"`
+	// allowOpenAccess (bool) search options
+	AllowOpenAccessEq     *bool   `json:"allowOpenAccessEq,omitempty"`
+	AllowOpenAccessNe     *bool   `json:"allowOpenAccessNe,omitempty"`
+	AllowOpenAccessGt     *bool   `json:"allowOpenAccessGt,omitempty"`
+	AllowOpenAccessGte    *bool   `json:"allowOpenAccessGte,omitempty"`
+	AllowOpenAccessLt     *bool   `json:"allowOpenAccessLt,omitempty"`
+	AllowOpenAccessLte    *bool   `json:"allowOpenAccessLte,omitempty"`
+	AllowOpenAccessIn     *[]bool `json:"allowOpenAccessIn,omitempty"`
+	AllowOpenAccessNin    *[]bool `json:"allowOpenAccessNin,omitempty"`
+	AllowOpenAccessExists *bool   `json:"allowOpenAccessExists,omitempty"`
 	// coverImageUrl (string) search options
 	CoverImageUrlEq     *string   `json:"coverImageUrlEq,omitempty"`
 	CoverImageUrlNe     *string   `json:"coverImageUrlNe,omitempty"`
@@ -531,6 +549,50 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 	if o.AddressAccessModeExists != nil {
 		elemaddressAccessModeExists0 := o.AddressAccessModeExists
 		to.AddressAccessModeExists = elemaddressAccessModeExists0
+	}
+	if o.AllowOpenAccessEq != nil {
+		elemallowOpenAccessEq0 := o.AllowOpenAccessEq
+		to.AllowOpenAccessEq = elemallowOpenAccessEq0
+	}
+	if o.AllowOpenAccessNe != nil {
+		elemallowOpenAccessNe0 := o.AllowOpenAccessNe
+		to.AllowOpenAccessNe = elemallowOpenAccessNe0
+	}
+	if o.AllowOpenAccessGt != nil {
+		elemallowOpenAccessGt0 := o.AllowOpenAccessGt
+		to.AllowOpenAccessGt = elemallowOpenAccessGt0
+	}
+	if o.AllowOpenAccessGte != nil {
+		elemallowOpenAccessGte0 := o.AllowOpenAccessGte
+		to.AllowOpenAccessGte = elemallowOpenAccessGte0
+	}
+	if o.AllowOpenAccessLt != nil {
+		elemallowOpenAccessLt0 := o.AllowOpenAccessLt
+		to.AllowOpenAccessLt = elemallowOpenAccessLt0
+	}
+	if o.AllowOpenAccessLte != nil {
+		elemallowOpenAccessLte0 := o.AllowOpenAccessLte
+		to.AllowOpenAccessLte = elemallowOpenAccessLte0
+	}
+	if o.AllowOpenAccessIn != nil {
+		elemallowOpenAccessIn0 := make([]bool, 0)
+		for _, oallowOpenAccessIn0 := range *o.AllowOpenAccessIn {
+			elemallowOpenAccessIn1 := oallowOpenAccessIn0
+			elemallowOpenAccessIn0 = append(elemallowOpenAccessIn0, elemallowOpenAccessIn1)
+		}
+		to.AllowOpenAccessIn = &elemallowOpenAccessIn0
+	}
+	if o.AllowOpenAccessNin != nil {
+		elemallowOpenAccessNin0 := make([]bool, 0)
+		for _, oallowOpenAccessNin0 := range *o.AllowOpenAccessNin {
+			elemallowOpenAccessNin1 := oallowOpenAccessNin0
+			elemallowOpenAccessNin0 = append(elemallowOpenAccessNin0, elemallowOpenAccessNin1)
+		}
+		to.AllowOpenAccessNin = &elemallowOpenAccessNin0
+	}
+	if o.AllowOpenAccessExists != nil {
+		elemallowOpenAccessExists0 := o.AllowOpenAccessExists
+		to.AllowOpenAccessExists = elemallowOpenAccessExists0
 	}
 	if o.CoverImageUrlEq != nil {
 		elemcoverImageUrlEq0 := o.CoverImageUrlEq

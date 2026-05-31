@@ -22,6 +22,8 @@ objects:
         type: string
       - name: isPublic
         type: bool
+      - name: allowOpenAccess
+        type: bool
       - name: addressAccessMode
         type: AddressAccessMode
       - name: shippingPolicyVersion

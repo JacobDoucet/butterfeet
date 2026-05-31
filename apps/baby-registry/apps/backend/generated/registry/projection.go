@@ -8,6 +8,7 @@ import (
 type Projection struct {
 	Id                       bool                   `json:"id"`
 	AddressAccessMode        bool                   `json:"addressAccessMode"`
+	AllowOpenAccess          bool                   `json:"allowOpenAccess"`
 	CoverImageUrl            bool                   `json:"coverImageUrl"`
 	Created                  bool                   `json:"created"`
 	CreatedFields            actor_trace.Projection `json:"createdFields,omitempty"`
@@ -38,6 +39,7 @@ func NewProjection(defaultVal bool) Projection {
 	return Projection{
 		Id:                       defaultVal,
 		AddressAccessMode:        defaultVal,
+		AllowOpenAccess:          defaultVal,
 		CoverImageUrl:            defaultVal,
 		Created:                  defaultVal,
 		CreatedFields:            actor_trace.NewProjection(defaultVal),
@@ -70,6 +72,9 @@ func (p Projection) ToBson() bson.M {
 	projection["_id"] = 1
 	if p.AddressAccessMode {
 		projection["addressAccessMode"] = 1
+	}
+	if p.AllowOpenAccess {
+		projection["allowOpenAccess"] = 1
 	}
 	if p.CoverImageUrl {
 		projection["coverImageUrl"] = 1

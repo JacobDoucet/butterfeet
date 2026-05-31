@@ -1291,6 +1291,10 @@ export const RegistryApprovedGuestStatusDataGridColumnKey = 'status' as const;
 export function useRegistryApprovedGuestStatusDataGridColumn(options: RegistryApprovedGuestStatusDataGridColumnOptions) { 
     const values = useMemo(() => [
             {
+                value: 'Pending',
+                label: options.getOptionLabel('Pending'),
+            },
+            {
                 value: 'Active',
                 label: options.getOptionLabel('Active'),
             },

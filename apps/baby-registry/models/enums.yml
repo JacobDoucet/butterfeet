@@ -33,6 +33,7 @@ enums:
   - name: GuestStatus
     type: string
     values:
+      - Pending
       - Active
       - Revoked
       - Blocked

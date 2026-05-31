@@ -44,6 +44,7 @@ export interface Registry {
   dueDate?: string;
   isPublic?: boolean;
   ownerId?: string;
+  allowOpenAccess?: boolean;
   addressAccessMode?: AddressAccessMode;
   shippingPolicyVersion?: number;
   shippingRecipientName?: string;
@@ -81,6 +82,26 @@ export interface RegistryItem {
 
 export interface PublicRegistry extends Registry {
   items: (RegistryItem & { reserved: number })[];
+}
+
+export type RegistryAccessRequestStatus = 'none' | 'pending' | 'rejected';
+
+export interface GatedRegistry {
+  accessGated: true;
+  slug: string;
+  title: string;
+  parentNames?: string;
+  themeColor?: string;
+  coverImageUrl?: string;
+  welcomeMessage?: string;
+  ownerDisplayName?: string;
+  accessRequestStatus: RegistryAccessRequestStatus;
+}
+
+export type PublicRegistryResponse = PublicRegistry | GatedRegistry;
+
+export function isGatedRegistry(r: PublicRegistryResponse): r is GatedRegistry {
+  return (r as GatedRegistry).accessGated === true;
 }
 
 export interface ScrapeResult {
@@ -174,11 +195,13 @@ export const reservations = {
 };
 
 export const pub = {
-  registry: (slug: string) => api.get<PublicRegistry>(`/api/public/r/${encodeURIComponent(slug)}`),
+  registry: (slug: string) => api.get<PublicRegistryResponse>(`/api/public/r/${encodeURIComponent(slug)}`),
   reserve: (itemId: string, body: { reserverName: string; isAnonymous: boolean; message: string; contactEmail?: string; quantity?: number }) =>
     api.post<{ ok: boolean }>(`/api/public/items/${itemId}/reserve`, body),
   requestAddress: (body: { slug: string; itemId?: string; name?: string; note?: string }) =>
     api.post<{ ok: boolean; status?: 'pending'; id?: string }>('/api/public/address-requests', body),
+  requestRegistryAccess: (body: { slug: string; name?: string; note?: string }) =>
+    api.post<{ ok: boolean; status: 'pending' | 'approved' | 'rejected' }>('/api/public/registry-access/request', body),
 };
 
 export interface BuyerSession {
@@ -201,7 +224,7 @@ export const scrape = {
 };
 
 export type GuestAccessLevel = 'ViewShippingAddress' | 'ReserveOnly';
-export type GuestStatus = 'Active' | 'Revoked' | 'Blocked';
+export type GuestStatus = 'Pending' | 'Active' | 'Revoked' | 'Blocked';
 
 export interface ApprovedGuest {
   id: string;

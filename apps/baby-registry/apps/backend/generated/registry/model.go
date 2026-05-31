@@ -11,6 +11,7 @@ import (
 type Model struct {
 	Id                    string
 	AddressAccessMode     enum_address_access_mode.Value
+	AllowOpenAccess       bool
 	CoverImageUrl         string
 	Created               actor_trace.Model
 	DueDate               time.Time
@@ -46,6 +47,10 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 	if projection.AddressAccessMode {
 		elemaddressAccessMode0 := m.AddressAccessMode
 		r.AddressAccessMode = &elemaddressAccessMode0
+	}
+	if projection.AllowOpenAccess {
+		elemallowOpenAccess0 := m.AllowOpenAccess
+		r.AllowOpenAccess = &elemallowOpenAccess0
 	}
 	if projection.CoverImageUrl {
 		elemcoverImageUrl0 := m.CoverImageUrl
@@ -155,6 +160,10 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 	if projection.AddressAccessMode {
 		elemaddressAccessMode0 := m.AddressAccessMode
 		r.AddressAccessMode = &elemaddressAccessMode0
+	}
+	if projection.AllowOpenAccess {
+		elemallowOpenAccess0 := m.AllowOpenAccess
+		r.AllowOpenAccess = &elemallowOpenAccess0
 	}
 	if projection.CoverImageUrl {
 		elemcoverImageUrl0 := m.CoverImageUrl
@@ -275,6 +284,16 @@ type WhereClause struct {
 	AddressAccessModeIn     *[]enum_address_access_mode.Value
 	AddressAccessModeNin    *[]enum_address_access_mode.Value
 	AddressAccessModeExists *bool
+	// allowOpenAccess (bool) search options
+	AllowOpenAccessEq     *bool
+	AllowOpenAccessNe     *bool
+	AllowOpenAccessGt     *bool
+	AllowOpenAccessGte    *bool
+	AllowOpenAccessLt     *bool
+	AllowOpenAccessLte    *bool
+	AllowOpenAccessIn     *[]bool
+	AllowOpenAccessNin    *[]bool
+	AllowOpenAccessExists *bool
 	// coverImageUrl (string) search options
 	CoverImageUrlEq     *string
 	CoverImageUrlNe     *string
@@ -580,6 +599,50 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 	if o.AddressAccessModeExists != nil {
 		elemaddressAccessModeExists0 := o.AddressAccessModeExists
 		to.AddressAccessModeExists = elemaddressAccessModeExists0
+	}
+	if o.AllowOpenAccessEq != nil {
+		elemallowOpenAccessEq0 := o.AllowOpenAccessEq
+		to.AllowOpenAccessEq = elemallowOpenAccessEq0
+	}
+	if o.AllowOpenAccessNe != nil {
+		elemallowOpenAccessNe0 := o.AllowOpenAccessNe
+		to.AllowOpenAccessNe = elemallowOpenAccessNe0
+	}
+	if o.AllowOpenAccessGt != nil {
+		elemallowOpenAccessGt0 := o.AllowOpenAccessGt
+		to.AllowOpenAccessGt = elemallowOpenAccessGt0
+	}
+	if o.AllowOpenAccessGte != nil {
+		elemallowOpenAccessGte0 := o.AllowOpenAccessGte
+		to.AllowOpenAccessGte = elemallowOpenAccessGte0
+	}
+	if o.AllowOpenAccessLt != nil {
+		elemallowOpenAccessLt0 := o.AllowOpenAccessLt
+		to.AllowOpenAccessLt = elemallowOpenAccessLt0
+	}
+	if o.AllowOpenAccessLte != nil {
+		elemallowOpenAccessLte0 := o.AllowOpenAccessLte
+		to.AllowOpenAccessLte = elemallowOpenAccessLte0
+	}
+	if o.AllowOpenAccessIn != nil {
+		elemallowOpenAccessIn0 := make([]bool, 0)
+		for _, oallowOpenAccessIn0 := range *o.AllowOpenAccessIn {
+			elemallowOpenAccessIn1 := oallowOpenAccessIn0
+			elemallowOpenAccessIn0 = append(elemallowOpenAccessIn0, elemallowOpenAccessIn1)
+		}
+		to.AllowOpenAccessIn = &elemallowOpenAccessIn0
+	}
+	if o.AllowOpenAccessNin != nil {
+		elemallowOpenAccessNin0 := make([]bool, 0)
+		for _, oallowOpenAccessNin0 := range *o.AllowOpenAccessNin {
+			elemallowOpenAccessNin1 := oallowOpenAccessNin0
+			elemallowOpenAccessNin0 = append(elemallowOpenAccessNin0, elemallowOpenAccessNin1)
+		}
+		to.AllowOpenAccessNin = &elemallowOpenAccessNin0
+	}
+	if o.AllowOpenAccessExists != nil {
+		elemallowOpenAccessExists0 := o.AllowOpenAccessExists
+		to.AllowOpenAccessExists = elemallowOpenAccessExists0
 	}
 	if o.CoverImageUrlEq != nil {
 		elemcoverImageUrlEq0 := o.CoverImageUrlEq

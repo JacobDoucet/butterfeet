@@ -1,5 +1,6 @@
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { AppBar, Toolbar, Box, Button, Typography, Container } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
 import LandingPage from './pages/Landing';
 import LoginPage from './pages/Login';
 import AuthCallbackPage from './pages/AuthCallback';
@@ -10,6 +11,8 @@ import ShipPage from './pages/Ship';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { auth, type Me } from './api';
 import BrandLogo from './components/BrandLogo';
+import { useActiveThemeColor } from './activeTheme';
+import { themeForColor } from './themePalettes';
 
 function Shell({ children }: { children: React.ReactNode }) {
   const nav = useNavigate();
@@ -38,8 +41,12 @@ function Shell({ children }: { children: React.ReactNode }) {
     ? { gap: 2, minHeight: { xs: 64, sm: 68 }, justifyContent: 'center' }
     : { gap: 2 };
 
+  const activeColor = useActiveThemeColor();
+  const themed = themeForColor(activeColor);
+
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <ThemeProvider theme={themed}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: activeColor ?? undefined }}>
       <AppBar
         position="sticky"
         color="transparent"
@@ -90,13 +97,14 @@ function Shell({ children }: { children: React.ReactNode }) {
       </AppBar>
       <Box sx={{ flexGrow: 1 }}>{children}</Box>
       {!hideHeaderActions && (
-        <Box component="footer" sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>
+        <Box component="footer" sx={{ py: 4, textAlign: 'center', color: 'text.secondary', bgcolor: activeColor ?? undefined }}>
           <Container>
             <Typography variant="body2">made with care for new parents</Typography>
           </Container>
         </Box>
       )}
     </Box>
+    </ThemeProvider>
   );
 }
 

@@ -7,6 +7,7 @@ import (
 type Value string
 
 const (
+	Pending Value = "Pending"
 	Active  Value = "Active"
 	Revoked Value = "Revoked"
 	Blocked Value = "Blocked"
@@ -14,6 +15,8 @@ const (
 
 func (v Value) ToString() (string, error) {
 	switch v {
+	case Pending:
+		return string(v), nil
 	case Active:
 		return string(v), nil
 	case Revoked:
@@ -27,6 +30,8 @@ func (v Value) ToString() (string, error) {
 
 func Validate(v Value) error {
 	switch v {
+	case Pending:
+		return nil
 	case Active:
 		return nil
 	case Revoked:

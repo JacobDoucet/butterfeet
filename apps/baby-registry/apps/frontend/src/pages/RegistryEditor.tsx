@@ -40,7 +40,9 @@ import {
   Tooltip,
 } from '@mui/material';
 import { registries, items, scrape, reservations, type RegistryItem, type Registry, type Reservation, type ReservationStatus } from '../api';
+import { useSetActiveThemeColor } from '../activeTheme';
 import PrivacyPanel from './PrivacyPanel';
+import BasicInfoPanel from './BasicInfoPanel';
 import CsvImportDialog from '../components/CsvImportDialog';
 import ItemCard from '../components/ItemCard';
 
@@ -51,7 +53,7 @@ type DeleteTarget =
 export default function RegistryEditor() {
   const { slug = '' } = useParams();
   const qc = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'items' | 'shipping' | 'access'>('items');
+  const [activeTab, setActiveTab] = useState<'items' | 'details' | 'shipping' | 'access'>('items');
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [csvImportSnack, setCsvImportSnack] = useState<string | null>(null);
 
@@ -60,6 +62,7 @@ export default function RegistryEditor() {
     queryFn: () => registries.list(),
   });
   const reg: Registry | undefined = regsQ.data?.data.find((r) => r.slug === slug);
+  useSetActiveThemeColor(reg?.themeColor);
 
   const itemsQ = useQuery({
     queryKey: ['items', reg?.id],
@@ -374,11 +377,13 @@ export default function RegistryEditor() {
           scrollButtons="auto"
         >
           <Tab value="items" label="Items" />
-          <Tab value="shipping" label="Shipping info" />
-          <Tab value="access" label="User access" />
+          <Tab value="details" label="Details" />
+          <Tab value="shipping" label="Shipping" />
+          <Tab value="access" label="Privacy" />
         </Tabs>
       </Box>
 
+      {activeTab === 'details' && <BasicInfoPanel reg={reg} />}
       {activeTab === 'shipping' && <PrivacyPanel reg={reg} section="shipping" />}
       {activeTab === 'access' && <PrivacyPanel reg={reg} section="access" />}
 

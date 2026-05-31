@@ -6,6 +6,7 @@ import { AddressAccessMode } from './address-access-mode-enum';
 export type Registry = {
   id?: string;
   addressAccessMode?: AddressAccessMode;
+  allowOpenAccess?: boolean;
   coverImageUrl?: string;
   created?: ActorTrace;
   dueDate?: string;
@@ -32,6 +33,7 @@ export type Registry = {
 export type RegistryProjection = {
     id?: boolean;
     addressAccessMode?: boolean;
+    allowOpenAccess?: boolean;
     coverImageUrl?: boolean;
     created?: boolean;
 		createdFields?: ActorTraceProjection;

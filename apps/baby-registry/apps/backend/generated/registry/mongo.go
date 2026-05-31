@@ -11,6 +11,7 @@ import (
 type MongoRecord struct {
 	Id                    *primitive.ObjectID             `bson:"_id,omitempty"`
 	AddressAccessMode     *enum_address_access_mode.Value `bson:"addressAccessMode,omitempty"`
+	AllowOpenAccess       *bool                           `bson:"allowOpenAccess,omitempty"`
 	CoverImageUrl         *string                         `bson:"coverImageUrl,omitempty"`
 	Created               *actor_trace.MongoRecord        `bson:"created,omitempty"`
 	DueDate               *time.Time                      `bson:"dueDate,omitempty"`
@@ -48,6 +49,10 @@ func (r *MongoRecord) ToModel() (Model, error) {
 	if r.AddressAccessMode != nil {
 		elemaddressAccessMode0 := r.AddressAccessMode
 		m.AddressAccessMode = *elemaddressAccessMode0
+	}
+	if r.AllowOpenAccess != nil {
+		elemallowOpenAccess0 := r.AllowOpenAccess
+		m.AllowOpenAccess = *elemallowOpenAccess0
 	}
 	if r.CoverImageUrl != nil {
 		elemcoverImageUrl0 := r.CoverImageUrl
@@ -168,6 +173,16 @@ type MongoWhereClause struct {
 	AddressAccessModeIn     *[]enum_address_access_mode.Value
 	AddressAccessModeNin    *[]enum_address_access_mode.Value
 	AddressAccessModeExists *bool
+	// allowOpenAccess (bool) search options
+	AllowOpenAccessEq     *bool
+	AllowOpenAccessNe     *bool
+	AllowOpenAccessGt     *bool
+	AllowOpenAccessGte    *bool
+	AllowOpenAccessLt     *bool
+	AllowOpenAccessLte    *bool
+	AllowOpenAccessIn     *[]bool
+	AllowOpenAccessNin    *[]bool
+	AllowOpenAccessExists *bool
 	// coverImageUrl (string) search options
 	CoverImageUrlEq     *string
 	CoverImageUrlNe     *string
@@ -461,6 +476,51 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 	if o.AddressAccessModeExists != nil {
 		query := bson.M{}
 		query["addressAccessMode"] = bson.M{"$exists": *o.AddressAccessModeExists}
+		and = append(and, query)
+	}
+	if o.AllowOpenAccessEq != nil {
+		query := bson.M{}
+		query["allowOpenAccess"] = o.AllowOpenAccessEq
+		and = append(and, query)
+	}
+	if o.AllowOpenAccessNe != nil {
+		query := bson.M{}
+		query["allowOpenAccess"] = bson.M{"$ne": o.AllowOpenAccessNe}
+		and = append(and, query)
+	}
+	if o.AllowOpenAccessGt != nil {
+		query := bson.M{}
+		query["allowOpenAccess"] = bson.M{"$gt": o.AllowOpenAccessGt}
+		and = append(and, query)
+	}
+	if o.AllowOpenAccessGte != nil {
+		query := bson.M{}
+		query["allowOpenAccess"] = bson.M{"$gte": o.AllowOpenAccessGte}
+		and = append(and, query)
+	}
+	if o.AllowOpenAccessLt != nil {
+		query := bson.M{}
+		query["allowOpenAccess"] = bson.M{"$lt": o.AllowOpenAccessLt}
+		and = append(and, query)
+	}
+	if o.AllowOpenAccessLte != nil {
+		query := bson.M{}
+		query["allowOpenAccess"] = bson.M{"$lte": o.AllowOpenAccessLte}
+		and = append(and, query)
+	}
+	if o.AllowOpenAccessIn != nil {
+		query := bson.M{}
+		query["allowOpenAccess"] = bson.M{"$in": o.AllowOpenAccessIn}
+		and = append(and, query)
+	}
+	if o.AllowOpenAccessNin != nil {
+		query := bson.M{}
+		query["allowOpenAccess"] = bson.M{"$nin": o.AllowOpenAccessNin}
+		and = append(and, query)
+	}
+	if o.AllowOpenAccessExists != nil {
+		query := bson.M{}
+		query["allowOpenAccess"] = bson.M{"$exists": *o.AllowOpenAccessExists}
 		and = append(and, query)
 	}
 	if o.CoverImageUrlEq != nil {

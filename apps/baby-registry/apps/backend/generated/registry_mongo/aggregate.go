@@ -85,6 +85,7 @@ type AggregateOptions struct {
 // AggregateResultRow holds a single aggregation result row with flat structure
 type AggregateResultRow struct {
 	// Group-by fields (original types)
+	AllowOpenAccess       *bool               `bson:"allowOpenAccess" json:"allowOpenAccess,omitempty"`
 	CoverImageUrl         *string             `bson:"coverImageUrl" json:"coverImageUrl,omitempty"`
 	DueDate               *time.Time          `bson:"dueDate" json:"dueDate,omitempty"`
 	IsPublic              *bool               `bson:"isPublic" json:"isPublic,omitempty"`

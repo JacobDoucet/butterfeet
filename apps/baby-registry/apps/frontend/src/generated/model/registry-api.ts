@@ -53,6 +53,16 @@ export type RegistrySearchQuery = {
     addressAccessModeIn?: AddressAccessMode[];
     addressAccessModeNin?: AddressAccessMode[];
     addressAccessModeExists?: boolean;
+    // allowOpenAccess (bool) search options
+    allowOpenAccessEq?: boolean;
+    allowOpenAccessNe?: boolean;
+    allowOpenAccessGt?: boolean;
+    allowOpenAccessGte?: boolean;
+    allowOpenAccessLt?: boolean;
+    allowOpenAccessLte?: boolean;
+    allowOpenAccessIn?: boolean[];
+    allowOpenAccessNin?: boolean[];
+    allowOpenAccessExists?: boolean;
     // coverImageUrl (string) search options
     coverImageUrlEq?: string;
     coverImageUrlNe?: string;

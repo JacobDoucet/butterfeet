@@ -164,6 +164,7 @@ export type RegistryAggregateField = typeof RegistryAggregateFields[keyof typeof
 
 // Type-safe group-by fields
 export const RegistryGroupByFields = {
+    AllowOpenAccess: 'allowOpenAccess',
     CoverImageUrl: 'coverImageUrl',
     DueDate: 'dueDate',
     IsPublic: 'isPublic',
@@ -195,6 +196,7 @@ export type AggregateFieldSpec = {
 // Aggregate result row with partial model fields and metadata
 export type RegistryAggregateResultRow = {
     // Group-by fields (original types)
+    allowOpenAccess?: boolean | null;
     coverImageUrl?: string | null;
     dueDate?: string | null;
     isPublic?: boolean | null;

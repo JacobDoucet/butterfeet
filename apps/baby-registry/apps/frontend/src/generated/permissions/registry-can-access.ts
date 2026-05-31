@@ -9,6 +9,7 @@ type canAccessRegistry<T = Registry> = ActorCanAccessFunc<T> & {
     field: {
         id: ActorCanAccessFunc<Registry>;
         addressAccessMode: ActorCanAccessFunc<Registry>;
+        allowOpenAccess: ActorCanAccessFunc<Registry>;
         coverImageUrl: ActorCanAccessFunc<Registry>; 
         created: ReturnType<typeof NewCanReadActorTrace<Registry>>,
         dueDate: ActorCanAccessFunc<Registry>;
@@ -84,6 +85,7 @@ export function NewCanReadRegistry<T = Registry>(canAccessObj: ActorCanAccessFun
             field: {
                 id: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 addressAccessMode: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                allowOpenAccess: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 coverImageUrl: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 created:  NewCanReadActorTrace( (_actorRoles: ActorRole[], _obj?: Registry) =>  true),
                 dueDate: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
@@ -119,6 +121,7 @@ export function NewCanWriteRegistry<T = Registry>(canAccessObj: ActorCanAccessFu
             field: {
                 id: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 addressAccessMode: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
+                allowOpenAccess: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 coverImageUrl: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,
                 created:  NewCanWriteActorTrace( (_actorRoles: ActorRole[], _obj?: Registry) =>  true),
                 dueDate: (_actorRoles: ActorRole[], _obj?: Registry) =>  true,

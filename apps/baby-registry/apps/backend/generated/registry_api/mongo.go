@@ -281,6 +281,7 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 			AggregateKeys: r.AggregateKeys,
 		}
 		// Copy group-by fields (with type conversion for refs)
+		row.AllowOpenAccess = r.AllowOpenAccess
 		row.CoverImageUrl = r.CoverImageUrl
 		row.DueDate = r.DueDate
 		row.IsPublic = r.IsPublic

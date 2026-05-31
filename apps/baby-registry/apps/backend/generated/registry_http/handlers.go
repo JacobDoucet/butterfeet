@@ -638,6 +638,15 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 					searchRequest.Query.IdIn = utils.StringSliceToStringSlicePtr(values)
 					continue
 				}
+			case "allowOpenAccess":
+				if len(values) == 1 {
+					searchRequest.Query.AllowOpenAccessEq = utils.StringSliceToBoolPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.AllowOpenAccessIn = utils.StringSliceToBoolSlicePtr(values)
+					continue
+				}
 			case "coverImageUrl":
 				if len(values) == 1 {
 					searchRequest.Query.CoverImageUrlEq = utils.StringSliceToStringPtr(values)
@@ -820,6 +829,7 @@ type AggregateRequest struct {
 
 // AggregateResultRowHTTP is the HTTP response type for a single aggregate result row
 type AggregateResultRowHTTP struct {
+	AllowOpenAccess       any `json:"allowOpenAccess,omitempty"`
 	CoverImageUrl         any `json:"coverImageUrl,omitempty"`
 	DueDate               any `json:"dueDate,omitempty"`
 	IsPublic              any `json:"isPublic,omitempty"`
@@ -941,6 +951,7 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 				AggregateKeys: row.AggregateKeys,
 			}
 			// Copy group-by fields
+			httpRow.AllowOpenAccess = row.AllowOpenAccess
 			httpRow.CoverImageUrl = row.CoverImageUrl
 			httpRow.DueDate = row.DueDate
 			httpRow.IsPublic = row.IsPublic

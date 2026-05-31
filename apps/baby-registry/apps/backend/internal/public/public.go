@@ -53,6 +53,7 @@ func NewHandler(client api.Client, db *mongo.Database, notificationMailer mailer
 	mux.HandleFunc("/items/", h.handleItemRoute) // /items/:id/reserve and /items/:id/click
 	mux.HandleFunc("/shipping/resolve", h.handleShippingResolve)
 	mux.HandleFunc("/address-requests", h.handleAddressRequestCreate)
+	mux.HandleFunc("/registry-access/request", h.handleRegistryAccessRequest)
 	h.mux = mux
 	return h
 }
@@ -121,6 +122,21 @@ type publicRegistry struct {
 	Items                 []publicItem `json:"items"`
 }
 
+// gatedRegistry is the minimal payload returned when the viewer has not been
+// granted access to a registry that requires owner approval. It deliberately
+// excludes items, shipping details, and any other sensitive content.
+type gatedRegistry struct {
+	AccessGated         bool   `json:"accessGated"`
+	Slug                string `json:"slug"`
+	Title               string `json:"title"`
+	ParentNames         string `json:"parentNames,omitempty"`
+	ThemeColor          string `json:"themeColor,omitempty"`
+	CoverImageUrl       string `json:"coverImageUrl,omitempty"`
+	WelcomeMessage      string `json:"welcomeMessage,omitempty"`
+	OwnerDisplayName    string `json:"ownerDisplayName,omitempty"`
+	AccessRequestStatus string `json:"accessRequestStatus"` // none | pending | rejected
+}
+
 func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -148,8 +164,7 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Gate: buyer must have verified their email for this registry. Approved
-	// guest status only controls whether shipping details are included.
+	// Gate 1: buyer must have verified their email for this registry.
 	canViewShippingAddress := false
 	if h.resolveBuyer != nil {
 		buyerEmail, err := h.resolveBuyer(r, slug)
@@ -166,12 +181,46 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		guest, gErr := h.resolveApprovedGuest(r.Context(), super, reg.Id, buyerEmail)
+		guest, gErr := h.fetchApprovedGuest(r.Context(), super, reg.Id, buyerEmail)
 		if gErr != nil {
 			http.Error(w, "lookup error", http.StatusInternalServerError)
 			return
 		}
-		if guest != nil {
+
+		// Gate 2: if the registry requires owner approval, the buyer must be
+		// an Active approved guest to see any contents. Otherwise return a
+		// minimal payload that drives the request-access UI.
+		if !reg.AllowOpenAccess && (guest == nil || guest.Status != enum_guest_status.Active) {
+			status := "none"
+			if guest != nil {
+				switch guest.Status {
+				case enum_guest_status.Pending:
+					status = "pending"
+				case enum_guest_status.Blocked, enum_guest_status.Revoked:
+					status = "rejected"
+				}
+			}
+			ownerName := ""
+			if owner, _, oErr := h.client.OwnerUser().SelectById(r.Context(), super,
+				owner_user.SelectByIdQuery{Id: reg.OwnerId}, owneruserapi.NewProjection(true)); oErr == nil {
+				ownerName = strings.TrimSpace(owner.Name)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(gatedRegistry{
+				AccessGated:         true,
+				Slug:                reg.Slug,
+				Title:               reg.Title,
+				ParentNames:         reg.ParentNames,
+				ThemeColor:          reg.ThemeColor,
+				CoverImageUrl:       reg.CoverImageUrl,
+				WelcomeMessage:      reg.WelcomeMessage,
+				OwnerDisplayName:    ownerName,
+				AccessRequestStatus: status,
+			})
+			return
+		}
+
+		if guest != nil && guest.Status == enum_guest_status.Active {
 			canViewShippingAddress = guest.AccessLevel == enum_guest_access_level.ViewShippingAddress
 		}
 	}
@@ -303,6 +352,23 @@ func (h *Handler) handleItemClick(w http.ResponseWriter, r *http.Request, itemId
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
+	// Gate access for registries that require owner approval.
+	if h.resolveBuyer != nil {
+		reg, _, regErr := h.client.Registry().SelectById(r.Context(), super,
+			registry.SelectByIdQuery{Id: item.RegistryId}, registryapi.NewProjection(true))
+		if regErr == nil && !reg.AllowOpenAccess {
+			email, bErr := h.resolveBuyer(r, reg.Slug)
+			if bErr != nil {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			guest, gErr := h.fetchApprovedGuest(r.Context(), super, reg.Id, email)
+			if gErr != nil || guest == nil || guest.Status != enum_guest_status.Active {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+		}
+	}
 	event := bson.M{
 		"event":      "registry_item_purchase_click",
 		"registryId": item.RegistryId,
@@ -376,8 +442,9 @@ func (h *Handler) handleItemReserve(w http.ResponseWriter, r *http.Request, item
 		rootItem = item
 	}
 
-	// Gate: reserver must be email-verified for this registry. Approved guest
-	// access is not required to reserve an item; it only controls address access.
+	// Gate: reserver must be email-verified for this registry. When the
+	// registry requires owner approval, the reserver must also be an Active
+	// approved guest.
 	var buyerEmail string
 	if h.resolveBuyer != nil {
 		email, err := h.resolveBuyer(r, reg.Slug)
@@ -386,6 +453,17 @@ func (h *Handler) handleItemReserve(w http.ResponseWriter, r *http.Request, item
 			return
 		}
 		buyerEmail = email
+		if !reg.AllowOpenAccess {
+			guest, gErr := h.fetchApprovedGuest(r.Context(), super, reg.Id, email)
+			if gErr != nil {
+				http.Error(w, "lookup error", http.StatusInternalServerError)
+				return
+			}
+			if guest == nil || guest.Status != enum_guest_status.Active {
+				http.Error(w, "access not approved", http.StatusForbidden)
+				return
+			}
+		}
 	}
 	if buyerEmail == "" {
 		buyerEmail = strings.TrimSpace(body.ContactEmail)
@@ -525,6 +603,19 @@ func groupRootID(item registryitemapi.Model, byID map[string]registryitemapi.Mod
 }
 
 func (h *Handler) resolveApprovedGuest(ctx context.Context, super permissions.Actor, registryId, email string) (*registryapprovedguestapi.Model, error) {
+	guest, err := h.fetchApprovedGuest(ctx, super, registryId, email)
+	if err != nil || guest == nil {
+		return nil, err
+	}
+	if guest.Status != enum_guest_status.Active {
+		return nil, nil
+	}
+	return guest, nil
+}
+
+// fetchApprovedGuest returns the approved-guest row for (registry, email) regardless
+// of status, so callers can distinguish Pending / Active / Blocked.
+func (h *Handler) fetchApprovedGuest(ctx context.Context, super permissions.Actor, registryId, email string) (*registryapprovedguestapi.Model, error) {
 	hash := shipping.HashEmail(email)
 	res, _, err := h.client.RegistryApprovedGuest().Search(ctx, super,
 		registry_approved_guest.WhereClause{RegistryIdEq: &registryId, EmailHashEq: &hash},
@@ -536,11 +627,7 @@ func (h *Handler) resolveApprovedGuest(ctx context.Context, super permissions.Ac
 	if len(res.Data) == 0 {
 		return nil, nil
 	}
-	guest := res.Data[0]
-	if guest.Status != enum_guest_status.Active {
-		return nil, nil
-	}
-	return &guest, nil
+	return &res.Data[0], nil
 }
 
 // Unused import suppression for items that may not be referenced in some builds.
@@ -690,6 +777,20 @@ func (h *Handler) handleAddressRequestCreate(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// When the registry requires owner approval, the buyer must be an Active
+	// approved guest to even ask for the address.
+	if !reg.AllowOpenAccess {
+		guest, gErr := h.fetchApprovedGuest(r.Context(), super, reg.Id, buyerEmail)
+		if gErr != nil {
+			http.Error(w, "lookup error", http.StatusInternalServerError)
+			return
+		}
+		if guest == nil || guest.Status != enum_guest_status.Active {
+			http.Error(w, "access not approved", http.StatusForbidden)
+			return
+		}
+	}
+
 	emailHash := shipping.HashEmail(buyerEmail)
 	pending := enum_address_request_status.Pending
 
@@ -791,6 +892,167 @@ func (h *Handler) sendOwnerAddressRequestNotification(ownerID, registryTitle, re
 		})
 		if err != nil {
 			log.Error().Err(err).Str("ownerId", ownerID).Str("email", owner.Email).Msg("owner address-request notification send failed")
+		}
+	}()
+}
+
+type registryAccessRequestBody struct {
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+	Note string `json:"note"`
+}
+
+// handleRegistryAccessRequest lets a verified buyer ask the registry owner
+// for access to view the registry. Creates (or reuses) a RegistryApprovedGuest
+// row with status=Pending and emails the owner. Idempotent.
+func (h *Handler) handleRegistryAccessRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var body registryAccessRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid body", http.StatusBadRequest)
+		return
+	}
+	slug := strings.TrimSpace(body.Slug)
+	if slug == "" {
+		http.Error(w, "slug required", http.StatusBadRequest)
+		return
+	}
+
+	if h.resolveBuyer == nil {
+		http.Error(w, "verification required", http.StatusUnauthorized)
+		return
+	}
+	buyerEmail, err := h.resolveBuyer(r, slug)
+	if err != nil || strings.TrimSpace(buyerEmail) == "" {
+		http.Error(w, "verification required", http.StatusUnauthorized)
+		return
+	}
+
+	super := permissions.NewSuperActor()
+
+	regResult, _, err := h.client.Registry().Search(r.Context(), super,
+		registry.WhereClause{SlugEq: &slug},
+		registryapi.QueryOptions{Limit: 1},
+	)
+	if err != nil || len(regResult.Data) == 0 {
+		http.Error(w, "registry not found", http.StatusNotFound)
+		return
+	}
+	reg := regResult.Data[0]
+
+	hash := shipping.HashEmail(buyerEmail)
+	name := strings.TrimSpace(body.Name)
+	note := strings.TrimSpace(body.Note)
+
+	existing, _, err := h.client.RegistryApprovedGuest().Search(r.Context(), super,
+		registry_approved_guest.WhereClause{RegistryIdEq: &reg.Id, EmailHashEq: &hash},
+		registryapprovedguestapi.QueryOptions{Limit: 1},
+	)
+	if err != nil {
+		http.Error(w, "lookup error", http.StatusInternalServerError)
+		return
+	}
+
+	if len(existing.Data) > 0 {
+		guest := existing.Data[0]
+		switch guest.Status {
+		case enum_guest_status.Active:
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "status": "approved"})
+			return
+		case enum_guest_status.Blocked, enum_guest_status.Revoked:
+			// Don't allow re-requesting if the owner already declined.
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "status": "rejected"})
+			return
+		case enum_guest_status.Pending:
+			// Refresh name if provided, but keep status as Pending.
+			if name != "" && guest.Name == "" {
+				guest.Model.Name = name
+				if _, _, uErr := h.client.RegistryApprovedGuest().Update(r.Context(), super,
+					guest.Model, registry_approved_guest.NewProjection(true)); uErr != nil {
+					log.Warn().Err(uErr).Msg("update pending guest name failed")
+				}
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "status": "pending"})
+			return
+		}
+	}
+
+	_, _, err = h.client.RegistryApprovedGuest().Create(r.Context(), super, registry_approved_guest.Model{
+		OwnerId:     reg.OwnerId,
+		RegistryId:  reg.Id,
+		EmailHash:   hash,
+		EmailEnc:    shipping.EncryptEmail(buyerEmail),
+		Name:        name,
+		AccessLevel: enum_guest_access_level.ReserveOnly,
+		Status:      enum_guest_status.Pending,
+	}, registry_approved_guest.NewProjection(true))
+	if err != nil {
+		log.Error().Err(err).Str("slug", slug).Msg("create registry access request failed")
+		http.Error(w, "could not create request", http.StatusInternalServerError)
+		return
+	}
+
+	h.sendOwnerRegistryAccessNotification(reg.OwnerId, reg.Title, reg.Slug, name, buyerEmail, note)
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "status": "pending"})
+}
+
+func (h *Handler) sendOwnerRegistryAccessNotification(ownerID, registryTitle, registrySlug, buyerName, buyerEmail, note string) {
+	if h.mailer == nil || ownerID == "" {
+		return
+	}
+
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		super := permissions.NewSuperActor()
+		owner, _, err := h.client.OwnerUser().SelectById(ctx, super,
+			owner_user.SelectByIdQuery{Id: ownerID},
+			owneruserapi.NewProjection(true),
+		)
+		if err != nil {
+			log.Error().Err(err).Str("ownerId", ownerID).Msg("owner registry-access notification lookup failed")
+			return
+		}
+		if strings.TrimSpace(owner.Email) == "" {
+			return
+		}
+		ownerName := fallbackString(strings.TrimSpace(owner.Name), "there")
+
+		displayName := strings.TrimSpace(buyerName)
+		if displayName == "" {
+			displayName = "A guest"
+		}
+		noteLine := ""
+		if note != "" {
+			noteLine = "Their message: \"" + note + "\"\n\n"
+		}
+
+		dashboardLink := h.appBaseURL + "/owner/r/" + registrySlug + "?tab=access"
+
+		err = h.mailer.Send(ctx, mailer.Message{
+			To:      owner.Email,
+			Subject: "Someone is asking to view your Stork Nest registry",
+			Text: fmt.Sprintf(
+				"Hi %s,\n\n%s (%s) is asking for access to view your \"%s\" registry.\n\n%sReview the request and approve or decline here:\n%s\n\nThey will not see any of your registry contents until you approve them.\n",
+				ownerName,
+				displayName,
+				fallbackString(strings.TrimSpace(buyerEmail), "email not available"),
+				registryTitle,
+				noteLine,
+				dashboardLink,
+			),
+		})
+		if err != nil {
+			log.Error().Err(err).Str("ownerId", ownerID).Str("email", owner.Email).Msg("owner registry-access notification send failed")
 		}
 	}()
 }

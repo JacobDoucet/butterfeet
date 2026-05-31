@@ -281,6 +281,135 @@ export function useRegistryMuiDataGridFilterModel(options: FilterOptions = {}) {
                             },
                         };
                 }
+            case "allowOpenAccess":
+                switch(gridFilterModel?.items?.[0]?.operator) { 
+                    case "equals":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                allowOpenAccessEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "is":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                allowOpenAccessEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notEquals":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                allowOpenAccessNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThan":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                allowOpenAccessGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "after":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                allowOpenAccessGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                allowOpenAccessGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrAfter":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                allowOpenAccessGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThan":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                allowOpenAccessLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "before":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                allowOpenAccessLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                allowOpenAccessLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrBefore":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                allowOpenAccessLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "in":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                allowOpenAccessIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notIn":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                allowOpenAccessNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "isEmpty":
+                        return { 
+                            searchQuery: { 
+                                allowOpenAccessExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                allowOpenAccessExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                }
             case "coverImageUrl":
                 switch(gridFilterModel?.items?.[0]?.operator) { 
                     case "equals":
@@ -2881,6 +3010,40 @@ export function useRegistryAddressAccessModeDataGridColumn(options: RegistryAddr
     ]);
 }
 
+type RegistryAllowOpenAccessDataGridColumnOptions = {
+    headerName?: string;
+    width?: number;
+    sortable?: boolean;
+    hideable?: boolean;
+    getValue?: (obj: RegistryWithRefs | undefined) => boolean;
+    renderCell?: GridColDef<RegistryWithRefs>['renderCell'];
+};
+
+export const RegistryAllowOpenAccessDataGridColumnKey = 'allowOpenAccess' as const;
+
+export function useRegistryAllowOpenAccessDataGridColumn(options: RegistryAllowOpenAccessDataGridColumnOptions) {
+
+    return useMemo<GridColDef<RegistryWithRefs>>(() => ({
+        headerName: options.headerName ?? RegistryAllowOpenAccessDataGridColumnKey,
+        width: options.width,
+        sortable: options.sortable,
+        hideable: options.hideable,
+        field: RegistryAllowOpenAccessDataGridColumnKey,
+        valueGetter: (_, row) => { 
+            return options.getValue ? options.getValue(row) : row.registry.allowOpenAccess;
+        },
+        type: "boolean",
+        renderCell: options.renderCell,
+    }), [
+        options.headerName, 
+        options.width, 
+        options.sortable,
+        options.hideable,
+        options.getValue,
+        options.renderCell,
+    ]);
+}
+
 type RegistryCoverImageUrlDataGridColumnOptions = {
     headerName?: string;
     width?: number;
@@ -3612,6 +3775,7 @@ export function getRegistryColumnVisibilityModel(
     return {
         id: projection.id ?? false,
         addressAccessMode: projection.addressAccessMode ?? false,
+        allowOpenAccess: projection.allowOpenAccess ?? false,
         coverImageUrl: projection.coverImageUrl ?? false,
         created: projection.created ?? false,
         dueDate: projection.dueDate ?? false,

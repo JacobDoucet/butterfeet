@@ -213,6 +213,7 @@ type GroupByField string
 
 // Valid group-by fields for Registry
 const (
+	GroupByFieldAllowOpenAccess       GroupByField = "allowOpenAccess"
 	GroupByFieldCoverImageUrl         GroupByField = "coverImageUrl"
 	GroupByFieldDueDate               GroupByField = "dueDate"
 	GroupByFieldIsPublic              GroupByField = "isPublic"
@@ -236,6 +237,7 @@ const (
 // ValidGroupByFields returns all valid group-by fields
 func ValidGroupByFields() []GroupByField {
 	return []GroupByField{
+		GroupByFieldAllowOpenAccess,
 		GroupByFieldCoverImageUrl,
 		GroupByFieldDueDate,
 		GroupByFieldIsPublic,
@@ -328,6 +330,7 @@ type AggregateOptions struct {
 // AggregateResultRow holds a single aggregation result row with a partial model structure
 type AggregateResultRow struct {
 	// Group-by fields (original types)
+	AllowOpenAccess       *bool      `json:"allowOpenAccess,omitempty"`
 	CoverImageUrl         *string    `json:"coverImageUrl,omitempty"`
 	DueDate               *time.Time `json:"dueDate,omitempty"`
 	IsPublic              *bool      `json:"isPublic,omitempty"`
