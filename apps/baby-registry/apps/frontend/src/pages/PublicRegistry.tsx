@@ -486,7 +486,7 @@ export default function PublicRegistry() {
               {reg.title}
             </Typography>
             {reg.parentNames && (
-              <Typography variant="subtitle1" color="text.secondary">
+              <Typography variant="subtitle1" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.75rem' }}>
                 with love, for {reg.parentNames}
               </Typography>
             )}
@@ -578,14 +578,14 @@ export default function PublicRegistry() {
                     justifyContent="space-between"
                     sx={{ mb: 2 }}
                   >
-                    <Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: '-0.01em' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                       {cat}
                     </Typography>
                     {hasMore && (
                       <Button
                         size="small"
                         onClick={() => setCategoryFilter(cat)}
-                        sx={{ textTransform: 'none', fontWeight: 600 }}
+                        sx={{ textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.06em', fontSize: '0.7rem' }}
                       >
                         See all ({all.length}) →
                       </Button>
