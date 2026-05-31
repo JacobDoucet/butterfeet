@@ -45,6 +45,9 @@ export default function ItemCard({
         position: 'relative',
         bgcolor: 'background.paper',
         transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
+        opacity: disabled ? 0.62 : 1,
+        filter: disabled ? 'grayscale(0.35)' : undefined,
+        pointerEvents: disabled ? 'auto' : undefined,
         ...(interactive
           ? {
               '&:hover': {
