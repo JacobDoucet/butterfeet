@@ -5,17 +5,20 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_reservation_status"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
 )
 
 type MongoRecord struct {
 	Id                 *primitive.ObjectID            `bson:"_id,omitempty"`
 	ContactEmail       *string                        `bson:"contactEmail,omitempty"`
 	Created            *actor_trace.MongoRecord       `bson:"created,omitempty"`
+	ExpiresAt          *time.Time                     `bson:"expiresAt,omitempty"`
 	IsAnonymous        *bool                          `bson:"isAnonymous,omitempty"`
 	ItemId             *primitive.ObjectID            `bson:"itemId,omitempty"`
 	Message            *string                        `bson:"message,omitempty"`
 	Quantity           *int                           `bson:"quantity,omitempty"`
 	RegistryId         *primitive.ObjectID            `bson:"registryId,omitempty"`
+	ReminderSentAt     *time.Time                     `bson:"reminderSentAt,omitempty"`
 	ReserverName       *string                        `bson:"reserverName,omitempty"`
 	Status             *enum_reservation_status.Value `bson:"status,omitempty"`
 	Updated            *actor_trace.MongoRecord       `bson:"updated,omitempty"`
@@ -43,6 +46,10 @@ func (r *MongoRecord) ToModel() (Model, error) {
 		}
 		m.Created = elemcreated0
 	}
+	if r.ExpiresAt != nil {
+		elemexpiresAt0 := r.ExpiresAt
+		m.ExpiresAt = *elemexpiresAt0
+	}
 	if r.IsAnonymous != nil {
 		elemisAnonymous0 := r.IsAnonymous
 		m.IsAnonymous = *elemisAnonymous0
@@ -62,6 +69,10 @@ func (r *MongoRecord) ToModel() (Model, error) {
 	if r.RegistryId != nil {
 		elemregistryId0 := r.RegistryId.Hex()
 		m.RegistryId = elemregistryId0
+	}
+	if r.ReminderSentAt != nil {
+		elemreminderSentAt0 := r.ReminderSentAt
+		m.ReminderSentAt = *elemreminderSentAt0
 	}
 	if r.ReserverName != nil {
 		elemreserverName0 := r.ReserverName
@@ -112,6 +123,16 @@ type MongoWhereClause struct {
 	ContactEmailNlike  *string
 	// created (ActorTrace) search options
 	Created *actor_trace.MongoWhereClause
+	// expiresAt (timestamp) search options
+	ExpiresAtEq     *time.Time
+	ExpiresAtNe     *time.Time
+	ExpiresAtGt     *time.Time
+	ExpiresAtGte    *time.Time
+	ExpiresAtLt     *time.Time
+	ExpiresAtLte    *time.Time
+	ExpiresAtIn     *[]time.Time
+	ExpiresAtNin    *[]time.Time
+	ExpiresAtExists *bool
 	// isAnonymous (bool) search options
 	IsAnonymousEq     *bool
 	IsAnonymousNe     *bool
@@ -154,6 +175,16 @@ type MongoWhereClause struct {
 	RegistryIdIn     *[]primitive.ObjectID
 	RegistryIdNin    *[]primitive.ObjectID
 	RegistryIdExists *bool
+	// reminderSentAt (timestamp) search options
+	ReminderSentAtEq     *time.Time
+	ReminderSentAtNe     *time.Time
+	ReminderSentAtGt     *time.Time
+	ReminderSentAtGte    *time.Time
+	ReminderSentAtLt     *time.Time
+	ReminderSentAtLte    *time.Time
+	ReminderSentAtIn     *[]time.Time
+	ReminderSentAtNin    *[]time.Time
+	ReminderSentAtExists *bool
 	// reserverName (string) search options
 	ReserverNameEq     *string
 	ReserverNameNe     *string
@@ -291,6 +322,51 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 				query["created."+k] = v
 			}
 		}
+		and = append(and, query)
+	}
+	if o.ExpiresAtEq != nil {
+		query := bson.M{}
+		query["expiresAt"] = o.ExpiresAtEq
+		and = append(and, query)
+	}
+	if o.ExpiresAtNe != nil {
+		query := bson.M{}
+		query["expiresAt"] = bson.M{"$ne": o.ExpiresAtNe}
+		and = append(and, query)
+	}
+	if o.ExpiresAtGt != nil {
+		query := bson.M{}
+		query["expiresAt"] = bson.M{"$gt": o.ExpiresAtGt}
+		and = append(and, query)
+	}
+	if o.ExpiresAtGte != nil {
+		query := bson.M{}
+		query["expiresAt"] = bson.M{"$gte": o.ExpiresAtGte}
+		and = append(and, query)
+	}
+	if o.ExpiresAtLt != nil {
+		query := bson.M{}
+		query["expiresAt"] = bson.M{"$lt": o.ExpiresAtLt}
+		and = append(and, query)
+	}
+	if o.ExpiresAtLte != nil {
+		query := bson.M{}
+		query["expiresAt"] = bson.M{"$lte": o.ExpiresAtLte}
+		and = append(and, query)
+	}
+	if o.ExpiresAtIn != nil {
+		query := bson.M{}
+		query["expiresAt"] = bson.M{"$in": o.ExpiresAtIn}
+		and = append(and, query)
+	}
+	if o.ExpiresAtNin != nil {
+		query := bson.M{}
+		query["expiresAt"] = bson.M{"$nin": o.ExpiresAtNin}
+		and = append(and, query)
+	}
+	if o.ExpiresAtExists != nil {
+		query := bson.M{}
+		query["expiresAt"] = bson.M{"$exists": *o.ExpiresAtExists}
 		and = append(and, query)
 	}
 	if o.IsAnonymousEq != nil {
@@ -478,6 +554,51 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 		query["registryId"] = bson.M{"$exists": *o.RegistryIdExists}
 		and = append(and, query)
 	}
+	if o.ReminderSentAtEq != nil {
+		query := bson.M{}
+		query["reminderSentAt"] = o.ReminderSentAtEq
+		and = append(and, query)
+	}
+	if o.ReminderSentAtNe != nil {
+		query := bson.M{}
+		query["reminderSentAt"] = bson.M{"$ne": o.ReminderSentAtNe}
+		and = append(and, query)
+	}
+	if o.ReminderSentAtGt != nil {
+		query := bson.M{}
+		query["reminderSentAt"] = bson.M{"$gt": o.ReminderSentAtGt}
+		and = append(and, query)
+	}
+	if o.ReminderSentAtGte != nil {
+		query := bson.M{}
+		query["reminderSentAt"] = bson.M{"$gte": o.ReminderSentAtGte}
+		and = append(and, query)
+	}
+	if o.ReminderSentAtLt != nil {
+		query := bson.M{}
+		query["reminderSentAt"] = bson.M{"$lt": o.ReminderSentAtLt}
+		and = append(and, query)
+	}
+	if o.ReminderSentAtLte != nil {
+		query := bson.M{}
+		query["reminderSentAt"] = bson.M{"$lte": o.ReminderSentAtLte}
+		and = append(and, query)
+	}
+	if o.ReminderSentAtIn != nil {
+		query := bson.M{}
+		query["reminderSentAt"] = bson.M{"$in": o.ReminderSentAtIn}
+		and = append(and, query)
+	}
+	if o.ReminderSentAtNin != nil {
+		query := bson.M{}
+		query["reminderSentAt"] = bson.M{"$nin": o.ReminderSentAtNin}
+		and = append(and, query)
+	}
+	if o.ReminderSentAtExists != nil {
+		query := bson.M{}
+		query["reminderSentAt"] = bson.M{"$exists": *o.ReminderSentAtExists}
+		and = append(and, query)
+	}
 	if o.ReserverNameEq != nil {
 		query := bson.M{}
 		query["reserverName"] = o.ReserverNameEq
@@ -617,6 +738,7 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 
 type MongoSortParams struct {
 	CreatedAt  int8
+	ExpiresAt  int8
 	ItemId     int8
 	RegistryId int8
 	UpdatedAt  int8

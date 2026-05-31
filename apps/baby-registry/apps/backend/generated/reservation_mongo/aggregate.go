@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"time"
 )
 
 // AggregateMethod represents the type of aggregation operation
@@ -72,13 +73,15 @@ type AggregateOptions struct {
 // AggregateResultRow holds a single aggregation result row with flat structure
 type AggregateResultRow struct {
 	// Group-by fields (original types)
-	ContactEmail *string             `bson:"contactEmail" json:"contactEmail,omitempty"`
-	IsAnonymous  *bool               `bson:"isAnonymous" json:"isAnonymous,omitempty"`
-	ItemId       *primitive.ObjectID `bson:"itemId" json:"itemId,omitempty"`
-	Message      *string             `bson:"message" json:"message,omitempty"`
-	Quantity     *int                `bson:"quantity" json:"quantity,omitempty"`
-	RegistryId   *primitive.ObjectID `bson:"registryId" json:"registryId,omitempty"`
-	ReserverName *string             `bson:"reserverName" json:"reserverName,omitempty"`
+	ContactEmail   *string             `bson:"contactEmail" json:"contactEmail,omitempty"`
+	ExpiresAt      *time.Time          `bson:"expiresAt" json:"expiresAt,omitempty"`
+	IsAnonymous    *bool               `bson:"isAnonymous" json:"isAnonymous,omitempty"`
+	ItemId         *primitive.ObjectID `bson:"itemId" json:"itemId,omitempty"`
+	Message        *string             `bson:"message" json:"message,omitempty"`
+	Quantity       *int                `bson:"quantity" json:"quantity,omitempty"`
+	RegistryId     *primitive.ObjectID `bson:"registryId" json:"registryId,omitempty"`
+	ReminderSentAt *time.Time          `bson:"reminderSentAt" json:"reminderSentAt,omitempty"`
+	ReserverName   *string             `bson:"reserverName" json:"reserverName,omitempty"`
 	// Aggregate fields - always float64 since they're results of sum/avg/etc
 	// Ref field Item
 	Item *registry_item.MongoRecord `bson:"item,omitempty" json:"item,omitempty"`

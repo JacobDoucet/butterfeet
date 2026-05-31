@@ -10,11 +10,13 @@ type canAccessReservation<T = Reservation> = ActorCanAccessFunc<T> & {
         id: ActorCanAccessFunc<Reservation>;
         contactEmail: ActorCanAccessFunc<Reservation>; 
         created: ReturnType<typeof NewCanReadActorTrace<Reservation>>,
+        expiresAt: ActorCanAccessFunc<Reservation>;
         isAnonymous: ActorCanAccessFunc<Reservation>;
         itemId: ActorCanAccessFunc<Reservation>;
         message: ActorCanAccessFunc<Reservation>;
         quantity: ActorCanAccessFunc<Reservation>;
         registryId: ActorCanAccessFunc<Reservation>;
+        reminderSentAt: ActorCanAccessFunc<Reservation>;
         reserverName: ActorCanAccessFunc<Reservation>;
         status: ActorCanAccessFunc<Reservation>; 
         updated: ReturnType<typeof NewCanReadActorTrace<Reservation>>, 
@@ -60,11 +62,13 @@ export function NewCanReadReservation<T = Reservation>(canAccessObj: ActorCanAcc
                 id: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 contactEmail: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 created:  NewCanReadActorTrace( (_actorRoles: ActorRole[], _obj?: Reservation) =>  true),
+                expiresAt: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 isAnonymous: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 itemId: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 message: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 quantity: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 registryId: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
+                reminderSentAt: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 reserverName: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 status: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 updated:  NewCanReadActorTrace( (_actorRoles: ActorRole[], _obj?: Reservation) =>  true),
@@ -84,11 +88,13 @@ export function NewCanWriteReservation<T = Reservation>(canAccessObj: ActorCanAc
                 id: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 contactEmail: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 created:  NewCanWriteActorTrace( (_actorRoles: ActorRole[], _obj?: Reservation) =>  true),
+                expiresAt: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 isAnonymous: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 itemId: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 message: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 quantity: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 registryId: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
+                reminderSentAt: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 reserverName: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 status: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 updated:  NewCanWriteActorTrace( (_actorRoles: ActorRole[], _obj?: Reservation) =>  true),

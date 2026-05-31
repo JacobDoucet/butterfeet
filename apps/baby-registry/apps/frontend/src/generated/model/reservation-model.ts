@@ -7,11 +7,13 @@ export type Reservation = {
   id?: string;
   contactEmail?: string;
   created?: ActorTrace;
+  expiresAt?: string;
   isAnonymous?: boolean;
   itemId?: string;
   message?: string;
   quantity?: number;
   registryId?: string;
+  reminderSentAt?: string;
   reserverName?: string;
   status?: ReservationStatus;
   updated?: ActorTrace;
@@ -23,11 +25,13 @@ export type ReservationProjection = {
     contactEmail?: boolean;
     created?: boolean;
 		createdFields?: ActorTraceProjection;
+    expiresAt?: boolean;
     isAnonymous?: boolean;
     itemId?: boolean;
     message?: boolean;
     quantity?: boolean;
     registryId?: boolean;
+    reminderSentAt?: boolean;
     reserverName?: boolean;
     status?: boolean;
     updated?: boolean;
@@ -38,6 +42,7 @@ export type ReservationProjection = {
 
 export type ReservationSortParams = {
     createdAt?: -1 | 1;
+    expiresAt?: -1 | 1;
     itemId?: -1 | 1;
     registryId?: -1 | 1;
     updatedAt?: -1 | 1;

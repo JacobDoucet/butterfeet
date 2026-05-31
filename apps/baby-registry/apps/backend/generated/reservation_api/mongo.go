@@ -196,6 +196,7 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 		}
 		// Copy group-by fields (with type conversion for refs)
 		row.ContactEmail = r.ContactEmail
+		row.ExpiresAt = r.ExpiresAt
 		row.IsAnonymous = r.IsAnonymous
 		if r.ItemId != nil {
 			s := r.ItemId.Hex()
@@ -207,6 +208,7 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 			s := r.RegistryId.Hex()
 			row.RegistryId = &s
 		}
+		row.ReminderSentAt = r.ReminderSentAt
 		row.ReserverName = r.ReserverName
 		// Copy aggregate fields (only those not in group-by)
 		// Copy ref field Item

@@ -56,6 +56,8 @@ export default function RegistryEditor() {
   const [activeTab, setActiveTab] = useState<'items' | 'details' | 'shipping' | 'access'>('items');
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [csvImportSnack, setCsvImportSnack] = useState<string | null>(null);
+  const [itemSearch, setItemSearch] = useState('');
+  const [itemCategoryFilter, setItemCategoryFilter] = useState<string>('__all__');
 
   const regsQ = useQuery({
     queryKey: ['registries'],
@@ -330,6 +332,23 @@ export default function RegistryEditor() {
       if (aFulfilled !== bFulfilled) return aFulfilled ? 1 : -1;
       return (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' });
     });
+  const itemCategories = Array.from(
+    new Set(topLevelItems.map((it) => (it.category || '').trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  const itemSearchQuery = itemSearch.trim().toLowerCase();
+  const filteredTopLevelItems = topLevelItems.filter((it) => {
+    if (itemCategoryFilter === '__uncategorised__') {
+      if ((it.category || '').trim()) return false;
+    } else if (itemCategoryFilter !== '__all__') {
+      if ((it.category || '').trim() !== itemCategoryFilter) return false;
+    }
+    if (!itemSearchQuery) return true;
+    const opts = [it, ...(alternativesByRootId[it.id] ?? [])];
+    return opts.some((o) =>
+      [o.title, o.description, o.source, o.category, o.notes]
+        .some((v) => (v || '').toLowerCase().includes(itemSearchQuery)),
+    );
+  });
   const editingItem = list.find((it) => it.id === editingId) ?? null;
   const editRootId = editingItem ? groupRootId(editingItem) : null;
   const editRootItem = editRootId ? itemById[editRootId] ?? null : null;
@@ -387,8 +406,33 @@ export default function RegistryEditor() {
       {activeTab === 'shipping' && <PrivacyPanel reg={reg} section="shipping" />}
       {activeTab === 'access' && <PrivacyPanel reg={reg} section="access" />}
 
+      {activeTab === 'items' && (
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
+          <TextField
+            size="small"
+            placeholder="Search items"
+            value={itemSearch}
+            onChange={(e) => setItemSearch(e.target.value)}
+            sx={{ flex: 1, minWidth: 0, '& .MuiOutlinedInput-root': { bgcolor: '#fff' } }}
+          />
+          <Select
+            size="small"
+            value={itemCategoryFilter}
+            onChange={(e) => setItemCategoryFilter(String(e.target.value))}
+            displayEmpty
+            sx={{ minWidth: 220, bgcolor: '#fff' }}
+          >
+            <MenuItem value="__all__">All categories</MenuItem>
+            {itemCategories.map((cat) => (
+              <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+            ))}
+            <MenuItem value="__uncategorised__">Uncategorised</MenuItem>
+          </Select>
+        </Stack>
+      )}
+
       {activeTab === 'items' && <Grid container spacing={2}>
-        {topLevelItems.map((it) => {
+        {filteredTopLevelItems.map((it) => {
           const optionItems = [it, ...(alternativesByRootId[it.id] ?? [])];
           const itemReservations = optionItems.flatMap((opt) => reservationsByItem[opt.id] ?? []);
           const activeCount = itemReservations
@@ -488,6 +532,11 @@ export default function RegistryEditor() {
         {list.length === 0 && (
           <Grid item xs={12}>
             <Typography color="text.secondary">No items yet. Paste a product URL to start.</Typography>
+          </Grid>
+        )}
+        {list.length > 0 && filteredTopLevelItems.length === 0 && (
+          <Grid item xs={12}>
+            <Typography color="text.secondary">No items match the current filters.</Typography>
           </Grid>
         )}
       </Grid>}

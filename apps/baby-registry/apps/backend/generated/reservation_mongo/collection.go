@@ -13,6 +13,9 @@ func CreateIndexes(ctx context.Context, db *mongo.Database) error {
 	if err := createCreatedAtIndex(ctx, db); err != nil {
 		return err
 	}
+	if err := createExpiresAtIndex(ctx, db); err != nil {
+		return err
+	}
 	if err := createItemIdxIndex(ctx, db); err != nil {
 		return err
 	}
@@ -33,6 +36,18 @@ func createCreatedAtIndex(ctx context.Context, db *mongo.Database) error {
 			{Key: "created.at", Value: -1},
 		},
 		Options: options.Index().SetName("createdAt"),
+	})
+	return err
+}
+
+func createExpiresAtIndex(ctx context.Context, db *mongo.Database) error {
+	collection := db.Collection(CollectionName)
+
+	_, err := collection.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "expiresAt", Value: 1},
+		},
+		Options: options.Index().SetName("expiresAt"),
 	})
 	return err
 }

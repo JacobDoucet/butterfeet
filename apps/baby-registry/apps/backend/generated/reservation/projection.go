@@ -10,11 +10,13 @@ type Projection struct {
 	ContactEmail             bool                   `json:"contactEmail"`
 	Created                  bool                   `json:"created"`
 	CreatedFields            actor_trace.Projection `json:"createdFields,omitempty"`
+	ExpiresAt                bool                   `json:"expiresAt"`
 	IsAnonymous              bool                   `json:"isAnonymous"`
 	ItemId                   bool
 	Message                  bool `json:"message"`
 	Quantity                 bool `json:"quantity"`
 	RegistryId               bool
+	ReminderSentAt           bool                   `json:"reminderSentAt"`
 	ReserverName             bool                   `json:"reserverName"`
 	Status                   bool                   `json:"status"`
 	Updated                  bool                   `json:"updated"`
@@ -29,11 +31,13 @@ func NewProjection(defaultVal bool) Projection {
 		ContactEmail:             defaultVal,
 		Created:                  defaultVal,
 		CreatedFields:            actor_trace.NewProjection(defaultVal),
+		ExpiresAt:                defaultVal,
 		IsAnonymous:              defaultVal,
 		ItemId:                   defaultVal,
 		Message:                  defaultVal,
 		Quantity:                 defaultVal,
 		RegistryId:               defaultVal,
+		ReminderSentAt:           defaultVal,
 		ReserverName:             defaultVal,
 		Status:                   defaultVal,
 		Updated:                  defaultVal,
@@ -63,6 +67,9 @@ func (p Projection) ToBson() bson.M {
 			projection["created.at"] = 1
 		}
 	}
+	if p.ExpiresAt {
+		projection["expiresAt"] = 1
+	}
 	if p.IsAnonymous {
 		projection["isAnonymous"] = 1
 	}
@@ -77,6 +84,9 @@ func (p Projection) ToBson() bson.M {
 	}
 	if p.RegistryId {
 		projection["registryId"] = 1
+	}
+	if p.ReminderSentAt {
+		projection["reminderSentAt"] = 1
 	}
 	if p.ReserverName {
 		projection["reserverName"] = 1

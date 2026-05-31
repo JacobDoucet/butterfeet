@@ -559,6 +559,15 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 					searchRequest.Query.ContactEmailIn = utils.StringSliceToStringSlicePtr(values)
 					continue
 				}
+			case "expiresAt":
+				if len(values) == 1 {
+					searchRequest.Query.ExpiresAtEq = utils.StringSliceToTimestampPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.ExpiresAtIn = utils.StringSliceToTimestampSlicePtr(values)
+					continue
+				}
 			case "isAnonymous":
 				if len(values) == 1 {
 					searchRequest.Query.IsAnonymousEq = utils.StringSliceToBoolPtr(values)
@@ -584,6 +593,15 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 				}
 				if len(values) > 1 {
 					searchRequest.Query.QuantityIn = utils.StringSliceToIntSlicePtr(values)
+					continue
+				}
+			case "reminderSentAt":
+				if len(values) == 1 {
+					searchRequest.Query.ReminderSentAtEq = utils.StringSliceToTimestampPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.ReminderSentAtIn = utils.StringSliceToTimestampSlicePtr(values)
 					continue
 				}
 			case "reserverName":
@@ -620,13 +638,15 @@ type AggregateRequest struct {
 
 // AggregateResultRowHTTP is the HTTP response type for a single aggregate result row
 type AggregateResultRowHTTP struct {
-	ContactEmail any `json:"contactEmail,omitempty"`
-	IsAnonymous  any `json:"isAnonymous,omitempty"`
-	ItemId       any `json:"itemId,omitempty"`
-	Message      any `json:"message,omitempty"`
-	Quantity     any `json:"quantity,omitempty"`
-	RegistryId   any `json:"registryId,omitempty"`
-	ReserverName any `json:"reserverName,omitempty"`
+	ContactEmail   any `json:"contactEmail,omitempty"`
+	ExpiresAt      any `json:"expiresAt,omitempty"`
+	IsAnonymous    any `json:"isAnonymous,omitempty"`
+	ItemId         any `json:"itemId,omitempty"`
+	Message        any `json:"message,omitempty"`
+	Quantity       any `json:"quantity,omitempty"`
+	RegistryId     any `json:"registryId,omitempty"`
+	ReminderSentAt any `json:"reminderSentAt,omitempty"`
+	ReserverName   any `json:"reserverName,omitempty"`
 	// Ref field Item
 	Item any `json:"item,omitempty"`
 	// Ref field Registry
@@ -719,11 +739,13 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 			}
 			// Copy group-by fields
 			httpRow.ContactEmail = row.ContactEmail
+			httpRow.ExpiresAt = row.ExpiresAt
 			httpRow.IsAnonymous = row.IsAnonymous
 			httpRow.ItemId = row.ItemId
 			httpRow.Message = row.Message
 			httpRow.Quantity = row.Quantity
 			httpRow.RegistryId = row.RegistryId
+			httpRow.ReminderSentAt = row.ReminderSentAt
 			httpRow.ReserverName = row.ReserverName
 			// Convert ref fields to HTTP records
 			if row.Item != nil {

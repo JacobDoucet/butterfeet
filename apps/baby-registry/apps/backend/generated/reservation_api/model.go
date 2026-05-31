@@ -6,6 +6,7 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
+	"time"
 )
 
 type Client interface {
@@ -147,24 +148,28 @@ type GroupByField string
 
 // Valid group-by fields for Reservation
 const (
-	GroupByFieldContactEmail GroupByField = "contactEmail"
-	GroupByFieldIsAnonymous  GroupByField = "isAnonymous"
-	GroupByFieldItemId       GroupByField = "itemId"
-	GroupByFieldMessage      GroupByField = "message"
-	GroupByFieldQuantity     GroupByField = "quantity"
-	GroupByFieldRegistryId   GroupByField = "registryId"
-	GroupByFieldReserverName GroupByField = "reserverName"
+	GroupByFieldContactEmail   GroupByField = "contactEmail"
+	GroupByFieldExpiresAt      GroupByField = "expiresAt"
+	GroupByFieldIsAnonymous    GroupByField = "isAnonymous"
+	GroupByFieldItemId         GroupByField = "itemId"
+	GroupByFieldMessage        GroupByField = "message"
+	GroupByFieldQuantity       GroupByField = "quantity"
+	GroupByFieldRegistryId     GroupByField = "registryId"
+	GroupByFieldReminderSentAt GroupByField = "reminderSentAt"
+	GroupByFieldReserverName   GroupByField = "reserverName"
 )
 
 // ValidGroupByFields returns all valid group-by fields
 func ValidGroupByFields() []GroupByField {
 	return []GroupByField{
 		GroupByFieldContactEmail,
+		GroupByFieldExpiresAt,
 		GroupByFieldIsAnonymous,
 		GroupByFieldItemId,
 		GroupByFieldMessage,
 		GroupByFieldQuantity,
 		GroupByFieldRegistryId,
+		GroupByFieldReminderSentAt,
 		GroupByFieldReserverName,
 	}
 }
@@ -232,13 +237,15 @@ type AggregateOptions struct {
 // AggregateResultRow holds a single aggregation result row with a partial model structure
 type AggregateResultRow struct {
 	// Group-by fields (original types)
-	ContactEmail *string `json:"contactEmail,omitempty"`
-	IsAnonymous  *bool   `json:"isAnonymous,omitempty"`
-	ItemId       *string `json:"itemId,omitempty"`
-	Message      *string `json:"message,omitempty"`
-	Quantity     *int    `json:"quantity,omitempty"`
-	RegistryId   *string `json:"registryId,omitempty"`
-	ReserverName *string `json:"reserverName,omitempty"`
+	ContactEmail   *string    `json:"contactEmail,omitempty"`
+	ExpiresAt      *time.Time `json:"expiresAt,omitempty"`
+	IsAnonymous    *bool      `json:"isAnonymous,omitempty"`
+	ItemId         *string    `json:"itemId,omitempty"`
+	Message        *string    `json:"message,omitempty"`
+	Quantity       *int       `json:"quantity,omitempty"`
+	RegistryId     *string    `json:"registryId,omitempty"`
+	ReminderSentAt *time.Time `json:"reminderSentAt,omitempty"`
+	ReserverName   *string    `json:"reserverName,omitempty"`
 	// Aggregate fields - always float64 since they're results of sum/avg/etc
 	// Ref field Item
 	Item *registry_item.Model `json:"item,omitempty"`

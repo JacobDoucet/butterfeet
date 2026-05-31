@@ -82,6 +82,16 @@ export interface RegistryItem {
 
 export interface PublicRegistry extends Registry {
   items: (RegistryItem & { reserved: number })[];
+  myReservations?: MyReservation[];
+}
+
+export interface MyReservation {
+  id: string;
+  itemId: string;
+  itemTitle: string;
+  quantity: number;
+  createdAt: string;
+  expiresAt: string;
 }
 
 export type RegistryAccessRequestStatus = 'none' | 'pending' | 'rejected';
@@ -197,7 +207,11 @@ export const reservations = {
 export const pub = {
   registry: (slug: string) => api.get<PublicRegistryResponse>(`/api/public/r/${encodeURIComponent(slug)}`),
   reserve: (itemId: string, body: { reserverName: string; isAnonymous: boolean; message: string; contactEmail?: string; quantity?: number }) =>
-    api.post<{ ok: boolean }>(`/api/public/items/${itemId}/reserve`, body),
+    api.post<{ ok: boolean; id: string }>(`/api/public/items/${itemId}/reserve`, body),
+  confirmReservation: (id: string) =>
+    api.post<{ ok: boolean; status: ReservationStatus }>(`/api/public/reservations/${encodeURIComponent(id)}/confirm`, {}),
+  cancelReservation: (id: string) =>
+    api.post<{ ok: boolean; status: ReservationStatus }>(`/api/public/reservations/${encodeURIComponent(id)}/cancel`, {}),
   requestAddress: (body: { slug: string; itemId?: string; name?: string; note?: string }) =>
     api.post<{ ok: boolean; status?: 'pending'; id?: string }>('/api/public/address-requests', body),
   requestRegistryAccess: (body: { slug: string; name?: string; note?: string }) =>
@@ -206,13 +220,14 @@ export const pub = {
 
 export interface BuyerSession {
   email: string;
+  name?: string;
 }
 
 export const buyer = {
-  request: (slug: string, email: string) =>
-    api.post<{ ok: boolean }>('/api/public/buyer/verify/request', { slug, email }),
+  request: (slug: string, email: string, name?: string) =>
+    api.post<{ ok: boolean }>('/api/public/buyer/verify/request', { slug, email, name }),
   confirm: (slug: string, email: string, code: string) =>
-    api.post<{ ok: boolean; email: string }>('/api/public/buyer/verify/confirm', { slug, email, code }),
+    api.post<{ ok: boolean; email: string; name?: string }>('/api/public/buyer/verify/confirm', { slug, email, code }),
   me: (slug: string) =>
     api.get<BuyerSession>(`/api/public/buyer/me?slug=${encodeURIComponent(slug)}`),
   logout: (slug: string) =>

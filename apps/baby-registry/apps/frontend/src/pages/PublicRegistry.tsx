@@ -87,13 +87,12 @@ export default function PublicRegistry() {
 
   const [target, setTarget] = useState<string | null>(null);
   const [name, setName] = useState('');
-  const [anon, setAnon] = useState(false);
   const [message, setMessage] = useState('');
   const [reserveQtyMode, setReserveQtyMode] = useState<'one' | 'all'>('one');
   const [reserveQty, setReserveQty] = useState('1');
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('__all__');
-  const [celebrate, setCelebrate] = useState<{ title: string } | null>(null);
+  const [reservedId, setReservedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
   const [accessNote, setAccessNote] = useState('');
@@ -119,6 +118,12 @@ export default function PublicRegistry() {
     if (target) setSelectedOptionId(null);
   }, [target]);
 
+  // Seed the reservation form's name field with the verified buyer's name.
+  useEffect(() => {
+    const buyerName = meQ.data?.name?.trim();
+    if (buyerName) setName((cur) => (cur ? cur : buyerName));
+  }, [meQ.data?.name]);
+
   useEffect(() => {
     const title = regQ.data?.title;
     if (!title) return;
@@ -139,20 +144,24 @@ export default function PublicRegistry() {
         : reserveQtyMode === 'all'
         ? Math.max(1, (rootItem?.quantity || 1) - (rootItem?.reserved || 0))
         : 1;
-      return pub.reserve(effectiveId, { reserverName: name, isAnonymous: anon, message, quantity: qty });
+      return pub.reserve(effectiveId, { reserverName: name, isAnonymous: false, message, quantity: qty });
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['public', slug] });
       const data = regQ.data;
       if (data && !isGatedRegistry(data)) {
         const rootItem = data.items.find((it) => it.id === target);
         const effectiveId = selectedOptionId ?? target;
         const purchasedItem = data.items.find((it) => it.id === effectiveId) ?? rootItem;
-        setCelebrate({ title: purchasedItem?.title ?? 'this gift' });
-      } else {
-        setCelebrate({ title: 'this gift' });
+        const href = purchaseHref(purchasedItem ?? rootItem ?? undefined);
+        if (href) {
+          window.open(href, '_blank', 'noopener,noreferrer');
+        }
       }
-      setTarget(null); setSelectedOptionId(null); setName(''); setAnon(false); setMessage(''); setError(null); setReserveQtyMode('one'); setReserveQty('1');
+      if (res?.id) {
+        setReservedId(res.id);
+      }
+      setError(null);
     },
     onError: (err) => setError((err as Error).message),
   });
@@ -171,6 +180,36 @@ export default function PublicRegistry() {
       setSnack("Request sent \u2014 we'll email you the address once the parents approve.");
     },
     onError: (err) => setError((err as Error).message),
+  });
+
+  const resetReserveDialog = () => {
+    setTarget(null);
+    setReservedId(null);
+    setSelectedOptionId(null);
+    setName('');
+    setMessage('');
+    setError(null);
+    setReserveQtyMode('one');
+    setReserveQty('1');
+  };
+
+  const confirmRsvM = useMutation({
+    mutationFn: (id: string) => pub.confirmReservation(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['public', slug] });
+      setSnack('Thanks! Marked as purchased.');
+      resetReserveDialog();
+    },
+    onError: (err) => setSnack((err as Error).message),
+  });
+  const cancelRsvM = useMutation({
+    mutationFn: (id: string) => pub.cancelReservation(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['public', slug] });
+      setSnack("Reservation released \u2014 the gift is available again.");
+      resetReserveDialog();
+    },
+    onError: (err) => setSnack((err as Error).message),
   });
 
   if (meQ.isLoading) {
@@ -214,6 +253,11 @@ export default function PublicRegistry() {
     return acc;
   }, {});
   const topLevelItems = reg.items.filter((it) => !it.parentItemId || !itemById[it.parentItemId]);
+  const myReservationByRootId: Record<string, NonNullable<typeof reg.myReservations>[number]> = {};
+  for (const rsv of reg.myReservations ?? []) {
+    const root = rootItemById[rsv.itemId];
+    if (root) myReservationByRootId[root.id] = rsv;
+  }
   const isClaimed = (rootId: string) => {
     const r = itemById[rootId];
     if (!r) return false;
@@ -249,6 +293,7 @@ export default function PublicRegistry() {
     const options = optionsByRootId[root.id] ?? [root];
     const remaining = root.quantityUnlimited ? Infinity : Math.max(0, (root.quantity || 1) - (root.reserved || 0));
     const claimed = !root.quantityUnlimited && remaining === 0;
+    const myRsv = myReservationByRootId[root.id];
     const optionCount = options.length;
     const lowStock = !root.quantityUnlimited && remaining > 0 && remaining < (root.quantity || 1);
     const swatchImages = options
@@ -292,7 +337,26 @@ export default function PublicRegistry() {
       </Box>
     ) : null;
 
-    const topRightOverlay = claimed ? (
+    const topRightOverlay = myRsv ? (
+      <Box
+        sx={{
+          bgcolor: 'primary.main',
+          color: '#fff',
+          px: 1.5,
+          py: 0.5,
+          borderRadius: 5,
+          fontSize: '0.75rem',
+          fontWeight: 700,
+          letterSpacing: 0.3,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+          boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+        }}
+      >
+        ❤ Held by you
+      </Box>
+    ) : claimed ? (
       <Box
         sx={{
           bgcolor: 'success.main',
@@ -334,10 +398,17 @@ export default function PublicRegistry() {
           imageUrl={it.imageUrl}
           imageBgColor={it.imageBgColor}
           title={it.title}
-          onClick={() => setTarget(it.id)}
-          disabled={claimed}
-          dimTitle={claimed}
-          imageFilter={claimed ? 'grayscale(0.4)' : undefined}
+          onClick={() => {
+            if (myRsv) {
+              setTarget(it.id);
+              setReservedId(myRsv.id);
+            } else {
+              setTarget(it.id);
+            }
+          }}
+          disabled={claimed && !myRsv}
+          dimTitle={claimed && !myRsv}
+          imageFilter={claimed && !myRsv ? 'grayscale(0.4)' : undefined}
           topLeftOverlay={topLeftOverlay}
           topRightOverlay={topRightOverlay}
           footer={
@@ -349,11 +420,15 @@ export default function PublicRegistry() {
               ) : (
                 <span />
               )}
-              {!claimed && (
+              {myRsv ? (
+                <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600 }}>
+                  Manage →
+                </Typography>
+              ) : !claimed ? (
                 <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600 }}>
                   Gift this →
                 </Typography>
-              )}
+              ) : null}
             </>
           }
         />
@@ -445,6 +520,73 @@ export default function PublicRegistry() {
       </Box>
 
       <Container maxWidth="lg" sx={{ pt: { xs: 1, md: 2 }, pb: { xs: 4, md: 6 } }}>
+        {(reg.myReservations ?? []).length > 0 && (
+          <Stack spacing={1.5} sx={{ mb: 3 }}>
+            {(reg.myReservations ?? []).map((rsv) => (
+              <Alert
+                key={rsv.id}
+                severity="info"
+                icon={false}
+                sx={{
+                  borderRadius: 3,
+                  bgcolor: 'primary.main',
+                  color: '#fff',
+                  '& .MuiAlert-message': { width: '100%' },
+                }}
+              >
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1.5}
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
+                  justifyContent="space-between"
+                >
+                  <Box sx={{ color: '#fff' }}>
+                    <Typography
+                      sx={{
+                        fontWeight: 600,
+                        color: '#fff',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        textDecorationColor: 'rgba(255,255,255,0.4)',
+                      }}
+                      onClick={() => {
+                        if (rsv.itemId) {
+                          setTarget(rsv.itemId);
+                          setReservedId(rsv.id);
+                        }
+                      }}
+                    >
+                      Did you complete your purchase of {rsv.itemTitle || 'this gift'}?
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)' }}>
+                      Reserved {new Date(rsv.createdAt).toLocaleString()} · held until {new Date(rsv.expiresAt).toLocaleString()}
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={() => confirmRsvM.mutate(rsv.id)}
+                      disabled={confirmRsvM.isPending || cancelRsvM.isPending}
+                      sx={{ bgcolor: '#fff', color: 'primary.main', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+                    >
+                      Yes, I bought it
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => cancelRsvM.mutate(rsv.id)}
+                      disabled={confirmRsvM.isPending || cancelRsvM.isPending}
+                      sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.7)', '&:hover': { borderColor: '#fff', bgcolor: 'rgba(255,255,255,0.08)' } }}
+                    >
+                      No, release it
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Alert>
+            ))}
+          </Stack>
+        )}
         {categories.length > 0 && (
           <Box
             sx={{
@@ -567,8 +709,8 @@ export default function PublicRegistry() {
         )}
 
         <Dialog
-          open={!!target}
-          onClose={() => setTarget(null)}
+          open={!!target || !!reservedId}
+          onClose={() => { if (!reservedId) setTarget(null); }}
           scroll="paper"
           fullWidth
           maxWidth="md"
@@ -583,7 +725,7 @@ export default function PublicRegistry() {
         >
           <DialogTitle sx={{ pb: 1 }}>
             <Typography variant="overline" color="text.secondary" sx={{ display: 'block', lineHeight: 1, mb: 0.5 }}>
-              Get this gift
+              {reservedId ? 'Held for you' : 'Get this gift'}
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
               {targetRootItem?.title ?? 'Item details'}
@@ -600,12 +742,59 @@ export default function PublicRegistry() {
             }}
           >
             <Stack spacing={2} sx={{ mt: 1 }}>
+              {reservedId ? (
+                <>
+                  <Alert
+                    severity="info"
+                    icon={false}
+                    sx={{ borderRadius: 2, bgcolor: 'primary.main', color: '#fff' }}
+                  >
+                    <Typography sx={{ fontWeight: 600, color: '#fff', mb: 0.5 }}>
+                      We're holding this for you for 24 hours.
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
+                      Finish checkout in the retailer tab we opened, then come back here and confirm.
+                      If you change your mind, release it so someone else can grab it.
+                    </Typography>
+                  </Alert>
+                  {hasShippingAddress ? (
+                    <Box sx={{ p: 2, borderRadius: 1, bgcolor: 'action.hover' }}>
+                      <Typography variant="overline" color="text.secondary">Ship it to</Typography>
+                      {reg.shippingRecipientName && <Typography>{reg.shippingRecipientName}</Typography>}
+                      {reg.shippingLine1 && <Typography>{reg.shippingLine1}</Typography>}
+                      {reg.shippingLine2 && <Typography>{reg.shippingLine2}</Typography>}
+                      {(reg.shippingCity || reg.shippingRegion || reg.shippingPostalCode) && (
+                        <Typography>{[reg.shippingCity, reg.shippingRegion, reg.shippingPostalCode].filter(Boolean).join(' ')}</Typography>
+                      )}
+                      {reg.shippingCountry && <Typography>{reg.shippingCountry}</Typography>}
+                      {reg.shippingDeliveryNotes && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>
+                          Note: {reg.shippingDeliveryNotes}
+                        </Typography>
+                      )}
+                    </Box>
+                  ) : null}
+                  {(() => {
+                    const effectiveOpt = itemById[selectedOptionId ?? target ?? ''] ?? targetOptions[0];
+                    const href = purchaseHref(effectiveOpt);
+                    if (!href) return null;
+                    return (
+                      <Button
+                        variant="outlined"
+                        onClick={() => { window.open(href, '_blank', 'noopener,noreferrer'); trackPurchaseClick(effectiveOpt); }}
+                        sx={{ alignSelf: 'flex-start' }}
+                      >
+                        Reopen retailer
+                      </Button>
+                    );
+                  })()}
+                </>
+              ) : (
+                <>
               {targetOptions.length === 1 && targetOptions[0] && (
                 <Card variant="outlined" sx={{ borderRadius: 2 }}>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0} sx={{ overflow: 'hidden' }}>
                     <Box
-                      component={targetOptions[0].productUrl ? 'a' : 'div'}
-                      {...(targetOptions[0].productUrl ? { href: purchaseHref(targetOptions[0]), target: '_blank', rel: 'noreferrer', onClick: () => trackPurchaseClick(targetOptions[0]) } : {})}
                       sx={{
                         width: { xs: '100%', sm: 160 },
                         flexShrink: 0,
@@ -615,8 +804,6 @@ export default function PublicRegistry() {
                         justifyContent: 'center',
                         aspectRatio: { xs: '16 / 9', sm: '1 / 1' },
                         overflow: 'hidden',
-                        textDecoration: 'none',
-                        ...(targetOptions[0].productUrl && { cursor: 'pointer', '&:hover': { opacity: 0.85 } }),
                       }}
                     >
                       {targetOptions[0].imageUrl ? (
@@ -633,15 +820,7 @@ export default function PublicRegistry() {
                     <Stack spacing={1} sx={{ p: 2, minWidth: 0, flex: 1 }}>
                       <Typography
                         variant="subtitle1"
-                        component={targetOptions[0].productUrl ? 'a' : 'span'}
-                        {...(targetOptions[0].productUrl ? { href: purchaseHref(targetOptions[0]), target: '_blank', rel: 'noreferrer', onClick: () => trackPurchaseClick(targetOptions[0]) } : {})}
-                        sx={{
-                          fontWeight: 700,
-                          lineHeight: 1.3,
-                          textDecoration: targetOptions[0].productUrl ? 'underline' : 'none',
-                          color: targetOptions[0].productUrl ? 'primary.main' : 'text.primary',
-                          '&:hover': targetOptions[0].productUrl ? { opacity: 0.8 } : {},
-                        }}
+                        sx={{ fontWeight: 700, lineHeight: 1.3, color: 'text.primary' }}
                       >
                         {targetOptions[0].title}
                       </Typography>
@@ -751,20 +930,6 @@ export default function PublicRegistry() {
                             >
                               {opt.title}
                             </Typography>
-                            {opt.productUrl && (
-                              <Box
-                                component="a"
-                                href={purchaseHref(opt)}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(e: React.MouseEvent) => { e.stopPropagation(); trackPurchaseClick(opt); }}
-                                sx={{ textDecoration: 'none' }}
-                              >
-                                <Typography variant="caption" color="primary" sx={{ display: 'block', mt: 0.5 }}>
-                                  Shop →
-                                </Typography>
-                              </Box>
-                            )}
                           </Box>
                         </Box>
                       );
@@ -780,38 +945,6 @@ export default function PublicRegistry() {
                     : `${targetRemaining} remaining out of ${targetRootItem.quantity || 1}.`}
                 </Typography>
               )}
-              <Card variant="outlined" sx={{ borderRadius: 2 }}>
-                <CardContent sx={{ minWidth: 0 }}>
-                  <Stack spacing={1}>
-                    <Typography variant="overline" color="text.secondary">How it works</Typography>
-                    <Typography variant="body2">
-                      1.{' '}
-                      {(() => {
-                        const effectiveOpt = itemById[selectedOptionId ?? target ?? ''] ?? targetOptions[0];
-                        return effectiveOpt?.productUrl ? (
-                          <>
-                            <Box
-                              component="a"
-                              href={purchaseHref(effectiveOpt)}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={() => trackPurchaseClick(effectiveOpt)}
-                              sx={{ color: 'primary.main', textDecoration: 'underline' }}
-                            >
-                              Open the product page
-                            </Box>
-                            {' '}and complete your purchase.
-                          </>
-                        ) : (
-                          'Open the product page and complete your purchase.'
-                        );
-                      })()}
-                    </Typography>
-                    <Typography variant="body2">2. Ship it to the delivery address below.</Typography>
-                    <Typography variant="body2">3. Click <strong>I've bought this</strong> when you’re done.</Typography>
-                  </Stack>
-                </CardContent>
-              </Card>
 
               <Card variant="outlined" sx={{ borderRadius: 2 }}>
                 <CardContent sx={{ minWidth: 0 }}>
@@ -888,11 +1021,7 @@ export default function PublicRegistry() {
                       </Alert>
                     )}
 
-                    <TextField label="Your name" value={name} onChange={(e) => setName(e.target.value)} disabled={anon} />
-                    <FormControlLabel
-                      control={<Checkbox checked={anon} onChange={(e) => setAnon(e.target.checked)} />}
-                      label="Keep me anonymous"
-                    />
+                    <TextField label="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
                     <TextField
                       label="Message to the parents (optional)"
                       placeholder="Example: Ordered from Amazon, arrives next Tuesday."
@@ -908,89 +1037,46 @@ export default function PublicRegistry() {
                 Verified as <strong>{meQ.data?.email}</strong>. The parents will see this email so they can follow up.
               </Typography>
               {error && <Alert severity="error">{error}</Alert>}
+                </>
+              )}
             </Stack>
           </DialogContent>
           <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
-            <Button onClick={() => setTarget(null)}>Cancel</Button>
-            <Button
-              variant="contained"
-              onClick={() => reserveM.mutate()}
-              disabled={(!anon && !name.trim()) || (!targetRootItem?.quantityUnlimited && targetRemaining <= 0)}
-            >
-              I've bought this
-            </Button>
+            {reservedId ? (
+              <>
+                <Button
+                  color="inherit"
+                  onClick={() => cancelRsvM.mutate(reservedId)}
+                  disabled={confirmRsvM.isPending || cancelRsvM.isPending}
+                >
+                  Release reservation
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => confirmRsvM.mutate(reservedId)}
+                  disabled={confirmRsvM.isPending || cancelRsvM.isPending}
+                  sx={{ color: '#fff' }}
+                >
+                  I've bought this
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button onClick={() => setTarget(null)}>Cancel</Button>
+                <Button
+                  variant="contained"
+                  onClick={() => reserveM.mutate()}
+                  disabled={!name.trim() || (!targetRootItem?.quantityUnlimited && targetRemaining <= 0) || reserveM.isPending}
+                  sx={{ color: '#fff' }}
+                >
+                  {purchaseHref(targetRootItem ?? undefined) ? 'Reserve & continue to retailer' : 'Reserve this gift'}
+                </Button>
+              </>
+            )}
           </DialogActions>
         </Dialog>
 
         <Snackbar open={!!snack} autoHideDuration={4000} onClose={() => setSnack(null)} message={snack ?? ''} />
-
-        <Dialog
-          open={!!celebrate}
-          onClose={() => setCelebrate(null)}
-          maxWidth="xs"
-          fullWidth
-          PaperProps={{
-            sx: {
-              borderRadius: 4,
-              overflow: 'hidden',
-              position: 'relative',
-              textAlign: 'center',
-            },
-          }}
-        >
-          {celebrate && (
-            <>
-              <Box
-                sx={{
-                  position: 'absolute',
-                  inset: 0,
-                  pointerEvents: 'none',
-                  overflow: 'hidden',
-                  '@keyframes confetti-fall': {
-                    '0%': { transform: 'translateY(-20px) rotate(0deg)', opacity: 1 },
-                    '100%': { transform: 'translateY(420px) rotate(720deg)', opacity: 0 },
-                  },
-                }}
-              >
-                {Array.from({ length: 28 }).map((_, i) => {
-                  const colors = ['#f4a4a4', '#ffd56b', '#9cd6c1', '#c1b2e0', '#f49a78', '#7fb8e3'];
-                  const left = (i * 37) % 100;
-                  const delay = (i % 7) * 0.15;
-                  const duration = 2 + ((i * 13) % 10) / 10;
-                  const color = colors[i % colors.length];
-                  const size = 6 + (i % 4) * 2;
-                  return (
-                    <Box
-                      key={i}
-                      sx={{
-                        position: 'absolute',
-                        left: `${left}%`,
-                        top: -10,
-                        width: size,
-                        height: size * 1.6,
-                        bgcolor: color,
-                        borderRadius: '2px',
-                        animation: `confetti-fall ${duration}s ${delay}s ease-in forwards`,
-                      }}
-                    />
-                  );
-                })}
-              </Box>
-              <Box sx={{ pt: 5, pb: 4, px: 4, position: 'relative' }}>
-                <Typography sx={{ fontSize: 56, lineHeight: 1, mb: 2 }}>🎁</Typography>
-                <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-                  Thank you!
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                  Your gift of <strong>{celebrate.title}</strong> means the world. The parents will be over the moon.
-                </Typography>
-                <Button variant="contained" onClick={() => setCelebrate(null)} sx={{ borderRadius: 5, px: 4 }}>
-                  Close
-                </Button>
-              </Box>
-            </>
-          )}
-        </Dialog>
       </Container>
     </Box>
   );
@@ -999,11 +1085,12 @@ export default function PublicRegistry() {
 function BuyerVerifyGate({ slug, onVerified }: { slug: string; onVerified: () => void }) {
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [err, setErr] = useState<string | null>(null);
 
   const requestM = useMutation({
-    mutationFn: () => buyer.request(slug, email.trim()),
+    mutationFn: () => buyer.request(slug, email.trim(), name.trim() || undefined),
     onSuccess: () => {
       setErr(null);
       setStep('code');
@@ -1037,11 +1124,18 @@ function BuyerVerifyGate({ slug, onVerified }: { slug: string; onVerified: () =>
           {step === 'email' && (
             <Stack spacing={2}>
               <TextField
+                label="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+                fullWidth
+                helperText="So the parents know who reserved each gift."
+              />
+              <TextField
                 label="Your email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                autoFocus
                 fullWidth
               />
               {err && <Alert severity="error">{err}</Alert>}
@@ -1049,7 +1143,7 @@ function BuyerVerifyGate({ slug, onVerified }: { slug: string; onVerified: () =>
                 variant="contained"
                 size="large"
                 onClick={() => requestM.mutate()}
-                disabled={!email.trim() || requestM.isPending}
+                disabled={!email.trim() || !name.trim() || requestM.isPending}
               >
                 {requestM.isPending ? <CircularProgress size={20} /> : 'Send code'}
               </Button>

@@ -5,17 +5,20 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/actor_trace"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_reservation_status"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
 )
 
 type Model struct {
 	Id                 string
 	ContactEmail       string
 	Created            actor_trace.Model
+	ExpiresAt          time.Time
 	IsAnonymous        bool
 	ItemId             string
 	Message            string
 	Quantity           int
 	RegistryId         string
+	ReminderSentAt     time.Time
 	ReserverName       string
 	Status             enum_reservation_status.Value
 	Updated            actor_trace.Model
@@ -42,6 +45,10 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 		}
 		r.Created = &elemcreated0
 	}
+	if projection.ExpiresAt {
+		elemexpiresAt0 := m.ExpiresAt
+		r.ExpiresAt = &elemexpiresAt0
+	}
 	if projection.IsAnonymous {
 		elemisAnonymous0 := m.IsAnonymous
 		r.IsAnonymous = &elemisAnonymous0
@@ -67,6 +74,10 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 			return r, errors.Join(errors.New("invalid m.RegistryId"), err)
 		}
 		r.RegistryId = &elemregistryId0
+	}
+	if projection.ReminderSentAt {
+		elemreminderSentAt0 := m.ReminderSentAt
+		r.ReminderSentAt = &elemreminderSentAt0
 	}
 	if projection.ReserverName {
 		elemreserverName0 := m.ReserverName
@@ -110,6 +121,10 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 		}
 		r.Created = &elemcreated0
 	}
+	if projection.ExpiresAt {
+		elemexpiresAt0 := m.ExpiresAt
+		r.ExpiresAt = &elemexpiresAt0
+	}
 	if projection.IsAnonymous {
 		elemisAnonymous0 := m.IsAnonymous
 		r.IsAnonymous = &elemisAnonymous0
@@ -129,6 +144,10 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 	if projection.RegistryId && m.RegistryId != "" {
 		elemregistryId0 := m.RegistryId
 		r.RegistryId = &elemregistryId0
+	}
+	if projection.ReminderSentAt {
+		elemreminderSentAt0 := m.ReminderSentAt
+		r.ReminderSentAt = &elemreminderSentAt0
 	}
 	if projection.ReserverName {
 		elemreserverName0 := m.ReserverName
@@ -179,6 +198,16 @@ type WhereClause struct {
 	ContactEmailNlike  *string
 	// created (ActorTrace) search options
 	Created *actor_trace.WhereClause
+	// expiresAt (timestamp) search options
+	ExpiresAtEq     *time.Time
+	ExpiresAtNe     *time.Time
+	ExpiresAtGt     *time.Time
+	ExpiresAtGte    *time.Time
+	ExpiresAtLt     *time.Time
+	ExpiresAtLte    *time.Time
+	ExpiresAtIn     *[]time.Time
+	ExpiresAtNin    *[]time.Time
+	ExpiresAtExists *bool
 	// isAnonymous (bool) search options
 	IsAnonymousEq     *bool
 	IsAnonymousNe     *bool
@@ -221,6 +250,16 @@ type WhereClause struct {
 	RegistryIdIn     *[]string
 	RegistryIdNin    *[]string
 	RegistryIdExists *bool
+	// reminderSentAt (timestamp) search options
+	ReminderSentAtEq     *time.Time
+	ReminderSentAtNe     *time.Time
+	ReminderSentAtGt     *time.Time
+	ReminderSentAtGte    *time.Time
+	ReminderSentAtLt     *time.Time
+	ReminderSentAtLte    *time.Time
+	ReminderSentAtIn     *[]time.Time
+	ReminderSentAtNin    *[]time.Time
+	ReminderSentAtExists *bool
 	// reserverName (string) search options
 	ReserverNameEq     *string
 	ReserverNameNe     *string
@@ -352,6 +391,50 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 			return to, err
 		}
 		to.Created = &elemcreated0
+	}
+	if o.ExpiresAtEq != nil {
+		elemexpiresAtEq0 := o.ExpiresAtEq
+		to.ExpiresAtEq = elemexpiresAtEq0
+	}
+	if o.ExpiresAtNe != nil {
+		elemexpiresAtNe0 := o.ExpiresAtNe
+		to.ExpiresAtNe = elemexpiresAtNe0
+	}
+	if o.ExpiresAtGt != nil {
+		elemexpiresAtGt0 := o.ExpiresAtGt
+		to.ExpiresAtGt = elemexpiresAtGt0
+	}
+	if o.ExpiresAtGte != nil {
+		elemexpiresAtGte0 := o.ExpiresAtGte
+		to.ExpiresAtGte = elemexpiresAtGte0
+	}
+	if o.ExpiresAtLt != nil {
+		elemexpiresAtLt0 := o.ExpiresAtLt
+		to.ExpiresAtLt = elemexpiresAtLt0
+	}
+	if o.ExpiresAtLte != nil {
+		elemexpiresAtLte0 := o.ExpiresAtLte
+		to.ExpiresAtLte = elemexpiresAtLte0
+	}
+	if o.ExpiresAtIn != nil {
+		elemexpiresAtIn0 := make([]time.Time, 0)
+		for _, oexpiresAtIn0 := range *o.ExpiresAtIn {
+			elemexpiresAtIn1 := oexpiresAtIn0
+			elemexpiresAtIn0 = append(elemexpiresAtIn0, elemexpiresAtIn1)
+		}
+		to.ExpiresAtIn = &elemexpiresAtIn0
+	}
+	if o.ExpiresAtNin != nil {
+		elemexpiresAtNin0 := make([]time.Time, 0)
+		for _, oexpiresAtNin0 := range *o.ExpiresAtNin {
+			elemexpiresAtNin1 := oexpiresAtNin0
+			elemexpiresAtNin0 = append(elemexpiresAtNin0, elemexpiresAtNin1)
+		}
+		to.ExpiresAtNin = &elemexpiresAtNin0
+	}
+	if o.ExpiresAtExists != nil {
+		elemexpiresAtExists0 := o.ExpiresAtExists
+		to.ExpiresAtExists = elemexpiresAtExists0
 	}
 	if o.IsAnonymousEq != nil {
 		elemisAnonymousEq0 := o.IsAnonymousEq
@@ -559,6 +642,50 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 		elemregistryIdExists0 := o.RegistryIdExists
 		to.RegistryIdExists = elemregistryIdExists0
 	}
+	if o.ReminderSentAtEq != nil {
+		elemreminderSentAtEq0 := o.ReminderSentAtEq
+		to.ReminderSentAtEq = elemreminderSentAtEq0
+	}
+	if o.ReminderSentAtNe != nil {
+		elemreminderSentAtNe0 := o.ReminderSentAtNe
+		to.ReminderSentAtNe = elemreminderSentAtNe0
+	}
+	if o.ReminderSentAtGt != nil {
+		elemreminderSentAtGt0 := o.ReminderSentAtGt
+		to.ReminderSentAtGt = elemreminderSentAtGt0
+	}
+	if o.ReminderSentAtGte != nil {
+		elemreminderSentAtGte0 := o.ReminderSentAtGte
+		to.ReminderSentAtGte = elemreminderSentAtGte0
+	}
+	if o.ReminderSentAtLt != nil {
+		elemreminderSentAtLt0 := o.ReminderSentAtLt
+		to.ReminderSentAtLt = elemreminderSentAtLt0
+	}
+	if o.ReminderSentAtLte != nil {
+		elemreminderSentAtLte0 := o.ReminderSentAtLte
+		to.ReminderSentAtLte = elemreminderSentAtLte0
+	}
+	if o.ReminderSentAtIn != nil {
+		elemreminderSentAtIn0 := make([]time.Time, 0)
+		for _, oreminderSentAtIn0 := range *o.ReminderSentAtIn {
+			elemreminderSentAtIn1 := oreminderSentAtIn0
+			elemreminderSentAtIn0 = append(elemreminderSentAtIn0, elemreminderSentAtIn1)
+		}
+		to.ReminderSentAtIn = &elemreminderSentAtIn0
+	}
+	if o.ReminderSentAtNin != nil {
+		elemreminderSentAtNin0 := make([]time.Time, 0)
+		for _, oreminderSentAtNin0 := range *o.ReminderSentAtNin {
+			elemreminderSentAtNin1 := oreminderSentAtNin0
+			elemreminderSentAtNin0 = append(elemreminderSentAtNin0, elemreminderSentAtNin1)
+		}
+		to.ReminderSentAtNin = &elemreminderSentAtNin0
+	}
+	if o.ReminderSentAtExists != nil {
+		elemreminderSentAtExists0 := o.ReminderSentAtExists
+		to.ReminderSentAtExists = elemreminderSentAtExists0
+	}
 	if o.ReserverNameEq != nil {
 		elemreserverNameEq0 := o.ReserverNameEq
 		to.ReserverNameEq = elemreserverNameEq0
@@ -674,6 +801,7 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 
 type SortParams struct {
 	CreatedAt  int8
+	ExpiresAt  int8
 	ItemId     int8
 	RegistryId int8
 	UpdatedAt  int8
@@ -682,6 +810,7 @@ type SortParams struct {
 func (s SortParams) ToMongoSortParams() MongoSortParams {
 	to := MongoSortParams{}
 	to.CreatedAt = s.CreatedAt
+	to.ExpiresAt = s.ExpiresAt
 	to.ItemId = s.ItemId
 	to.RegistryId = s.RegistryId
 	to.UpdatedAt = s.UpdatedAt

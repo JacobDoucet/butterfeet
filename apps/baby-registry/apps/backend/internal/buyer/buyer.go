@@ -56,6 +56,7 @@ func (s *Service) Register(mux *http.ServeMux) {
 type requestBody struct {
 	Email string `json:"email"`
 	Slug  string `json:"slug"`
+	Name  string `json:"name"`
 }
 
 type confirmBody struct {
@@ -89,12 +90,14 @@ func (s *Service) handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	codeHash := sha256Hex(code)
 	now := time.Now()
+	name := strings.TrimSpace(body.Name)
 	_, err = s.cfg.DB.Collection(otpCollection).UpdateOne(r.Context(),
 		bson.M{"email": email, "slug": slug},
 		bson.M{
 			"$set": bson.M{
 				"email":     email,
 				"slug":      slug,
+				"name":      name,
 				"codeHash":  codeHash,
 				"expiresAt": now.Add(otpTTL),
 				"createdAt": now,
@@ -144,6 +147,7 @@ func (s *Service) handleConfirm(w http.ResponseWriter, r *http.Request) {
 		CodeHash  string    `bson:"codeHash"`
 		ExpiresAt time.Time `bson:"expiresAt"`
 		Attempts  int       `bson:"attempts"`
+		Name      string    `bson:"name"`
 	}
 	err := coll.FindOne(r.Context(), bson.M{"email": email, "slug": slug}).Decode(&doc)
 	if err != nil {
@@ -169,7 +173,7 @@ func (s *Service) handleConfirm(w http.ResponseWriter, r *http.Request) {
 
 	_, _ = coll.DeleteOne(r.Context(), bson.M{"email": email, "slug": slug})
 
-	token, err := s.mintJWT(email, slug)
+	token, err := s.mintJWT(email, slug, doc.Name)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
@@ -177,7 +181,7 @@ func (s *Service) handleConfirm(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, buyerCookie(slug, token, sessionTTL, s.cfg.Prod))
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "email": email})
+	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "email": email, "name": doc.Name})
 }
 
 func (s *Service) handleMe(w http.ResponseWriter, r *http.Request) {
@@ -186,13 +190,13 @@ func (s *Service) handleMe(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing slug", http.StatusBadRequest)
 		return
 	}
-	email, err := s.ResolveBuyer(r, slug)
+	email, name, err := s.ResolveBuyerInfo(r, slug)
 	if err != nil {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"email": email})
+	_ = json.NewEncoder(w).Encode(map[string]any{"email": email, "name": name})
 }
 
 func (s *Service) handleLogout(w http.ResponseWriter, r *http.Request) {
@@ -217,9 +221,16 @@ func (s *Service) handleLogout(w http.ResponseWriter, r *http.Request) {
 // ResolveBuyer returns the verified email associated with a buyer cookie for
 // the given registry slug, or an error if no valid cookie is present.
 func (s *Service) ResolveBuyer(r *http.Request, slug string) (string, error) {
+	email, _, err := s.ResolveBuyerInfo(r, slug)
+	return email, err
+}
+
+// ResolveBuyerInfo returns the verified email and (optional) display name
+// captured at verification time.
+func (s *Service) ResolveBuyerInfo(r *http.Request, slug string) (string, string, error) {
 	c, err := r.Cookie(cookieName(slug))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	claims := jwt.MapClaims{}
 	_, err = jwt.ParseWithClaims(c.Value, claims, func(t *jwt.Token) (interface{}, error) {
@@ -229,22 +240,24 @@ func (s *Service) ResolveBuyer(r *http.Request, slug string) (string, error) {
 		return s.cfg.JWTSecret, nil
 	})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	aud, _ := claims["aud"].(string)
 	if aud != "buyer:"+slug {
-		return "", errors.New("audience mismatch")
+		return "", "", errors.New("audience mismatch")
 	}
 	email, _ := claims["email"].(string)
 	if email == "" {
-		return "", errors.New("missing email")
+		return "", "", errors.New("missing email")
 	}
-	return email, nil
+	name, _ := claims["name"].(string)
+	return email, name, nil
 }
 
-func (s *Service) mintJWT(email, slug string) (string, error) {
+func (s *Service) mintJWT(email, slug, name string) (string, error) {
 	claims := jwt.MapClaims{
 		"email": email,
+		"name":  name,
 		"aud":   "buyer:" + slug,
 		"exp":   time.Now().Add(sessionTTL).Unix(),
 		"iat":   time.Now().Unix(),

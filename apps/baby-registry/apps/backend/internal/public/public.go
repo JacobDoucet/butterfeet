@@ -50,7 +50,8 @@ func NewHandler(client api.Client, db *mongo.Database, notificationMailer mailer
 	h := &Handler{client: client, db: db, mailer: notificationMailer, appBaseURL: strings.TrimRight(appBaseURL, "/")}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/r/", h.handleRegistryBySlug)
-	mux.HandleFunc("/items/", h.handleItemRoute) // /items/:id/reserve and /items/:id/click
+	mux.HandleFunc("/items/", h.handleItemRoute)               // /items/:id/reserve and /items/:id/click
+	mux.HandleFunc("/reservations/", h.handleReservationRoute) // /reservations/:id/confirm and /reservations/:id/cancel
 	mux.HandleFunc("/shipping/resolve", h.handleShippingResolve)
 	mux.HandleFunc("/address-requests", h.handleAddressRequestCreate)
 	mux.HandleFunc("/registry-access/request", h.handleRegistryAccessRequest)
@@ -104,22 +105,34 @@ type publicItem struct {
 }
 
 type publicRegistry struct {
-	Id                    string       `json:"id"`
-	Slug                  string       `json:"slug"`
-	Title                 string       `json:"title"`
-	ParentNames           string       `json:"parentNames"`
-	WelcomeMessage        string       `json:"welcomeMessage"`
-	ThemeColor            string       `json:"themeColor"`
-	CoverImageUrl         string       `json:"coverImageUrl"`
-	ShippingRecipientName string       `json:"shippingRecipientName,omitempty"`
-	ShippingLine1         string       `json:"shippingLine1,omitempty"`
-	ShippingLine2         string       `json:"shippingLine2,omitempty"`
-	ShippingCity          string       `json:"shippingCity,omitempty"`
-	ShippingRegion        string       `json:"shippingRegion,omitempty"`
-	ShippingPostalCode    string       `json:"shippingPostalCode,omitempty"`
-	ShippingCountry       string       `json:"shippingCountry,omitempty"`
-	ShippingDeliveryNotes string       `json:"shippingDeliveryNotes,omitempty"`
-	Items                 []publicItem `json:"items"`
+	Id                    string          `json:"id"`
+	Slug                  string          `json:"slug"`
+	Title                 string          `json:"title"`
+	ParentNames           string          `json:"parentNames"`
+	WelcomeMessage        string          `json:"welcomeMessage"`
+	ThemeColor            string          `json:"themeColor"`
+	CoverImageUrl         string          `json:"coverImageUrl"`
+	ShippingRecipientName string          `json:"shippingRecipientName,omitempty"`
+	ShippingLine1         string          `json:"shippingLine1,omitempty"`
+	ShippingLine2         string          `json:"shippingLine2,omitempty"`
+	ShippingCity          string          `json:"shippingCity,omitempty"`
+	ShippingRegion        string          `json:"shippingRegion,omitempty"`
+	ShippingPostalCode    string          `json:"shippingPostalCode,omitempty"`
+	ShippingCountry       string          `json:"shippingCountry,omitempty"`
+	ShippingDeliveryNotes string          `json:"shippingDeliveryNotes,omitempty"`
+	Items                 []publicItem    `json:"items"`
+	MyReservations        []myReservation `json:"myReservations,omitempty"`
+}
+
+// myReservation surfaces the buyer's own active reservations so the UI can
+// prompt them to confirm or cancel after returning from the retailer.
+type myReservation struct {
+	Id        string `json:"id"`
+	ItemId    string `json:"itemId"`
+	ItemTitle string `json:"itemTitle"`
+	Quantity  int    `json:"quantity"`
+	CreatedAt string `json:"createdAt"`
+	ExpiresAt string `json:"expiresAt"`
 }
 
 // gatedRegistry is the minimal payload returned when the viewer has not been
@@ -166,8 +179,9 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 
 	// Gate 1: buyer must have verified their email for this registry.
 	canViewShippingAddress := false
+	var buyerEmail string
 	if h.resolveBuyer != nil {
-		buyerEmail, err := h.resolveBuyer(r, slug)
+		email, err := h.resolveBuyer(r, slug)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
@@ -181,6 +195,7 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		buyerEmail = email
 		guest, gErr := h.fetchApprovedGuest(r.Context(), super, reg.Id, buyerEmail)
 		if gErr != nil {
 			http.Error(w, "lookup error", http.StatusInternalServerError)
@@ -247,8 +262,12 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reservedByGroup := map[string]int{}
+	now := time.Now().UTC()
 	for _, rsv := range resvResult.Data {
 		if rsv.Status == enum_reservation_status.Cancelled {
+			continue
+		}
+		if !rsv.ExpiresAt.IsZero() && rsv.ExpiresAt.Before(now) && rsv.Status == enum_reservation_status.Reserved {
 			continue
 		}
 		it, ok := itemByID[rsv.ItemId]
@@ -308,6 +327,33 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 		resp.ShippingPostalCode = reg.ShippingPostalCode
 		resp.ShippingCountry = reg.ShippingCountry
 		resp.ShippingDeliveryNotes = reg.ShippingDeliveryNotes
+	}
+
+	if buyerEmail != "" {
+		lowerEmail := strings.ToLower(buyerEmail)
+		for _, rsv := range resvResult.Data {
+			if rsv.Status != enum_reservation_status.Reserved {
+				continue
+			}
+			if strings.ToLower(strings.TrimSpace(rsv.ContactEmail)) != lowerEmail {
+				continue
+			}
+			if !rsv.ExpiresAt.IsZero() && rsv.ExpiresAt.Before(now) {
+				continue
+			}
+			title := ""
+			if it, ok := itemByID[rsv.ItemId]; ok {
+				title = it.Title
+			}
+			resp.MyReservations = append(resp.MyReservations, myReservation{
+				Id:        rsv.Id,
+				ItemId:    rsv.ItemId,
+				ItemTitle: title,
+				Quantity:  rsv.Quantity,
+				CreatedAt: rsv.Created.At.UTC().Format(time.RFC3339),
+				ExpiresAt: rsv.ExpiresAt.UTC().Format(time.RFC3339),
+			})
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -479,8 +525,12 @@ func (h *Handler) handleItemReserve(w http.ResponseWriter, r *http.Request, item
 		}
 
 		reservedByGroup := map[string]int{}
+		now := time.Now().UTC()
 		for _, rsv := range resvResult.Data {
 			if rsv.Status == enum_reservation_status.Cancelled {
+				continue
+			}
+			if !rsv.ExpiresAt.IsZero() && rsv.ExpiresAt.Before(now) && rsv.Status == enum_reservation_status.Reserved {
 				continue
 			}
 			it, ok := itemByID[rsv.ItemId]
@@ -505,7 +555,7 @@ func (h *Handler) handleItemReserve(w http.ResponseWriter, r *http.Request, item
 		}
 	}
 
-	_, _, err = h.client.Reservation().Create(r.Context(), super, reservation.Model{
+	created, _, err := h.client.Reservation().Create(r.Context(), super, reservation.Model{
 		ItemId:       item.Id,
 		RegistryId:   item.RegistryId,
 		ReserverName: name,
@@ -514,6 +564,7 @@ func (h *Handler) handleItemReserve(w http.ResponseWriter, r *http.Request, item
 		ContactEmail: buyerEmail,
 		Quantity:     body.Quantity,
 		Status:       enum_reservation_status.Reserved,
+		ExpiresAt:    time.Now().UTC().Add(24 * time.Hour),
 	}, reservation.NewProjection(true))
 	if err != nil {
 		http.Error(w, "could not reserve: "+err.Error(), http.StatusInternalServerError)
@@ -523,7 +574,76 @@ func (h *Handler) handleItemReserve(w http.ResponseWriter, r *http.Request, item
 	h.sendOwnerReservationNotification(reg.OwnerId, reg.Title, item.Title, body.Quantity, name, body.IsAnonymous, buyerEmail, strings.TrimSpace(body.Message))
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
+	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "id": created.Id})
+}
+
+// handleReservationRoute handles POST /reservations/:id/confirm and
+// /reservations/:id/cancel — used by Phase 3 return-visit reminders so a
+// buyer can resolve their own pending reservation.
+func (h *Handler) handleReservationRoute(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	rest := strings.TrimPrefix(r.URL.Path, "/reservations/")
+	parts := strings.Split(strings.Trim(rest, "/"), "/")
+	if len(parts) != 2 {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	id := parts[0]
+	var next enum_reservation_status.Value
+	switch parts[1] {
+	case "confirm":
+		next = enum_reservation_status.Purchased
+	case "cancel":
+		next = enum_reservation_status.Cancelled
+	default:
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+
+	super := permissions.NewSuperActor()
+	rsv, _, err := h.client.Reservation().SelectById(r.Context(), super,
+		reservation.SelectByIdQuery{Id: id}, reservationapi.NewProjection(true))
+	if err != nil {
+		http.Error(w, "reservation not found", http.StatusNotFound)
+		return
+	}
+
+	if h.resolveBuyer == nil {
+		http.Error(w, "verification required", http.StatusUnauthorized)
+		return
+	}
+	reg, _, regErr := h.client.Registry().SelectById(r.Context(), super,
+		registry.SelectByIdQuery{Id: rsv.RegistryId}, registryapi.NewProjection(true))
+	if regErr != nil {
+		http.Error(w, "registry not found", http.StatusNotFound)
+		return
+	}
+	buyerEmail, bErr := h.resolveBuyer(r, reg.Slug)
+	if bErr != nil {
+		http.Error(w, "verification required", http.StatusUnauthorized)
+		return
+	}
+	if strings.ToLower(strings.TrimSpace(rsv.ContactEmail)) != strings.ToLower(strings.TrimSpace(buyerEmail)) {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	if rsv.Status != enum_reservation_status.Reserved {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "status": string(rsv.Status)})
+		return
+	}
+
+	inner := rsv.Model
+	inner.Status = next
+	if _, _, err := h.client.Reservation().Update(r.Context(), super, inner, reservation.NewProjection(true)); err != nil {
+		http.Error(w, "update failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "status": next})
 }
 
 func (h *Handler) sendOwnerReservationNotification(ownerID, registryTitle, itemTitle string, quantity int, reserverName string, isAnonymous bool, buyerEmail, message string) {

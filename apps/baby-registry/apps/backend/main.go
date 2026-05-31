@@ -32,6 +32,7 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/buyer"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/public"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/reminders"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/scrape"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/shipping"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -160,6 +161,14 @@ func main() {
 			log.Fatal().Err(err).Msg("server error")
 		}
 	}()
+
+	reminderCtx, reminderCancel := context.WithCancel(context.Background())
+	defer reminderCancel()
+	go reminders.Run(reminderCtx, reminders.Config{
+		Client:     apiClient,
+		Mailer:     mailSvc,
+		AppBaseURL: appBaseURL,
+	})
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

@@ -137,11 +137,13 @@ export type ReservationAggregateField = typeof ReservationAggregateFields[keyof 
 // Type-safe group-by fields
 export const ReservationGroupByFields = {
     ContactEmail: 'contactEmail',
+    ExpiresAt: 'expiresAt',
     IsAnonymous: 'isAnonymous',
     ItemId: 'itemId',
     Message: 'message',
     Quantity: 'quantity',
     RegistryId: 'registryId',
+    ReminderSentAt: 'reminderSentAt',
     ReserverName: 'reserverName',
 } as const;
 
@@ -157,11 +159,13 @@ export type AggregateFieldSpec = {
 export type ReservationAggregateResultRow = {
     // Group-by fields (original types)
     contactEmail?: string | null;
+    expiresAt?: string | null;
     isAnonymous?: boolean | null;
     itemId?: string | null;
     message?: string | null;
     quantity?: number | null;
     registryId?: string | null;
+    reminderSentAt?: string | null;
     reserverName?: string | null;
     // Aggregate fields - always numbers since they're results of sum/avg/etc
     // Ref field item

@@ -20,6 +20,10 @@ objects:
       - name: status
         type: ReservationStatus
         required: true
+      - name: expiresAt
+        type: timestamp
+      - name: reminderSentAt
+        type: timestamp
 
     collection:
       - type: mongo
@@ -32,6 +36,9 @@ objects:
       - name: registry_idx
         fields:
           - name: registryId
+      - name: expiresAt
+        fields:
+          - name: expiresAt
 
     http:
       endpoint: reservations

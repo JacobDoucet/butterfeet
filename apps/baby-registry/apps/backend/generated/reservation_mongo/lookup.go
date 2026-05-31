@@ -45,6 +45,11 @@ func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo
 	} else if lookupOptions.Sort.CreatedAt < 0 {
 		sortStage = append(sortStage, bson.E{Key: "created.at", Value: -1})
 	}
+	if lookupOptions.Sort.ExpiresAt > 0 {
+		sortStage = append(sortStage, bson.E{Key: "expiresAt", Value: 1})
+	} else if lookupOptions.Sort.ExpiresAt < 0 {
+		sortStage = append(sortStage, bson.E{Key: "expiresAt", Value: -1})
+	}
 	if lookupOptions.Sort.ItemId > 0 {
 		sortStage = append(sortStage, bson.E{Key: "itemId", Value: 1})
 	} else if lookupOptions.Sort.ItemId < 0 {

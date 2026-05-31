@@ -3,17 +3,20 @@ package reservation
 import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/actor_trace"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_reservation_status"
+	"time"
 )
 
 type HTTPRecord struct {
 	Id                 *string                        `json:"id,omitempty"`
 	ContactEmail       *string                        `json:"contactEmail,omitempty"`
 	Created            *actor_trace.HTTPRecord        `json:"created,omitempty"`
+	ExpiresAt          *time.Time                     `json:"expiresAt,omitempty"`
 	IsAnonymous        *bool                          `json:"isAnonymous,omitempty"`
 	ItemId             *string                        `json:"itemId,omitempty"`
 	Message            *string                        `json:"message,omitempty"`
 	Quantity           *int                           `json:"quantity,omitempty"`
 	RegistryId         *string                        `json:"registryId,omitempty"`
+	ReminderSentAt     *time.Time                     `json:"reminderSentAt,omitempty"`
 	ReserverName       *string                        `json:"reserverName,omitempty"`
 	Status             *enum_reservation_status.Value `json:"status,omitempty"`
 	Updated            *actor_trace.HTTPRecord        `json:"updated,omitempty"`
@@ -37,6 +40,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 		}
 		m.Created = elemcreated0
 	}
+	if r.ExpiresAt != nil {
+		elemexpiresAt0 := r.ExpiresAt
+		m.ExpiresAt = *elemexpiresAt0
+	}
 	if r.IsAnonymous != nil {
 		elemisAnonymous0 := r.IsAnonymous
 		m.IsAnonymous = *elemisAnonymous0
@@ -56,6 +63,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 	if r.RegistryId != nil {
 		elemregistryId0 := r.RegistryId
 		m.RegistryId = *elemregistryId0
+	}
+	if r.ReminderSentAt != nil {
+		elemreminderSentAt0 := r.ReminderSentAt
+		m.ReminderSentAt = *elemreminderSentAt0
 	}
 	if r.ReserverName != nil {
 		elemreserverName0 := r.ReserverName
@@ -94,6 +105,9 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 		p.Created = true
 		p.CreatedFields = actor_trace.NewProjection(true)
 	}
+	if r.ExpiresAt != nil {
+		p.ExpiresAt = true
+	}
 	if r.IsAnonymous != nil {
 		p.IsAnonymous = true
 	}
@@ -108,6 +122,9 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	}
 	if r.RegistryId != nil {
 		p.RegistryId = true
+	}
+	if r.ReminderSentAt != nil {
+		p.ReminderSentAt = true
 	}
 	if r.ReserverName != nil {
 		p.ReserverName = true
@@ -150,6 +167,16 @@ type HTTPWhereClause struct {
 	ContactEmailNlike  *string   `json:"contactEmailNlike,omitempty"`
 	// created (ActorTrace) search options
 	Created *actor_trace.HTTPWhereClause `json:"created,omitempty"`
+	// expiresAt (timestamp) search options
+	ExpiresAtEq     *time.Time   `json:"expiresAtEq,omitempty"`
+	ExpiresAtNe     *time.Time   `json:"expiresAtNe,omitempty"`
+	ExpiresAtGt     *time.Time   `json:"expiresAtGt,omitempty"`
+	ExpiresAtGte    *time.Time   `json:"expiresAtGte,omitempty"`
+	ExpiresAtLt     *time.Time   `json:"expiresAtLt,omitempty"`
+	ExpiresAtLte    *time.Time   `json:"expiresAtLte,omitempty"`
+	ExpiresAtIn     *[]time.Time `json:"expiresAtIn,omitempty"`
+	ExpiresAtNin    *[]time.Time `json:"expiresAtNin,omitempty"`
+	ExpiresAtExists *bool        `json:"expiresAtExists,omitempty"`
 	// isAnonymous (bool) search options
 	IsAnonymousEq     *bool   `json:"isAnonymousEq,omitempty"`
 	IsAnonymousNe     *bool   `json:"isAnonymousNe,omitempty"`
@@ -192,6 +219,16 @@ type HTTPWhereClause struct {
 	RegistryIdIn     *[]string `json:"registryIdIn,omitempty"`
 	RegistryIdNin    *[]string `json:"registryIdNin,omitempty"`
 	RegistryIdExists *bool     `json:"registryIdExists,omitempty"`
+	// reminderSentAt (timestamp) search options
+	ReminderSentAtEq     *time.Time   `json:"reminderSentAtEq,omitempty"`
+	ReminderSentAtNe     *time.Time   `json:"reminderSentAtNe,omitempty"`
+	ReminderSentAtGt     *time.Time   `json:"reminderSentAtGt,omitempty"`
+	ReminderSentAtGte    *time.Time   `json:"reminderSentAtGte,omitempty"`
+	ReminderSentAtLt     *time.Time   `json:"reminderSentAtLt,omitempty"`
+	ReminderSentAtLte    *time.Time   `json:"reminderSentAtLte,omitempty"`
+	ReminderSentAtIn     *[]time.Time `json:"reminderSentAtIn,omitempty"`
+	ReminderSentAtNin    *[]time.Time `json:"reminderSentAtNin,omitempty"`
+	ReminderSentAtExists *bool        `json:"reminderSentAtExists,omitempty"`
 	// reserverName (string) search options
 	ReserverNameEq     *string   `json:"reserverNameEq,omitempty"`
 	ReserverNameNe     *string   `json:"reserverNameNe,omitempty"`
@@ -311,6 +348,50 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 			return to, err
 		}
 		to.Created = &elemcreated0
+	}
+	if o.ExpiresAtEq != nil {
+		elemexpiresAtEq0 := o.ExpiresAtEq
+		to.ExpiresAtEq = elemexpiresAtEq0
+	}
+	if o.ExpiresAtNe != nil {
+		elemexpiresAtNe0 := o.ExpiresAtNe
+		to.ExpiresAtNe = elemexpiresAtNe0
+	}
+	if o.ExpiresAtGt != nil {
+		elemexpiresAtGt0 := o.ExpiresAtGt
+		to.ExpiresAtGt = elemexpiresAtGt0
+	}
+	if o.ExpiresAtGte != nil {
+		elemexpiresAtGte0 := o.ExpiresAtGte
+		to.ExpiresAtGte = elemexpiresAtGte0
+	}
+	if o.ExpiresAtLt != nil {
+		elemexpiresAtLt0 := o.ExpiresAtLt
+		to.ExpiresAtLt = elemexpiresAtLt0
+	}
+	if o.ExpiresAtLte != nil {
+		elemexpiresAtLte0 := o.ExpiresAtLte
+		to.ExpiresAtLte = elemexpiresAtLte0
+	}
+	if o.ExpiresAtIn != nil {
+		elemexpiresAtIn0 := make([]time.Time, 0)
+		for _, oexpiresAtIn0 := range *o.ExpiresAtIn {
+			elemexpiresAtIn1 := oexpiresAtIn0
+			elemexpiresAtIn0 = append(elemexpiresAtIn0, elemexpiresAtIn1)
+		}
+		to.ExpiresAtIn = &elemexpiresAtIn0
+	}
+	if o.ExpiresAtNin != nil {
+		elemexpiresAtNin0 := make([]time.Time, 0)
+		for _, oexpiresAtNin0 := range *o.ExpiresAtNin {
+			elemexpiresAtNin1 := oexpiresAtNin0
+			elemexpiresAtNin0 = append(elemexpiresAtNin0, elemexpiresAtNin1)
+		}
+		to.ExpiresAtNin = &elemexpiresAtNin0
+	}
+	if o.ExpiresAtExists != nil {
+		elemexpiresAtExists0 := o.ExpiresAtExists
+		to.ExpiresAtExists = elemexpiresAtExists0
 	}
 	if o.IsAnonymousEq != nil {
 		elemisAnonymousEq0 := o.IsAnonymousEq
@@ -500,6 +581,50 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 		elemregistryIdExists0 := o.RegistryIdExists
 		to.RegistryIdExists = elemregistryIdExists0
 	}
+	if o.ReminderSentAtEq != nil {
+		elemreminderSentAtEq0 := o.ReminderSentAtEq
+		to.ReminderSentAtEq = elemreminderSentAtEq0
+	}
+	if o.ReminderSentAtNe != nil {
+		elemreminderSentAtNe0 := o.ReminderSentAtNe
+		to.ReminderSentAtNe = elemreminderSentAtNe0
+	}
+	if o.ReminderSentAtGt != nil {
+		elemreminderSentAtGt0 := o.ReminderSentAtGt
+		to.ReminderSentAtGt = elemreminderSentAtGt0
+	}
+	if o.ReminderSentAtGte != nil {
+		elemreminderSentAtGte0 := o.ReminderSentAtGte
+		to.ReminderSentAtGte = elemreminderSentAtGte0
+	}
+	if o.ReminderSentAtLt != nil {
+		elemreminderSentAtLt0 := o.ReminderSentAtLt
+		to.ReminderSentAtLt = elemreminderSentAtLt0
+	}
+	if o.ReminderSentAtLte != nil {
+		elemreminderSentAtLte0 := o.ReminderSentAtLte
+		to.ReminderSentAtLte = elemreminderSentAtLte0
+	}
+	if o.ReminderSentAtIn != nil {
+		elemreminderSentAtIn0 := make([]time.Time, 0)
+		for _, oreminderSentAtIn0 := range *o.ReminderSentAtIn {
+			elemreminderSentAtIn1 := oreminderSentAtIn0
+			elemreminderSentAtIn0 = append(elemreminderSentAtIn0, elemreminderSentAtIn1)
+		}
+		to.ReminderSentAtIn = &elemreminderSentAtIn0
+	}
+	if o.ReminderSentAtNin != nil {
+		elemreminderSentAtNin0 := make([]time.Time, 0)
+		for _, oreminderSentAtNin0 := range *o.ReminderSentAtNin {
+			elemreminderSentAtNin1 := oreminderSentAtNin0
+			elemreminderSentAtNin0 = append(elemreminderSentAtNin0, elemreminderSentAtNin1)
+		}
+		to.ReminderSentAtNin = &elemreminderSentAtNin0
+	}
+	if o.ReminderSentAtExists != nil {
+		elemreminderSentAtExists0 := o.ReminderSentAtExists
+		to.ReminderSentAtExists = elemreminderSentAtExists0
+	}
 	if o.ReserverNameEq != nil {
 		elemreserverNameEq0 := o.ReserverNameEq
 		to.ReserverNameEq = elemreserverNameEq0
@@ -615,6 +740,7 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 
 type HTTPSortParams struct {
 	CreatedAt  *int8 `json:"createdAt,omitempty"`
+	ExpiresAt  *int8 `json:"expiresAt,omitempty"`
 	ItemId     *int8 `json:"itemId,omitempty"`
 	RegistryId *int8 `json:"registryId,omitempty"`
 	UpdatedAt  *int8 `json:"updatedAt,omitempty"`
@@ -624,6 +750,9 @@ func (s HTTPSortParams) ToSortParams() SortParams {
 	to := SortParams{}
 	if s.CreatedAt != nil {
 		to.CreatedAt = *s.CreatedAt
+	}
+	if s.ExpiresAt != nil {
+		to.ExpiresAt = *s.ExpiresAt
 	}
 	if s.ItemId != nil {
 		to.ItemId = *s.ItemId

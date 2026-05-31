@@ -41,6 +41,16 @@ export type ReservationSearchQuery = {
     contactEmailNlike?: string;
     // created (ActorTrace) search options
     created?: ActorTraceSearchQuery;
+    // expiresAt (timestamp) search options
+    expiresAtEq?: string;
+    expiresAtNe?: string;
+    expiresAtGt?: string;
+    expiresAtGte?: string;
+    expiresAtLt?: string;
+    expiresAtLte?: string;
+    expiresAtIn?: string[];
+    expiresAtNin?: string[];
+    expiresAtExists?: boolean;
     // isAnonymous (bool) search options
     isAnonymousEq?: boolean;
     isAnonymousNe?: boolean;
@@ -83,6 +93,16 @@ export type ReservationSearchQuery = {
     registryIdIn?: string[];
     registryIdNin?: string[];
     registryIdExists?: boolean;
+    // reminderSentAt (timestamp) search options
+    reminderSentAtEq?: string;
+    reminderSentAtNe?: string;
+    reminderSentAtGt?: string;
+    reminderSentAtGte?: string;
+    reminderSentAtLt?: string;
+    reminderSentAtLte?: string;
+    reminderSentAtIn?: string[];
+    reminderSentAtNin?: string[];
+    reminderSentAtExists?: boolean;
     // reserverName (string) search options
     reserverNameEq?: string;
     reserverNameNe?: string;
