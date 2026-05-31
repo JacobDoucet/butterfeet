@@ -79,8 +79,8 @@ func scan(ctx context.Context, cfg Config, base string) {
 	// Find Reserved holds that are still valid (not expired) and were created
 	// more than `cfg.Threshold` ago.
 	resvResult, _, err := cfg.Client.Reservation().Search(scanCtx, super, reservation.WhereClause{
-		StatusEq:     &status,
-		ExpiresAtGt:  &now,
+		StatusEq:    &status,
+		ExpiresAtGt: &now,
 	}, reservationapi.QueryOptions{Limit: 500})
 	if err != nil {
 		log.Error().Err(err).Msg("reminders scan failed")
