@@ -9,6 +9,8 @@ import (
 
 type Model struct {
 	Id                 string
+	AffiliateUrl       string
+	CanonicalUrl       string
 	Category           string
 	Created            actor_trace.Model
 	Currency           string
@@ -17,6 +19,7 @@ type Model struct {
 	ImageUrl           string
 	NoSubstitutes      bool
 	Notes              string
+	OriginalUrl        string
 	OwnerPurchased     bool
 	ParentItemId       string
 	Position           int
@@ -25,6 +28,7 @@ type Model struct {
 	Quantity           int
 	QuantityUnlimited  bool
 	RegistryId         string
+	Retailer           string
 	Source             enum_item_source.Value
 	Title              string
 	Updated            actor_trace.Model
@@ -39,6 +43,14 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 			return r, errors.Join(errors.New("invalid m.Id"), err)
 		}
 		r.Id = &elemid0
+	}
+	if projection.AffiliateUrl {
+		elemaffiliateUrl0 := m.AffiliateUrl
+		r.AffiliateUrl = &elemaffiliateUrl0
+	}
+	if projection.CanonicalUrl {
+		elemcanonicalUrl0 := m.CanonicalUrl
+		r.CanonicalUrl = &elemcanonicalUrl0
 	}
 	if projection.Category {
 		elemcategory0 := m.Category
@@ -74,6 +86,10 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 	if projection.Notes {
 		elemnotes0 := m.Notes
 		r.Notes = &elemnotes0
+	}
+	if projection.OriginalUrl {
+		elemoriginalUrl0 := m.OriginalUrl
+		r.OriginalUrl = &elemoriginalUrl0
 	}
 	if projection.OwnerPurchased {
 		elemownerPurchased0 := m.OwnerPurchased
@@ -113,6 +129,10 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 		}
 		r.RegistryId = &elemregistryId0
 	}
+	if projection.Retailer {
+		elemretailer0 := m.Retailer
+		r.Retailer = &elemretailer0
+	}
 	if projection.Source {
 		elemsource0 := m.Source
 		r.Source = &elemsource0
@@ -143,6 +163,14 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 	if m.Id != "" {
 		elemid0 := m.Id
 		r.Id = &elemid0
+	}
+	if projection.AffiliateUrl {
+		elemaffiliateUrl0 := m.AffiliateUrl
+		r.AffiliateUrl = &elemaffiliateUrl0
+	}
+	if projection.CanonicalUrl {
+		elemcanonicalUrl0 := m.CanonicalUrl
+		r.CanonicalUrl = &elemcanonicalUrl0
 	}
 	if projection.Category {
 		elemcategory0 := m.Category
@@ -179,6 +207,10 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 		elemnotes0 := m.Notes
 		r.Notes = &elemnotes0
 	}
+	if projection.OriginalUrl {
+		elemoriginalUrl0 := m.OriginalUrl
+		r.OriginalUrl = &elemoriginalUrl0
+	}
 	if projection.OwnerPurchased {
 		elemownerPurchased0 := m.OwnerPurchased
 		r.OwnerPurchased = &elemownerPurchased0
@@ -210,6 +242,10 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 	if projection.RegistryId && m.RegistryId != "" {
 		elemregistryId0 := m.RegistryId
 		r.RegistryId = &elemregistryId0
+	}
+	if projection.Retailer {
+		elemretailer0 := m.Retailer
+		r.Retailer = &elemretailer0
 	}
 	if projection.Source {
 		elemsource0 := m.Source
@@ -246,6 +282,30 @@ type WhereClause struct {
 	IdIn     *[]string
 	IdNin    *[]string
 	IdExists *bool
+	// affiliateUrl (string) search options
+	AffiliateUrlEq     *string
+	AffiliateUrlNe     *string
+	AffiliateUrlGt     *string
+	AffiliateUrlGte    *string
+	AffiliateUrlLt     *string
+	AffiliateUrlLte    *string
+	AffiliateUrlIn     *[]string
+	AffiliateUrlNin    *[]string
+	AffiliateUrlExists *bool
+	AffiliateUrlLike   *string
+	AffiliateUrlNlike  *string
+	// canonicalUrl (string) search options
+	CanonicalUrlEq     *string
+	CanonicalUrlNe     *string
+	CanonicalUrlGt     *string
+	CanonicalUrlGte    *string
+	CanonicalUrlLt     *string
+	CanonicalUrlLte    *string
+	CanonicalUrlIn     *[]string
+	CanonicalUrlNin    *[]string
+	CanonicalUrlExists *bool
+	CanonicalUrlLike   *string
+	CanonicalUrlNlike  *string
 	// category (string) search options
 	CategoryEq     *string
 	CategoryNe     *string
@@ -330,6 +390,18 @@ type WhereClause struct {
 	NotesExists *bool
 	NotesLike   *string
 	NotesNlike  *string
+	// originalUrl (string) search options
+	OriginalUrlEq     *string
+	OriginalUrlNe     *string
+	OriginalUrlGt     *string
+	OriginalUrlGte    *string
+	OriginalUrlLt     *string
+	OriginalUrlLte    *string
+	OriginalUrlIn     *[]string
+	OriginalUrlNin    *[]string
+	OriginalUrlExists *bool
+	OriginalUrlLike   *string
+	OriginalUrlNlike  *string
 	// ownerPurchased (bool) search options
 	OwnerPurchasedEq     *bool
 	OwnerPurchasedNe     *bool
@@ -402,6 +474,18 @@ type WhereClause struct {
 	RegistryIdIn     *[]string
 	RegistryIdNin    *[]string
 	RegistryIdExists *bool
+	// retailer (string) search options
+	RetailerEq     *string
+	RetailerNe     *string
+	RetailerGt     *string
+	RetailerGte    *string
+	RetailerLt     *string
+	RetailerLte    *string
+	RetailerIn     *[]string
+	RetailerNin    *[]string
+	RetailerExists *bool
+	RetailerLike   *string
+	RetailerNlike  *string
 	// source (ItemSource) search options
 	SourceEq     *enum_item_source.Value
 	SourceNe     *enum_item_source.Value
@@ -474,6 +558,110 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 	if o.IdExists != nil {
 		elemidExists0 := o.IdExists
 		to.IdExists = elemidExists0
+	}
+	if o.AffiliateUrlEq != nil {
+		elemaffiliateUrlEq0 := o.AffiliateUrlEq
+		to.AffiliateUrlEq = elemaffiliateUrlEq0
+	}
+	if o.AffiliateUrlNe != nil {
+		elemaffiliateUrlNe0 := o.AffiliateUrlNe
+		to.AffiliateUrlNe = elemaffiliateUrlNe0
+	}
+	if o.AffiliateUrlGt != nil {
+		elemaffiliateUrlGt0 := o.AffiliateUrlGt
+		to.AffiliateUrlGt = elemaffiliateUrlGt0
+	}
+	if o.AffiliateUrlGte != nil {
+		elemaffiliateUrlGte0 := o.AffiliateUrlGte
+		to.AffiliateUrlGte = elemaffiliateUrlGte0
+	}
+	if o.AffiliateUrlLt != nil {
+		elemaffiliateUrlLt0 := o.AffiliateUrlLt
+		to.AffiliateUrlLt = elemaffiliateUrlLt0
+	}
+	if o.AffiliateUrlLte != nil {
+		elemaffiliateUrlLte0 := o.AffiliateUrlLte
+		to.AffiliateUrlLte = elemaffiliateUrlLte0
+	}
+	if o.AffiliateUrlIn != nil {
+		elemaffiliateUrlIn0 := make([]string, 0)
+		for _, oaffiliateUrlIn0 := range *o.AffiliateUrlIn {
+			elemaffiliateUrlIn1 := oaffiliateUrlIn0
+			elemaffiliateUrlIn0 = append(elemaffiliateUrlIn0, elemaffiliateUrlIn1)
+		}
+		to.AffiliateUrlIn = &elemaffiliateUrlIn0
+	}
+	if o.AffiliateUrlNin != nil {
+		elemaffiliateUrlNin0 := make([]string, 0)
+		for _, oaffiliateUrlNin0 := range *o.AffiliateUrlNin {
+			elemaffiliateUrlNin1 := oaffiliateUrlNin0
+			elemaffiliateUrlNin0 = append(elemaffiliateUrlNin0, elemaffiliateUrlNin1)
+		}
+		to.AffiliateUrlNin = &elemaffiliateUrlNin0
+	}
+	if o.AffiliateUrlExists != nil {
+		elemaffiliateUrlExists0 := o.AffiliateUrlExists
+		to.AffiliateUrlExists = elemaffiliateUrlExists0
+	}
+	if o.AffiliateUrlLike != nil {
+		elemaffiliateUrlLike0 := o.AffiliateUrlLike
+		to.AffiliateUrlLike = elemaffiliateUrlLike0
+	}
+	if o.AffiliateUrlNlike != nil {
+		elemaffiliateUrlNlike0 := o.AffiliateUrlNlike
+		to.AffiliateUrlNlike = elemaffiliateUrlNlike0
+	}
+	if o.CanonicalUrlEq != nil {
+		elemcanonicalUrlEq0 := o.CanonicalUrlEq
+		to.CanonicalUrlEq = elemcanonicalUrlEq0
+	}
+	if o.CanonicalUrlNe != nil {
+		elemcanonicalUrlNe0 := o.CanonicalUrlNe
+		to.CanonicalUrlNe = elemcanonicalUrlNe0
+	}
+	if o.CanonicalUrlGt != nil {
+		elemcanonicalUrlGt0 := o.CanonicalUrlGt
+		to.CanonicalUrlGt = elemcanonicalUrlGt0
+	}
+	if o.CanonicalUrlGte != nil {
+		elemcanonicalUrlGte0 := o.CanonicalUrlGte
+		to.CanonicalUrlGte = elemcanonicalUrlGte0
+	}
+	if o.CanonicalUrlLt != nil {
+		elemcanonicalUrlLt0 := o.CanonicalUrlLt
+		to.CanonicalUrlLt = elemcanonicalUrlLt0
+	}
+	if o.CanonicalUrlLte != nil {
+		elemcanonicalUrlLte0 := o.CanonicalUrlLte
+		to.CanonicalUrlLte = elemcanonicalUrlLte0
+	}
+	if o.CanonicalUrlIn != nil {
+		elemcanonicalUrlIn0 := make([]string, 0)
+		for _, ocanonicalUrlIn0 := range *o.CanonicalUrlIn {
+			elemcanonicalUrlIn1 := ocanonicalUrlIn0
+			elemcanonicalUrlIn0 = append(elemcanonicalUrlIn0, elemcanonicalUrlIn1)
+		}
+		to.CanonicalUrlIn = &elemcanonicalUrlIn0
+	}
+	if o.CanonicalUrlNin != nil {
+		elemcanonicalUrlNin0 := make([]string, 0)
+		for _, ocanonicalUrlNin0 := range *o.CanonicalUrlNin {
+			elemcanonicalUrlNin1 := ocanonicalUrlNin0
+			elemcanonicalUrlNin0 = append(elemcanonicalUrlNin0, elemcanonicalUrlNin1)
+		}
+		to.CanonicalUrlNin = &elemcanonicalUrlNin0
+	}
+	if o.CanonicalUrlExists != nil {
+		elemcanonicalUrlExists0 := o.CanonicalUrlExists
+		to.CanonicalUrlExists = elemcanonicalUrlExists0
+	}
+	if o.CanonicalUrlLike != nil {
+		elemcanonicalUrlLike0 := o.CanonicalUrlLike
+		to.CanonicalUrlLike = elemcanonicalUrlLike0
+	}
+	if o.CanonicalUrlNlike != nil {
+		elemcanonicalUrlNlike0 := o.CanonicalUrlNlike
+		to.CanonicalUrlNlike = elemcanonicalUrlNlike0
 	}
 	if o.CategoryEq != nil {
 		elemcategoryEq0 := o.CategoryEq
@@ -838,6 +1026,58 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 		elemnotesNlike0 := o.NotesNlike
 		to.NotesNlike = elemnotesNlike0
 	}
+	if o.OriginalUrlEq != nil {
+		elemoriginalUrlEq0 := o.OriginalUrlEq
+		to.OriginalUrlEq = elemoriginalUrlEq0
+	}
+	if o.OriginalUrlNe != nil {
+		elemoriginalUrlNe0 := o.OriginalUrlNe
+		to.OriginalUrlNe = elemoriginalUrlNe0
+	}
+	if o.OriginalUrlGt != nil {
+		elemoriginalUrlGt0 := o.OriginalUrlGt
+		to.OriginalUrlGt = elemoriginalUrlGt0
+	}
+	if o.OriginalUrlGte != nil {
+		elemoriginalUrlGte0 := o.OriginalUrlGte
+		to.OriginalUrlGte = elemoriginalUrlGte0
+	}
+	if o.OriginalUrlLt != nil {
+		elemoriginalUrlLt0 := o.OriginalUrlLt
+		to.OriginalUrlLt = elemoriginalUrlLt0
+	}
+	if o.OriginalUrlLte != nil {
+		elemoriginalUrlLte0 := o.OriginalUrlLte
+		to.OriginalUrlLte = elemoriginalUrlLte0
+	}
+	if o.OriginalUrlIn != nil {
+		elemoriginalUrlIn0 := make([]string, 0)
+		for _, ooriginalUrlIn0 := range *o.OriginalUrlIn {
+			elemoriginalUrlIn1 := ooriginalUrlIn0
+			elemoriginalUrlIn0 = append(elemoriginalUrlIn0, elemoriginalUrlIn1)
+		}
+		to.OriginalUrlIn = &elemoriginalUrlIn0
+	}
+	if o.OriginalUrlNin != nil {
+		elemoriginalUrlNin0 := make([]string, 0)
+		for _, ooriginalUrlNin0 := range *o.OriginalUrlNin {
+			elemoriginalUrlNin1 := ooriginalUrlNin0
+			elemoriginalUrlNin0 = append(elemoriginalUrlNin0, elemoriginalUrlNin1)
+		}
+		to.OriginalUrlNin = &elemoriginalUrlNin0
+	}
+	if o.OriginalUrlExists != nil {
+		elemoriginalUrlExists0 := o.OriginalUrlExists
+		to.OriginalUrlExists = elemoriginalUrlExists0
+	}
+	if o.OriginalUrlLike != nil {
+		elemoriginalUrlLike0 := o.OriginalUrlLike
+		to.OriginalUrlLike = elemoriginalUrlLike0
+	}
+	if o.OriginalUrlNlike != nil {
+		elemoriginalUrlNlike0 := o.OriginalUrlNlike
+		to.OriginalUrlNlike = elemoriginalUrlNlike0
+	}
 	if o.OwnerPurchasedEq != nil {
 		elemownerPurchasedEq0 := o.OwnerPurchasedEq
 		to.OwnerPurchasedEq = elemownerPurchasedEq0
@@ -1175,6 +1415,58 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 	if o.RegistryIdExists != nil {
 		elemregistryIdExists0 := o.RegistryIdExists
 		to.RegistryIdExists = elemregistryIdExists0
+	}
+	if o.RetailerEq != nil {
+		elemretailerEq0 := o.RetailerEq
+		to.RetailerEq = elemretailerEq0
+	}
+	if o.RetailerNe != nil {
+		elemretailerNe0 := o.RetailerNe
+		to.RetailerNe = elemretailerNe0
+	}
+	if o.RetailerGt != nil {
+		elemretailerGt0 := o.RetailerGt
+		to.RetailerGt = elemretailerGt0
+	}
+	if o.RetailerGte != nil {
+		elemretailerGte0 := o.RetailerGte
+		to.RetailerGte = elemretailerGte0
+	}
+	if o.RetailerLt != nil {
+		elemretailerLt0 := o.RetailerLt
+		to.RetailerLt = elemretailerLt0
+	}
+	if o.RetailerLte != nil {
+		elemretailerLte0 := o.RetailerLte
+		to.RetailerLte = elemretailerLte0
+	}
+	if o.RetailerIn != nil {
+		elemretailerIn0 := make([]string, 0)
+		for _, oretailerIn0 := range *o.RetailerIn {
+			elemretailerIn1 := oretailerIn0
+			elemretailerIn0 = append(elemretailerIn0, elemretailerIn1)
+		}
+		to.RetailerIn = &elemretailerIn0
+	}
+	if o.RetailerNin != nil {
+		elemretailerNin0 := make([]string, 0)
+		for _, oretailerNin0 := range *o.RetailerNin {
+			elemretailerNin1 := oretailerNin0
+			elemretailerNin0 = append(elemretailerNin0, elemretailerNin1)
+		}
+		to.RetailerNin = &elemretailerNin0
+	}
+	if o.RetailerExists != nil {
+		elemretailerExists0 := o.RetailerExists
+		to.RetailerExists = elemretailerExists0
+	}
+	if o.RetailerLike != nil {
+		elemretailerLike0 := o.RetailerLike
+		to.RetailerLike = elemretailerLike0
+	}
+	if o.RetailerNlike != nil {
+		elemretailerNlike0 := o.RetailerNlike
+		to.RetailerNlike = elemretailerNlike0
 	}
 	if o.SourceEq != nil {
 		elemsourceEq0 := o.SourceEq

@@ -9,6 +9,8 @@ import (
 
 type MongoRecord struct {
 	Id                 *primitive.ObjectID      `bson:"_id,omitempty"`
+	AffiliateUrl       *string                  `bson:"affiliateUrl,omitempty"`
+	CanonicalUrl       *string                  `bson:"canonicalUrl,omitempty"`
 	Category           *string                  `bson:"category,omitempty"`
 	Created            *actor_trace.MongoRecord `bson:"created,omitempty"`
 	Currency           *string                  `bson:"currency,omitempty"`
@@ -17,6 +19,7 @@ type MongoRecord struct {
 	ImageUrl           *string                  `bson:"imageUrl,omitempty"`
 	NoSubstitutes      *bool                    `bson:"noSubstitutes,omitempty"`
 	Notes              *string                  `bson:"notes,omitempty"`
+	OriginalUrl        *string                  `bson:"originalUrl,omitempty"`
 	OwnerPurchased     *bool                    `bson:"ownerPurchased,omitempty"`
 	ParentItemId       *primitive.ObjectID      `bson:"parentItemId,omitempty"`
 	Position           *int                     `bson:"position,omitempty"`
@@ -25,6 +28,7 @@ type MongoRecord struct {
 	Quantity           *int                     `bson:"quantity,omitempty"`
 	QuantityUnlimited  *bool                    `bson:"quantityUnlimited,omitempty"`
 	RegistryId         *primitive.ObjectID      `bson:"registryId,omitempty"`
+	Retailer           *string                  `bson:"retailer,omitempty"`
 	Source             *enum_item_source.Value  `bson:"source,omitempty"`
 	Title              *string                  `bson:"title,omitempty"`
 	Updated            *actor_trace.MongoRecord `bson:"updated,omitempty"`
@@ -40,6 +44,14 @@ func (r *MongoRecord) ToModel() (Model, error) {
 	if r.Id != nil {
 		elemid0 := r.Id.Hex()
 		m.Id = elemid0
+	}
+	if r.AffiliateUrl != nil {
+		elemaffiliateUrl0 := r.AffiliateUrl
+		m.AffiliateUrl = *elemaffiliateUrl0
+	}
+	if r.CanonicalUrl != nil {
+		elemcanonicalUrl0 := r.CanonicalUrl
+		m.CanonicalUrl = *elemcanonicalUrl0
 	}
 	if r.Category != nil {
 		elemcategory0 := r.Category
@@ -76,6 +88,10 @@ func (r *MongoRecord) ToModel() (Model, error) {
 		elemnotes0 := r.Notes
 		m.Notes = *elemnotes0
 	}
+	if r.OriginalUrl != nil {
+		elemoriginalUrl0 := r.OriginalUrl
+		m.OriginalUrl = *elemoriginalUrl0
+	}
 	if r.OwnerPurchased != nil {
 		elemownerPurchased0 := r.OwnerPurchased
 		m.OwnerPurchased = *elemownerPurchased0
@@ -107,6 +123,10 @@ func (r *MongoRecord) ToModel() (Model, error) {
 	if r.RegistryId != nil {
 		elemregistryId0 := r.RegistryId.Hex()
 		m.RegistryId = elemregistryId0
+	}
+	if r.Retailer != nil {
+		elemretailer0 := r.Retailer
+		m.Retailer = *elemretailer0
 	}
 	if r.Source != nil {
 		elemsource0 := r.Source
@@ -143,6 +163,30 @@ type MongoWhereClause struct {
 	IdIn     *[]primitive.ObjectID
 	IdNin    *[]primitive.ObjectID
 	IdExists *bool
+	// affiliateUrl (string) search options
+	AffiliateUrlEq     *string
+	AffiliateUrlNe     *string
+	AffiliateUrlGt     *string
+	AffiliateUrlGte    *string
+	AffiliateUrlLt     *string
+	AffiliateUrlLte    *string
+	AffiliateUrlIn     *[]string
+	AffiliateUrlNin    *[]string
+	AffiliateUrlExists *bool
+	AffiliateUrlLike   *string
+	AffiliateUrlNlike  *string
+	// canonicalUrl (string) search options
+	CanonicalUrlEq     *string
+	CanonicalUrlNe     *string
+	CanonicalUrlGt     *string
+	CanonicalUrlGte    *string
+	CanonicalUrlLt     *string
+	CanonicalUrlLte    *string
+	CanonicalUrlIn     *[]string
+	CanonicalUrlNin    *[]string
+	CanonicalUrlExists *bool
+	CanonicalUrlLike   *string
+	CanonicalUrlNlike  *string
 	// category (string) search options
 	CategoryEq     *string
 	CategoryNe     *string
@@ -227,6 +271,18 @@ type MongoWhereClause struct {
 	NotesExists *bool
 	NotesLike   *string
 	NotesNlike  *string
+	// originalUrl (string) search options
+	OriginalUrlEq     *string
+	OriginalUrlNe     *string
+	OriginalUrlGt     *string
+	OriginalUrlGte    *string
+	OriginalUrlLt     *string
+	OriginalUrlLte    *string
+	OriginalUrlIn     *[]string
+	OriginalUrlNin    *[]string
+	OriginalUrlExists *bool
+	OriginalUrlLike   *string
+	OriginalUrlNlike  *string
 	// ownerPurchased (bool) search options
 	OwnerPurchasedEq     *bool
 	OwnerPurchasedNe     *bool
@@ -299,6 +355,18 @@ type MongoWhereClause struct {
 	RegistryIdIn     *[]primitive.ObjectID
 	RegistryIdNin    *[]primitive.ObjectID
 	RegistryIdExists *bool
+	// retailer (string) search options
+	RetailerEq     *string
+	RetailerNe     *string
+	RetailerGt     *string
+	RetailerGte    *string
+	RetailerLt     *string
+	RetailerLte    *string
+	RetailerIn     *[]string
+	RetailerNin    *[]string
+	RetailerExists *bool
+	RetailerLike   *string
+	RetailerNlike  *string
 	// source (ItemSource) search options
 	SourceEq     *enum_item_source.Value
 	SourceNe     *enum_item_source.Value
@@ -364,6 +432,116 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 	if o.IdExists != nil {
 		query := bson.M{}
 		query["_id"] = bson.M{"$exists": *o.IdExists}
+		and = append(and, query)
+	}
+	if o.AffiliateUrlEq != nil {
+		query := bson.M{}
+		query["affiliateUrl"] = o.AffiliateUrlEq
+		and = append(and, query)
+	}
+	if o.AffiliateUrlNe != nil {
+		query := bson.M{}
+		query["affiliateUrl"] = bson.M{"$ne": o.AffiliateUrlNe}
+		and = append(and, query)
+	}
+	if o.AffiliateUrlGt != nil {
+		query := bson.M{}
+		query["affiliateUrl"] = bson.M{"$gt": o.AffiliateUrlGt}
+		and = append(and, query)
+	}
+	if o.AffiliateUrlGte != nil {
+		query := bson.M{}
+		query["affiliateUrl"] = bson.M{"$gte": o.AffiliateUrlGte}
+		and = append(and, query)
+	}
+	if o.AffiliateUrlLt != nil {
+		query := bson.M{}
+		query["affiliateUrl"] = bson.M{"$lt": o.AffiliateUrlLt}
+		and = append(and, query)
+	}
+	if o.AffiliateUrlLte != nil {
+		query := bson.M{}
+		query["affiliateUrl"] = bson.M{"$lte": o.AffiliateUrlLte}
+		and = append(and, query)
+	}
+	if o.AffiliateUrlIn != nil {
+		query := bson.M{}
+		query["affiliateUrl"] = bson.M{"$in": o.AffiliateUrlIn}
+		and = append(and, query)
+	}
+	if o.AffiliateUrlNin != nil {
+		query := bson.M{}
+		query["affiliateUrl"] = bson.M{"$nin": o.AffiliateUrlNin}
+		and = append(and, query)
+	}
+	if o.AffiliateUrlExists != nil {
+		query := bson.M{}
+		query["affiliateUrl"] = bson.M{"$exists": *o.AffiliateUrlExists}
+		and = append(and, query)
+	}
+	if o.AffiliateUrlLike != nil {
+		query := bson.M{}
+		query["affiliateUrl"] = bson.M{"$regex": o.AffiliateUrlLike, "$options": "i"}
+		and = append(and, query)
+	}
+	if o.AffiliateUrlNlike != nil {
+		query := bson.M{}
+		query["affiliateUrl"] = bson.M{"$not": bson.M{"$regex": o.AffiliateUrlNlike, "$options": "i"}}
+		and = append(and, query)
+	}
+	if o.CanonicalUrlEq != nil {
+		query := bson.M{}
+		query["canonicalUrl"] = o.CanonicalUrlEq
+		and = append(and, query)
+	}
+	if o.CanonicalUrlNe != nil {
+		query := bson.M{}
+		query["canonicalUrl"] = bson.M{"$ne": o.CanonicalUrlNe}
+		and = append(and, query)
+	}
+	if o.CanonicalUrlGt != nil {
+		query := bson.M{}
+		query["canonicalUrl"] = bson.M{"$gt": o.CanonicalUrlGt}
+		and = append(and, query)
+	}
+	if o.CanonicalUrlGte != nil {
+		query := bson.M{}
+		query["canonicalUrl"] = bson.M{"$gte": o.CanonicalUrlGte}
+		and = append(and, query)
+	}
+	if o.CanonicalUrlLt != nil {
+		query := bson.M{}
+		query["canonicalUrl"] = bson.M{"$lt": o.CanonicalUrlLt}
+		and = append(and, query)
+	}
+	if o.CanonicalUrlLte != nil {
+		query := bson.M{}
+		query["canonicalUrl"] = bson.M{"$lte": o.CanonicalUrlLte}
+		and = append(and, query)
+	}
+	if o.CanonicalUrlIn != nil {
+		query := bson.M{}
+		query["canonicalUrl"] = bson.M{"$in": o.CanonicalUrlIn}
+		and = append(and, query)
+	}
+	if o.CanonicalUrlNin != nil {
+		query := bson.M{}
+		query["canonicalUrl"] = bson.M{"$nin": o.CanonicalUrlNin}
+		and = append(and, query)
+	}
+	if o.CanonicalUrlExists != nil {
+		query := bson.M{}
+		query["canonicalUrl"] = bson.M{"$exists": *o.CanonicalUrlExists}
+		and = append(and, query)
+	}
+	if o.CanonicalUrlLike != nil {
+		query := bson.M{}
+		query["canonicalUrl"] = bson.M{"$regex": o.CanonicalUrlLike, "$options": "i"}
+		and = append(and, query)
+	}
+	if o.CanonicalUrlNlike != nil {
+		query := bson.M{}
+		query["canonicalUrl"] = bson.M{"$not": bson.M{"$regex": o.CanonicalUrlNlike, "$options": "i"}}
 		and = append(and, query)
 	}
 	if o.CategoryEq != nil {
@@ -758,6 +936,61 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 		query["notes"] = bson.M{"$not": bson.M{"$regex": o.NotesNlike, "$options": "i"}}
 		and = append(and, query)
 	}
+	if o.OriginalUrlEq != nil {
+		query := bson.M{}
+		query["originalUrl"] = o.OriginalUrlEq
+		and = append(and, query)
+	}
+	if o.OriginalUrlNe != nil {
+		query := bson.M{}
+		query["originalUrl"] = bson.M{"$ne": o.OriginalUrlNe}
+		and = append(and, query)
+	}
+	if o.OriginalUrlGt != nil {
+		query := bson.M{}
+		query["originalUrl"] = bson.M{"$gt": o.OriginalUrlGt}
+		and = append(and, query)
+	}
+	if o.OriginalUrlGte != nil {
+		query := bson.M{}
+		query["originalUrl"] = bson.M{"$gte": o.OriginalUrlGte}
+		and = append(and, query)
+	}
+	if o.OriginalUrlLt != nil {
+		query := bson.M{}
+		query["originalUrl"] = bson.M{"$lt": o.OriginalUrlLt}
+		and = append(and, query)
+	}
+	if o.OriginalUrlLte != nil {
+		query := bson.M{}
+		query["originalUrl"] = bson.M{"$lte": o.OriginalUrlLte}
+		and = append(and, query)
+	}
+	if o.OriginalUrlIn != nil {
+		query := bson.M{}
+		query["originalUrl"] = bson.M{"$in": o.OriginalUrlIn}
+		and = append(and, query)
+	}
+	if o.OriginalUrlNin != nil {
+		query := bson.M{}
+		query["originalUrl"] = bson.M{"$nin": o.OriginalUrlNin}
+		and = append(and, query)
+	}
+	if o.OriginalUrlExists != nil {
+		query := bson.M{}
+		query["originalUrl"] = bson.M{"$exists": *o.OriginalUrlExists}
+		and = append(and, query)
+	}
+	if o.OriginalUrlLike != nil {
+		query := bson.M{}
+		query["originalUrl"] = bson.M{"$regex": o.OriginalUrlLike, "$options": "i"}
+		and = append(and, query)
+	}
+	if o.OriginalUrlNlike != nil {
+		query := bson.M{}
+		query["originalUrl"] = bson.M{"$not": bson.M{"$regex": o.OriginalUrlNlike, "$options": "i"}}
+		and = append(and, query)
+	}
 	if o.OwnerPurchasedEq != nil {
 		query := bson.M{}
 		query["ownerPurchased"] = o.OwnerPurchasedEq
@@ -1076,6 +1309,61 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 	if o.RegistryIdExists != nil {
 		query := bson.M{}
 		query["registryId"] = bson.M{"$exists": *o.RegistryIdExists}
+		and = append(and, query)
+	}
+	if o.RetailerEq != nil {
+		query := bson.M{}
+		query["retailer"] = o.RetailerEq
+		and = append(and, query)
+	}
+	if o.RetailerNe != nil {
+		query := bson.M{}
+		query["retailer"] = bson.M{"$ne": o.RetailerNe}
+		and = append(and, query)
+	}
+	if o.RetailerGt != nil {
+		query := bson.M{}
+		query["retailer"] = bson.M{"$gt": o.RetailerGt}
+		and = append(and, query)
+	}
+	if o.RetailerGte != nil {
+		query := bson.M{}
+		query["retailer"] = bson.M{"$gte": o.RetailerGte}
+		and = append(and, query)
+	}
+	if o.RetailerLt != nil {
+		query := bson.M{}
+		query["retailer"] = bson.M{"$lt": o.RetailerLt}
+		and = append(and, query)
+	}
+	if o.RetailerLte != nil {
+		query := bson.M{}
+		query["retailer"] = bson.M{"$lte": o.RetailerLte}
+		and = append(and, query)
+	}
+	if o.RetailerIn != nil {
+		query := bson.M{}
+		query["retailer"] = bson.M{"$in": o.RetailerIn}
+		and = append(and, query)
+	}
+	if o.RetailerNin != nil {
+		query := bson.M{}
+		query["retailer"] = bson.M{"$nin": o.RetailerNin}
+		and = append(and, query)
+	}
+	if o.RetailerExists != nil {
+		query := bson.M{}
+		query["retailer"] = bson.M{"$exists": *o.RetailerExists}
+		and = append(and, query)
+	}
+	if o.RetailerLike != nil {
+		query := bson.M{}
+		query["retailer"] = bson.M{"$regex": o.RetailerLike, "$options": "i"}
+		and = append(and, query)
+	}
+	if o.RetailerNlike != nil {
+		query := bson.M{}
+		query["retailer"] = bson.M{"$not": bson.M{"$regex": o.RetailerNlike, "$options": "i"}}
 		and = append(and, query)
 	}
 	if o.SourceEq != nil {

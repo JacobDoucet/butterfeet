@@ -26,6 +26,8 @@ import (
 	registrymongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_mongo"
 	reservationmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation_mongo"
 	shippingaddressrequestmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request_mongo"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/affiliate"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/affiliatehttp"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/auth"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/buyer"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
@@ -117,7 +119,7 @@ func main() {
 	scrapeHandler := scrape.NewHandler()
 	root.Handle("/api/scrape", forgeAuthWrapper(scrapeHandler, authSvc))
 
-	publicHandler := public.NewHandler(apiClient, mailSvc, appBaseURL)
+	publicHandler := public.NewHandler(apiClient, db, mailSvc, appBaseURL)
 	buyerSvc := buyer.NewService(buyer.Config{
 		DB:        db,
 		JWTSecret: []byte(jwtSecret),
@@ -132,7 +134,10 @@ func main() {
 	root.Handle("/api/shipping/", http.StripPrefix("/api/shipping", shippingHandler))
 
 	// Mount forge mux behind /api (owner-authenticated CRUD).
-	root.Handle("/api/", http.StripPrefix("/api", forgeAuthWrapper(forgeMux, authSvc)))
+	amazonTag := getEnv("AMAZON_UK_ASSOCIATE_TAG", "butterfeetlab-21")
+	affiliate.RegisterProvider(affiliate.NewAmazonUK(amazonTag))
+	forgeWithAffiliate := affiliatehttp.EnrichMiddleware(affiliate.Default)(forgeMux)
+	root.Handle("/api/", http.StripPrefix("/api", forgeAuthWrapper(forgeWithAffiliate, authSvc)))
 
 	root.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

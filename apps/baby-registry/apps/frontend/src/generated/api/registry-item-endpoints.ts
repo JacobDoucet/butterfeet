@@ -139,6 +139,8 @@ export type RegistryItemAggregateField = typeof RegistryItemAggregateFields[keyo
 
 // Type-safe group-by fields
 export const RegistryItemGroupByFields = {
+    AffiliateUrl: 'affiliateUrl',
+    CanonicalUrl: 'canonicalUrl',
     Category: 'category',
     Currency: 'currency',
     Description: 'description',
@@ -146,6 +148,7 @@ export const RegistryItemGroupByFields = {
     ImageUrl: 'imageUrl',
     NoSubstitutes: 'noSubstitutes',
     Notes: 'notes',
+    OriginalUrl: 'originalUrl',
     OwnerPurchased: 'ownerPurchased',
     ParentItemId: 'parentItemId',
     Position: 'position',
@@ -154,6 +157,7 @@ export const RegistryItemGroupByFields = {
     Quantity: 'quantity',
     QuantityUnlimited: 'quantityUnlimited',
     RegistryId: 'registryId',
+    Retailer: 'retailer',
     Title: 'title',
 } as const;
 
@@ -168,6 +172,8 @@ export type AggregateFieldSpec = {
 // Aggregate result row with partial model fields and metadata
 export type RegistryItemAggregateResultRow = {
     // Group-by fields (original types)
+    affiliateUrl?: string | null;
+    canonicalUrl?: string | null;
     category?: string | null;
     currency?: string | null;
     description?: string | null;
@@ -175,6 +181,7 @@ export type RegistryItemAggregateResultRow = {
     imageUrl?: string | null;
     noSubstitutes?: boolean | null;
     notes?: string | null;
+    originalUrl?: string | null;
     ownerPurchased?: boolean | null;
     parentItemId?: string | null;
     position?: number | null;
@@ -183,6 +190,7 @@ export type RegistryItemAggregateResultRow = {
     quantity?: number | null;
     quantityUnlimited?: boolean | null;
     registryId?: string | null;
+    retailer?: string | null;
     title?: string | null;
     // Aggregate fields - always numbers since they're results of sum/avg/etc
     // Ref field registry

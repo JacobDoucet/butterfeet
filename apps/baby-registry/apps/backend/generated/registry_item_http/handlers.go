@@ -553,6 +553,24 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 					searchRequest.Query.IdIn = utils.StringSliceToStringSlicePtr(values)
 					continue
 				}
+			case "affiliateUrl":
+				if len(values) == 1 {
+					searchRequest.Query.AffiliateUrlEq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.AffiliateUrlIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
+			case "canonicalUrl":
+				if len(values) == 1 {
+					searchRequest.Query.CanonicalUrlEq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.CanonicalUrlIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
 			case "category":
 				if len(values) == 1 {
 					searchRequest.Query.CategoryEq = utils.StringSliceToStringPtr(values)
@@ -616,6 +634,15 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 					searchRequest.Query.NotesIn = utils.StringSliceToStringSlicePtr(values)
 					continue
 				}
+			case "originalUrl":
+				if len(values) == 1 {
+					searchRequest.Query.OriginalUrlEq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.OriginalUrlIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
 			case "ownerPurchased":
 				if len(values) == 1 {
 					searchRequest.Query.OwnerPurchasedEq = utils.StringSliceToBoolPtr(values)
@@ -670,6 +697,15 @@ func resolveSearchRequest(r *http.Request) (SearchRequest, error) {
 					searchRequest.Query.QuantityUnlimitedIn = utils.StringSliceToBoolSlicePtr(values)
 					continue
 				}
+			case "retailer":
+				if len(values) == 1 {
+					searchRequest.Query.RetailerEq = utils.StringSliceToStringPtr(values)
+					continue
+				}
+				if len(values) > 1 {
+					searchRequest.Query.RetailerIn = utils.StringSliceToStringSlicePtr(values)
+					continue
+				}
 			case "title":
 				if len(values) == 1 {
 					searchRequest.Query.TitleEq = utils.StringSliceToStringPtr(values)
@@ -705,6 +741,8 @@ type AggregateRequest struct {
 
 // AggregateResultRowHTTP is the HTTP response type for a single aggregate result row
 type AggregateResultRowHTTP struct {
+	AffiliateUrl      any `json:"affiliateUrl,omitempty"`
+	CanonicalUrl      any `json:"canonicalUrl,omitempty"`
 	Category          any `json:"category,omitempty"`
 	Currency          any `json:"currency,omitempty"`
 	Description       any `json:"description,omitempty"`
@@ -712,6 +750,7 @@ type AggregateResultRowHTTP struct {
 	ImageUrl          any `json:"imageUrl,omitempty"`
 	NoSubstitutes     any `json:"noSubstitutes,omitempty"`
 	Notes             any `json:"notes,omitempty"`
+	OriginalUrl       any `json:"originalUrl,omitempty"`
 	OwnerPurchased    any `json:"ownerPurchased,omitempty"`
 	ParentItemId      any `json:"parentItemId,omitempty"`
 	Position          any `json:"position,omitempty"`
@@ -720,6 +759,7 @@ type AggregateResultRowHTTP struct {
 	Quantity          any `json:"quantity,omitempty"`
 	QuantityUnlimited any `json:"quantityUnlimited,omitempty"`
 	RegistryId        any `json:"registryId,omitempty"`
+	Retailer          any `json:"retailer,omitempty"`
 	Title             any `json:"title,omitempty"`
 	// Ref field Registry
 	Registry any `json:"registry,omitempty"`
@@ -815,6 +855,8 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 				AggregateKeys: row.AggregateKeys,
 			}
 			// Copy group-by fields
+			httpRow.AffiliateUrl = row.AffiliateUrl
+			httpRow.CanonicalUrl = row.CanonicalUrl
 			httpRow.Category = row.Category
 			httpRow.Currency = row.Currency
 			httpRow.Description = row.Description
@@ -822,6 +864,7 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 			httpRow.ImageUrl = row.ImageUrl
 			httpRow.NoSubstitutes = row.NoSubstitutes
 			httpRow.Notes = row.Notes
+			httpRow.OriginalUrl = row.OriginalUrl
 			httpRow.OwnerPurchased = row.OwnerPurchased
 			httpRow.ParentItemId = row.ParentItemId
 			httpRow.Position = row.Position
@@ -830,6 +873,7 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 			httpRow.Quantity = row.Quantity
 			httpRow.QuantityUnlimited = row.QuantityUnlimited
 			httpRow.RegistryId = row.RegistryId
+			httpRow.Retailer = row.Retailer
 			httpRow.Title = row.Title
 			// Convert ref fields to HTTP records
 			if row.Registry != nil {

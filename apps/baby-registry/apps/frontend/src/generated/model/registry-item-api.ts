@@ -30,6 +30,30 @@ export type RegistryItemSearchQuery = {
     idIn?: string[];
     idNin?: string[];
     idExists?: boolean;
+    // affiliateUrl (string) search options
+    affiliateUrlEq?: string;
+    affiliateUrlNe?: string;
+    affiliateUrlGt?: string;
+    affiliateUrlGte?: string;
+    affiliateUrlLt?: string;
+    affiliateUrlLte?: string;
+    affiliateUrlIn?: string[];
+    affiliateUrlNin?: string[];
+    affiliateUrlExists?: boolean;
+    affiliateUrlLike?: string;
+    affiliateUrlNlike?: string;
+    // canonicalUrl (string) search options
+    canonicalUrlEq?: string;
+    canonicalUrlNe?: string;
+    canonicalUrlGt?: string;
+    canonicalUrlGte?: string;
+    canonicalUrlLt?: string;
+    canonicalUrlLte?: string;
+    canonicalUrlIn?: string[];
+    canonicalUrlNin?: string[];
+    canonicalUrlExists?: boolean;
+    canonicalUrlLike?: string;
+    canonicalUrlNlike?: string;
     // category (string) search options
     categoryEq?: string;
     categoryNe?: string;
@@ -114,6 +138,18 @@ export type RegistryItemSearchQuery = {
     notesExists?: boolean;
     notesLike?: string;
     notesNlike?: string;
+    // originalUrl (string) search options
+    originalUrlEq?: string;
+    originalUrlNe?: string;
+    originalUrlGt?: string;
+    originalUrlGte?: string;
+    originalUrlLt?: string;
+    originalUrlLte?: string;
+    originalUrlIn?: string[];
+    originalUrlNin?: string[];
+    originalUrlExists?: boolean;
+    originalUrlLike?: string;
+    originalUrlNlike?: string;
     // ownerPurchased (bool) search options
     ownerPurchasedEq?: boolean;
     ownerPurchasedNe?: boolean;
@@ -186,6 +222,18 @@ export type RegistryItemSearchQuery = {
     registryIdIn?: string[];
     registryIdNin?: string[];
     registryIdExists?: boolean;
+    // retailer (string) search options
+    retailerEq?: string;
+    retailerNe?: string;
+    retailerGt?: string;
+    retailerGte?: string;
+    retailerLt?: string;
+    retailerLte?: string;
+    retailerIn?: string[];
+    retailerNin?: string[];
+    retailerExists?: boolean;
+    retailerLike?: string;
+    retailerNlike?: string;
     // source (ItemSource) search options
     sourceEq?: ItemSource;
     sourceNe?: ItemSource;

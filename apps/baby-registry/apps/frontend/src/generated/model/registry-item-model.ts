@@ -5,6 +5,8 @@ import { ItemSource } from './item-source-enum';
 
 export type RegistryItem = {
   id?: string;
+  affiliateUrl?: string;
+  canonicalUrl?: string;
   category?: string;
   created?: ActorTrace;
   currency?: string;
@@ -13,6 +15,7 @@ export type RegistryItem = {
   imageUrl?: string;
   noSubstitutes?: boolean;
   notes?: string;
+  originalUrl?: string;
   ownerPurchased?: boolean;
   parentItemId?: string;
   position?: number;
@@ -21,6 +24,7 @@ export type RegistryItem = {
   quantity?: number;
   quantityUnlimited?: boolean;
   registryId?: string;
+  retailer?: string;
   source?: ItemSource;
   title?: string;
   updated?: ActorTrace;
@@ -29,6 +33,8 @@ export type RegistryItem = {
 
 export type RegistryItemProjection = {
     id?: boolean;
+    affiliateUrl?: boolean;
+    canonicalUrl?: boolean;
     category?: boolean;
     created?: boolean;
 		createdFields?: ActorTraceProjection;
@@ -38,6 +44,7 @@ export type RegistryItemProjection = {
     imageUrl?: boolean;
     noSubstitutes?: boolean;
     notes?: boolean;
+    originalUrl?: boolean;
     ownerPurchased?: boolean;
     parentItemId?: boolean;
     position?: boolean;
@@ -46,6 +53,7 @@ export type RegistryItemProjection = {
     quantity?: boolean;
     quantityUnlimited?: boolean;
     registryId?: boolean;
+    retailer?: boolean;
     source?: boolean;
     title?: boolean;
     updated?: boolean;

@@ -152,6 +152,300 @@ export function useRegistryItemMuiDataGridFilterModel(options: FilterOptions = {
                             },
                         };
                 }
+            case "affiliateUrl":
+                switch(gridFilterModel?.items?.[0]?.operator) { 
+                    case "equals":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "is":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notEquals":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThan":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "after":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrAfter":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThan":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "before":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrBefore":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "in":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                affiliateUrlIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notIn":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                affiliateUrlNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "isEmpty":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                affiliateUrlExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "contains":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlLike: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlLike: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notContains":
+                        return { 
+                            searchQuery: { 
+                                affiliateUrlNlike: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                affiliateUrlNlike: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                }
+            case "canonicalUrl":
+                switch(gridFilterModel?.items?.[0]?.operator) { 
+                    case "equals":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "is":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notEquals":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThan":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "after":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrAfter":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThan":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "before":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrBefore":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "in":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                canonicalUrlIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notIn":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                canonicalUrlNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "isEmpty":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                canonicalUrlExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "contains":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlLike: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlLike: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notContains":
+                        return { 
+                            searchQuery: { 
+                                canonicalUrlNlike: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                canonicalUrlNlike: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                }
             case "category":
                 switch(gridFilterModel?.items?.[0]?.operator) { 
                     case "equals":
@@ -1166,6 +1460,153 @@ export function useRegistryItemMuiDataGridFilterModel(options: FilterOptions = {
                             },
                         };
                 }
+            case "originalUrl":
+                switch(gridFilterModel?.items?.[0]?.operator) { 
+                    case "equals":
+                        return { 
+                            searchQuery: { 
+                                originalUrlEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "is":
+                        return { 
+                            searchQuery: { 
+                                originalUrlEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notEquals":
+                        return { 
+                            searchQuery: { 
+                                originalUrlNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThan":
+                        return { 
+                            searchQuery: { 
+                                originalUrlGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "after":
+                        return { 
+                            searchQuery: { 
+                                originalUrlGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                originalUrlGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrAfter":
+                        return { 
+                            searchQuery: { 
+                                originalUrlGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThan":
+                        return { 
+                            searchQuery: { 
+                                originalUrlLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "before":
+                        return { 
+                            searchQuery: { 
+                                originalUrlLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                originalUrlLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrBefore":
+                        return { 
+                            searchQuery: { 
+                                originalUrlLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "in":
+                        return { 
+                            searchQuery: { 
+                                originalUrlIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                originalUrlIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notIn":
+                        return { 
+                            searchQuery: { 
+                                originalUrlNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                originalUrlNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "isEmpty":
+                        return { 
+                            searchQuery: { 
+                                originalUrlExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                originalUrlExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "contains":
+                        return { 
+                            searchQuery: { 
+                                originalUrlLike: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlLike: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notContains":
+                        return { 
+                            searchQuery: { 
+                                originalUrlNlike: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                originalUrlNlike: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                }
             case "ownerPurchased":
                 switch(gridFilterModel?.items?.[0]?.operator) { 
                     case "equals":
@@ -2054,6 +2495,153 @@ export function useRegistryItemMuiDataGridFilterModel(options: FilterOptions = {
                             },
                         };
                 }
+            case "retailer":
+                switch(gridFilterModel?.items?.[0]?.operator) { 
+                    case "equals":
+                        return { 
+                            searchQuery: { 
+                                retailerEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "is":
+                        return { 
+                            searchQuery: { 
+                                retailerEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notEquals":
+                        return { 
+                            searchQuery: { 
+                                retailerNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerNe: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThan":
+                        return { 
+                            searchQuery: { 
+                                retailerGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "after":
+                        return { 
+                            searchQuery: { 
+                                retailerGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerGt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "greaterThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                retailerGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrAfter":
+                        return { 
+                            searchQuery: { 
+                                retailerGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerGte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThan":
+                        return { 
+                            searchQuery: { 
+                                retailerLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "before":
+                        return { 
+                            searchQuery: { 
+                                retailerLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerLt: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "lessThanOrEqual":
+                        return { 
+                            searchQuery: { 
+                                retailerLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "onOrBefore":
+                        return { 
+                            searchQuery: { 
+                                retailerLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerLte: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "in":
+                        return { 
+                            searchQuery: { 
+                                retailerIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                retailerIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notIn":
+                        return { 
+                            searchQuery: { 
+                                retailerNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                retailerNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "isEmpty":
+                        return { 
+                            searchQuery: { 
+                                retailerExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                retailerExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "contains":
+                        return { 
+                            searchQuery: { 
+                                retailerLike: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerLike: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notContains":
+                        return { 
+                            searchQuery: { 
+                                retailerNlike: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                retailerNlike: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                }
             case "source":
                 switch(gridFilterModel?.items?.[0]?.operator) { 
                     case "equals":
@@ -2384,6 +2972,74 @@ export function useRegistryItemIdDataGridColumn(options: RegistryItemIdDataGridC
     ]);
 }
 
+type RegistryItemAffiliateUrlDataGridColumnOptions = {
+    headerName?: string;
+    width?: number;
+    sortable?: boolean;
+    hideable?: boolean;
+    getValue?: (obj: RegistryItemWithRefs | undefined) => string;
+    renderCell?: GridColDef<RegistryItemWithRefs>['renderCell'];
+};
+
+export const RegistryItemAffiliateUrlDataGridColumnKey = 'affiliateUrl' as const;
+
+export function useRegistryItemAffiliateUrlDataGridColumn(options: RegistryItemAffiliateUrlDataGridColumnOptions) {
+
+    return useMemo<GridColDef<RegistryItemWithRefs>>(() => ({
+        headerName: options.headerName ?? RegistryItemAffiliateUrlDataGridColumnKey,
+        width: options.width,
+        sortable: options.sortable,
+        hideable: options.hideable,
+        field: RegistryItemAffiliateUrlDataGridColumnKey,
+        valueGetter: (_, row) => { 
+            return options.getValue ? options.getValue(row) : row.registryItem.affiliateUrl;
+        },
+        type: "string",
+        renderCell: options.renderCell,
+    }), [
+        options.headerName, 
+        options.width, 
+        options.sortable,
+        options.hideable,
+        options.getValue,
+        options.renderCell,
+    ]);
+}
+
+type RegistryItemCanonicalUrlDataGridColumnOptions = {
+    headerName?: string;
+    width?: number;
+    sortable?: boolean;
+    hideable?: boolean;
+    getValue?: (obj: RegistryItemWithRefs | undefined) => string;
+    renderCell?: GridColDef<RegistryItemWithRefs>['renderCell'];
+};
+
+export const RegistryItemCanonicalUrlDataGridColumnKey = 'canonicalUrl' as const;
+
+export function useRegistryItemCanonicalUrlDataGridColumn(options: RegistryItemCanonicalUrlDataGridColumnOptions) {
+
+    return useMemo<GridColDef<RegistryItemWithRefs>>(() => ({
+        headerName: options.headerName ?? RegistryItemCanonicalUrlDataGridColumnKey,
+        width: options.width,
+        sortable: options.sortable,
+        hideable: options.hideable,
+        field: RegistryItemCanonicalUrlDataGridColumnKey,
+        valueGetter: (_, row) => { 
+            return options.getValue ? options.getValue(row) : row.registryItem.canonicalUrl;
+        },
+        type: "string",
+        renderCell: options.renderCell,
+    }), [
+        options.headerName, 
+        options.width, 
+        options.sortable,
+        options.hideable,
+        options.getValue,
+        options.renderCell,
+    ]);
+}
+
 type RegistryItemCategoryDataGridColumnOptions = {
     headerName?: string;
     width?: number;
@@ -2643,6 +3299,40 @@ export function useRegistryItemNotesDataGridColumn(options: RegistryItemNotesDat
         field: RegistryItemNotesDataGridColumnKey,
         valueGetter: (_, row) => { 
             return options.getValue ? options.getValue(row) : row.registryItem.notes;
+        },
+        type: "string",
+        renderCell: options.renderCell,
+    }), [
+        options.headerName, 
+        options.width, 
+        options.sortable,
+        options.hideable,
+        options.getValue,
+        options.renderCell,
+    ]);
+}
+
+type RegistryItemOriginalUrlDataGridColumnOptions = {
+    headerName?: string;
+    width?: number;
+    sortable?: boolean;
+    hideable?: boolean;
+    getValue?: (obj: RegistryItemWithRefs | undefined) => string;
+    renderCell?: GridColDef<RegistryItemWithRefs>['renderCell'];
+};
+
+export const RegistryItemOriginalUrlDataGridColumnKey = 'originalUrl' as const;
+
+export function useRegistryItemOriginalUrlDataGridColumn(options: RegistryItemOriginalUrlDataGridColumnOptions) {
+
+    return useMemo<GridColDef<RegistryItemWithRefs>>(() => ({
+        headerName: options.headerName ?? RegistryItemOriginalUrlDataGridColumnKey,
+        width: options.width,
+        sortable: options.sortable,
+        hideable: options.hideable,
+        field: RegistryItemOriginalUrlDataGridColumnKey,
+        valueGetter: (_, row) => { 
+            return options.getValue ? options.getValue(row) : row.registryItem.originalUrl;
         },
         type: "string",
         renderCell: options.renderCell,
@@ -2937,6 +3627,40 @@ export function useRegistryItemRegistryIdDataGridColumn(options: RegistryItemReg
     ]);
 }
 
+type RegistryItemRetailerDataGridColumnOptions = {
+    headerName?: string;
+    width?: number;
+    sortable?: boolean;
+    hideable?: boolean;
+    getValue?: (obj: RegistryItemWithRefs | undefined) => string;
+    renderCell?: GridColDef<RegistryItemWithRefs>['renderCell'];
+};
+
+export const RegistryItemRetailerDataGridColumnKey = 'retailer' as const;
+
+export function useRegistryItemRetailerDataGridColumn(options: RegistryItemRetailerDataGridColumnOptions) {
+
+    return useMemo<GridColDef<RegistryItemWithRefs>>(() => ({
+        headerName: options.headerName ?? RegistryItemRetailerDataGridColumnKey,
+        width: options.width,
+        sortable: options.sortable,
+        hideable: options.hideable,
+        field: RegistryItemRetailerDataGridColumnKey,
+        valueGetter: (_, row) => { 
+            return options.getValue ? options.getValue(row) : row.registryItem.retailer;
+        },
+        type: "string",
+        renderCell: options.renderCell,
+    }), [
+        options.headerName, 
+        options.width, 
+        options.sortable,
+        options.hideable,
+        options.getValue,
+        options.renderCell,
+    ]);
+}
+
 type RegistryItemSourceDataGridColumnOptions = {
     headerName?: string;
     width?: number;
@@ -3107,6 +3831,8 @@ export function getRegistryItemColumnVisibilityModel(
 ): GridColumnVisibilityModel {
     return {
         id: projection.id ?? false,
+        affiliateUrl: projection.affiliateUrl ?? false,
+        canonicalUrl: projection.canonicalUrl ?? false,
         category: projection.category ?? false,
         created: projection.created ?? false,
         currency: projection.currency ?? false,
@@ -3115,6 +3841,7 @@ export function getRegistryItemColumnVisibilityModel(
         imageUrl: projection.imageUrl ?? false,
         noSubstitutes: projection.noSubstitutes ?? false,
         notes: projection.notes ?? false,
+        originalUrl: projection.originalUrl ?? false,
         ownerPurchased: projection.ownerPurchased ?? false,
         parentItemId: projection.parentItemId ?? false,
         position: projection.position ?? false,
@@ -3123,6 +3850,7 @@ export function getRegistryItemColumnVisibilityModel(
         quantity: projection.quantity ?? false,
         quantityUnlimited: projection.quantityUnlimited ?? false,
         registryId: projection.registryId ?? false,
+        retailer: projection.retailer ?? false,
         source: projection.source ?? false,
         title: projection.title ?? false,
         updated: projection.updated ?? false,

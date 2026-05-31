@@ -221,6 +221,8 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 			AggregateKeys: r.AggregateKeys,
 		}
 		// Copy group-by fields (with type conversion for refs)
+		row.AffiliateUrl = r.AffiliateUrl
+		row.CanonicalUrl = r.CanonicalUrl
 		row.Category = r.Category
 		row.Currency = r.Currency
 		row.Description = r.Description
@@ -228,6 +230,7 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 		row.ImageUrl = r.ImageUrl
 		row.NoSubstitutes = r.NoSubstitutes
 		row.Notes = r.Notes
+		row.OriginalUrl = r.OriginalUrl
 		row.OwnerPurchased = r.OwnerPurchased
 		if r.ParentItemId != nil {
 			s := r.ParentItemId.Hex()
@@ -242,6 +245,7 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 			s := r.RegistryId.Hex()
 			row.RegistryId = &s
 		}
+		row.Retailer = r.Retailer
 		row.Title = r.Title
 		// Copy aggregate fields (only those not in group-by)
 		// Copy ref field Registry

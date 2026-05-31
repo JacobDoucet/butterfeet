@@ -7,6 +7,8 @@ import (
 
 type Projection struct {
 	Id                       bool                   `json:"id"`
+	AffiliateUrl             bool                   `json:"affiliateUrl"`
+	CanonicalUrl             bool                   `json:"canonicalUrl"`
 	Category                 bool                   `json:"category"`
 	Created                  bool                   `json:"created"`
 	CreatedFields            actor_trace.Projection `json:"createdFields,omitempty"`
@@ -16,6 +18,7 @@ type Projection struct {
 	ImageUrl                 bool                   `json:"imageUrl"`
 	NoSubstitutes            bool                   `json:"noSubstitutes"`
 	Notes                    bool                   `json:"notes"`
+	OriginalUrl              bool                   `json:"originalUrl"`
 	OwnerPurchased           bool                   `json:"ownerPurchased"`
 	ParentItemId             bool
 	Position                 bool `json:"position"`
@@ -24,6 +27,7 @@ type Projection struct {
 	Quantity                 bool `json:"quantity"`
 	QuantityUnlimited        bool `json:"quantityUnlimited"`
 	RegistryId               bool
+	Retailer                 bool                   `json:"retailer"`
 	Source                   bool                   `json:"source"`
 	Title                    bool                   `json:"title"`
 	Updated                  bool                   `json:"updated"`
@@ -35,6 +39,8 @@ type Projection struct {
 func NewProjection(defaultVal bool) Projection {
 	return Projection{
 		Id:                       defaultVal,
+		AffiliateUrl:             defaultVal,
+		CanonicalUrl:             defaultVal,
 		Category:                 defaultVal,
 		Created:                  defaultVal,
 		CreatedFields:            actor_trace.NewProjection(defaultVal),
@@ -44,6 +50,7 @@ func NewProjection(defaultVal bool) Projection {
 		ImageUrl:                 defaultVal,
 		NoSubstitutes:            defaultVal,
 		Notes:                    defaultVal,
+		OriginalUrl:              defaultVal,
 		OwnerPurchased:           defaultVal,
 		ParentItemId:             defaultVal,
 		Position:                 defaultVal,
@@ -52,6 +59,7 @@ func NewProjection(defaultVal bool) Projection {
 		Quantity:                 defaultVal,
 		QuantityUnlimited:        defaultVal,
 		RegistryId:               defaultVal,
+		Retailer:                 defaultVal,
 		Source:                   defaultVal,
 		Title:                    defaultVal,
 		Updated:                  defaultVal,
@@ -64,6 +72,12 @@ func NewProjection(defaultVal bool) Projection {
 func (p Projection) ToBson() bson.M {
 	projection := bson.M{}
 	projection["_id"] = 1
+	if p.AffiliateUrl {
+		projection["affiliateUrl"] = 1
+	}
+	if p.CanonicalUrl {
+		projection["canonicalUrl"] = 1
+	}
 	if p.Category {
 		projection["category"] = 1
 	}
@@ -99,6 +113,9 @@ func (p Projection) ToBson() bson.M {
 	if p.Notes {
 		projection["notes"] = 1
 	}
+	if p.OriginalUrl {
+		projection["originalUrl"] = 1
+	}
 	if p.OwnerPurchased {
 		projection["ownerPurchased"] = 1
 	}
@@ -122,6 +139,9 @@ func (p Projection) ToBson() bson.M {
 	}
 	if p.RegistryId {
 		projection["registryId"] = 1
+	}
+	if p.Retailer {
+		projection["retailer"] = 1
 	}
 	if p.Source {
 		projection["source"] = 1

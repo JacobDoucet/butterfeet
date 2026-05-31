@@ -75,6 +75,8 @@ type AggregateOptions struct {
 // AggregateResultRow holds a single aggregation result row with flat structure
 type AggregateResultRow struct {
 	// Group-by fields (original types)
+	AffiliateUrl      *string             `bson:"affiliateUrl" json:"affiliateUrl,omitempty"`
+	CanonicalUrl      *string             `bson:"canonicalUrl" json:"canonicalUrl,omitempty"`
 	Category          *string             `bson:"category" json:"category,omitempty"`
 	Currency          *string             `bson:"currency" json:"currency,omitempty"`
 	Description       *string             `bson:"description" json:"description,omitempty"`
@@ -82,6 +84,7 @@ type AggregateResultRow struct {
 	ImageUrl          *string             `bson:"imageUrl" json:"imageUrl,omitempty"`
 	NoSubstitutes     *bool               `bson:"noSubstitutes" json:"noSubstitutes,omitempty"`
 	Notes             *string             `bson:"notes" json:"notes,omitempty"`
+	OriginalUrl       *string             `bson:"originalUrl" json:"originalUrl,omitempty"`
 	OwnerPurchased    *bool               `bson:"ownerPurchased" json:"ownerPurchased,omitempty"`
 	ParentItemId      *primitive.ObjectID `bson:"parentItemId" json:"parentItemId,omitempty"`
 	Position          *int                `bson:"position" json:"position,omitempty"`
@@ -90,6 +93,7 @@ type AggregateResultRow struct {
 	Quantity          *int                `bson:"quantity" json:"quantity,omitempty"`
 	QuantityUnlimited *bool               `bson:"quantityUnlimited" json:"quantityUnlimited,omitempty"`
 	RegistryId        *primitive.ObjectID `bson:"registryId" json:"registryId,omitempty"`
+	Retailer          *string             `bson:"retailer" json:"retailer,omitempty"`
 	Title             *string             `bson:"title" json:"title,omitempty"`
 	// Aggregate fields - always float64 since they're results of sum/avg/etc
 	// Ref field Registry

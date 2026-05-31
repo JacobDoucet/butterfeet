@@ -30,6 +30,38 @@ import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { pub, buyer } from '../api';
 
+type ClickableItem = {
+  id: string;
+  productUrl?: string;
+  affiliateUrl?: string;
+  retailer?: string;
+};
+
+function purchaseHref(item: ClickableItem | undefined | null): string | undefined {
+  if (!item) return undefined;
+  return item.affiliateUrl || item.productUrl || undefined;
+}
+
+function trackPurchaseClick(item: ClickableItem | undefined | null) {
+  if (!item || !item.id) return;
+  try {
+    const payload = JSON.stringify({ retailer: item.retailer || 'unknown' });
+    if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+      const blob = new Blob([payload], { type: 'application/json' });
+      navigator.sendBeacon(`/api/public/items/${item.id}/click`, blob);
+    } else {
+      fetch(`/api/public/items/${item.id}/click`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true,
+      }).catch(() => {});
+    }
+  } catch {
+    // best-effort tracking; never block navigation
+  }
+}
+
 export default function PublicRegistry() {
   const { slug = '' } = useParams();
   const qc = useQueryClient();
@@ -628,7 +660,7 @@ export default function PublicRegistry() {
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0} sx={{ overflow: 'hidden' }}>
                     <Box
                       component={targetOptions[0].productUrl ? 'a' : 'div'}
-                      {...(targetOptions[0].productUrl ? { href: targetOptions[0].productUrl, target: '_blank', rel: 'noreferrer' } : {})}
+                      {...(targetOptions[0].productUrl ? { href: purchaseHref(targetOptions[0]), target: '_blank', rel: 'noreferrer', onClick: () => trackPurchaseClick(targetOptions[0]) } : {})}
                       sx={{
                         width: { xs: '100%', sm: 160 },
                         flexShrink: 0,
@@ -657,7 +689,7 @@ export default function PublicRegistry() {
                       <Typography
                         variant="subtitle1"
                         component={targetOptions[0].productUrl ? 'a' : 'span'}
-                        {...(targetOptions[0].productUrl ? { href: targetOptions[0].productUrl, target: '_blank', rel: 'noreferrer' } : {})}
+                        {...(targetOptions[0].productUrl ? { href: purchaseHref(targetOptions[0]), target: '_blank', rel: 'noreferrer', onClick: () => trackPurchaseClick(targetOptions[0]) } : {})}
                         sx={{
                           fontWeight: 700,
                           lineHeight: 1.3,
@@ -777,10 +809,10 @@ export default function PublicRegistry() {
                             {opt.productUrl && (
                               <Box
                                 component="a"
-                                href={opt.productUrl}
+                                href={purchaseHref(opt)}
                                 target="_blank"
                                 rel="noreferrer"
-                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                onClick={(e: React.MouseEvent) => { e.stopPropagation(); trackPurchaseClick(opt); }}
                                 sx={{ textDecoration: 'none' }}
                               >
                                 <Typography variant="caption" color="primary" sx={{ display: 'block', mt: 0.5 }}>
@@ -815,9 +847,10 @@ export default function PublicRegistry() {
                           <>
                             <Box
                               component="a"
-                              href={effectiveOpt.productUrl}
+                              href={purchaseHref(effectiveOpt)}
                               target="_blank"
                               rel="noreferrer"
+                              onClick={() => trackPurchaseClick(effectiveOpt)}
                               sx={{ color: 'primary.main', textDecoration: 'underline' }}
                             >
                               Open the product page

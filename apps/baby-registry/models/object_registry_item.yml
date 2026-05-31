@@ -15,6 +15,14 @@ objects:
         type: string
       - name: productUrl
         type: string
+      - name: originalUrl
+        type: string
+      - name: canonicalUrl
+        type: string
+      - name: affiliateUrl
+        type: string
+      - name: retailer
+        type: string
       - name: source
         type: ItemSource
       - name: priceCents

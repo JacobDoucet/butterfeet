@@ -167,6 +167,8 @@ type GroupByField string
 
 // Valid group-by fields for RegistryItem
 const (
+	GroupByFieldAffiliateUrl      GroupByField = "affiliateUrl"
+	GroupByFieldCanonicalUrl      GroupByField = "canonicalUrl"
 	GroupByFieldCategory          GroupByField = "category"
 	GroupByFieldCurrency          GroupByField = "currency"
 	GroupByFieldDescription       GroupByField = "description"
@@ -174,6 +176,7 @@ const (
 	GroupByFieldImageUrl          GroupByField = "imageUrl"
 	GroupByFieldNoSubstitutes     GroupByField = "noSubstitutes"
 	GroupByFieldNotes             GroupByField = "notes"
+	GroupByFieldOriginalUrl       GroupByField = "originalUrl"
 	GroupByFieldOwnerPurchased    GroupByField = "ownerPurchased"
 	GroupByFieldParentItemId      GroupByField = "parentItemId"
 	GroupByFieldPosition          GroupByField = "position"
@@ -182,12 +185,15 @@ const (
 	GroupByFieldQuantity          GroupByField = "quantity"
 	GroupByFieldQuantityUnlimited GroupByField = "quantityUnlimited"
 	GroupByFieldRegistryId        GroupByField = "registryId"
+	GroupByFieldRetailer          GroupByField = "retailer"
 	GroupByFieldTitle             GroupByField = "title"
 )
 
 // ValidGroupByFields returns all valid group-by fields
 func ValidGroupByFields() []GroupByField {
 	return []GroupByField{
+		GroupByFieldAffiliateUrl,
+		GroupByFieldCanonicalUrl,
 		GroupByFieldCategory,
 		GroupByFieldCurrency,
 		GroupByFieldDescription,
@@ -195,6 +201,7 @@ func ValidGroupByFields() []GroupByField {
 		GroupByFieldImageUrl,
 		GroupByFieldNoSubstitutes,
 		GroupByFieldNotes,
+		GroupByFieldOriginalUrl,
 		GroupByFieldOwnerPurchased,
 		GroupByFieldParentItemId,
 		GroupByFieldPosition,
@@ -203,6 +210,7 @@ func ValidGroupByFields() []GroupByField {
 		GroupByFieldQuantity,
 		GroupByFieldQuantityUnlimited,
 		GroupByFieldRegistryId,
+		GroupByFieldRetailer,
 		GroupByFieldTitle,
 	}
 }
@@ -272,6 +280,8 @@ type AggregateOptions struct {
 // AggregateResultRow holds a single aggregation result row with a partial model structure
 type AggregateResultRow struct {
 	// Group-by fields (original types)
+	AffiliateUrl      *string `json:"affiliateUrl,omitempty"`
+	CanonicalUrl      *string `json:"canonicalUrl,omitempty"`
 	Category          *string `json:"category,omitempty"`
 	Currency          *string `json:"currency,omitempty"`
 	Description       *string `json:"description,omitempty"`
@@ -279,6 +289,7 @@ type AggregateResultRow struct {
 	ImageUrl          *string `json:"imageUrl,omitempty"`
 	NoSubstitutes     *bool   `json:"noSubstitutes,omitempty"`
 	Notes             *string `json:"notes,omitempty"`
+	OriginalUrl       *string `json:"originalUrl,omitempty"`
 	OwnerPurchased    *bool   `json:"ownerPurchased,omitempty"`
 	ParentItemId      *string `json:"parentItemId,omitempty"`
 	Position          *int    `json:"position,omitempty"`
@@ -287,6 +298,7 @@ type AggregateResultRow struct {
 	Quantity          *int    `json:"quantity,omitempty"`
 	QuantityUnlimited *bool   `json:"quantityUnlimited,omitempty"`
 	RegistryId        *string `json:"registryId,omitempty"`
+	Retailer          *string `json:"retailer,omitempty"`
 	Title             *string `json:"title,omitempty"`
 	// Aggregate fields - always float64 since they're results of sum/avg/etc
 	// Ref field Registry

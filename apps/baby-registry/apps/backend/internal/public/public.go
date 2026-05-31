@@ -33,21 +33,24 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/shipping"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Handler struct {
 	mux          *http.ServeMux
 	client       api.Client
+	db           *mongo.Database
 	mailer       mailer.Mailer
 	appBaseURL   string
 	resolveBuyer func(r *http.Request, slug string) (string, error)
 }
 
-func NewHandler(client api.Client, notificationMailer mailer.Mailer, appBaseURL string) *Handler {
-	h := &Handler{client: client, mailer: notificationMailer, appBaseURL: strings.TrimRight(appBaseURL, "/")}
+func NewHandler(client api.Client, db *mongo.Database, notificationMailer mailer.Mailer, appBaseURL string) *Handler {
+	h := &Handler{client: client, db: db, mailer: notificationMailer, appBaseURL: strings.TrimRight(appBaseURL, "/")}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/r/", h.handleRegistryBySlug)
-	mux.HandleFunc("/items/", h.handleItemRoute) // /items/:id/reserve
+	mux.HandleFunc("/items/", h.handleItemRoute) // /items/:id/reserve and /items/:id/click
 	mux.HandleFunc("/shipping/resolve", h.handleShippingResolve)
 	mux.HandleFunc("/address-requests", h.handleAddressRequestCreate)
 	h.mux = mux
@@ -68,6 +71,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mux.ServeHTTP(w, r)
 }
 
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if strings.TrimSpace(v) != "" {
+			return v
+		}
+	}
+	return ""
+}
+
 type publicItem struct {
 	Id                string `json:"id"`
 	Title             string `json:"title"`
@@ -75,6 +87,8 @@ type publicItem struct {
 	ImageUrl          string `json:"imageUrl"`
 	ImageBgColor      string `json:"imageBgColor"`
 	ProductUrl        string `json:"productUrl"`
+	AffiliateUrl      string `json:"affiliateUrl"`
+	Retailer          string `json:"retailer"`
 	Source            string `json:"source"`
 	PriceCents        int    `json:"priceCents"`
 	Currency          string `json:"currency"`
@@ -210,6 +224,8 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 			ImageUrl:          it.ImageUrl,
 			ImageBgColor:      it.ImageBgColor,
 			ProductUrl:        it.ProductUrl,
+			AffiliateUrl:      firstNonEmpty(it.AffiliateUrl, it.ProductUrl),
+			Retailer:          it.Retailer,
 			Source:            string(it.Source),
 			PriceCents:        it.PriceCents,
 			Currency:          it.Currency,
@@ -261,16 +277,58 @@ type reserveBody struct {
 func (h *Handler) handleItemRoute(w http.ResponseWriter, r *http.Request) {
 	rest := strings.TrimPrefix(r.URL.Path, "/items/")
 	parts := strings.Split(strings.Trim(rest, "/"), "/")
-	if len(parts) != 2 || parts[1] != "reserve" {
+	if len(parts) != 2 {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
+	switch parts[1] {
+	case "reserve":
+		h.handleItemReserve(w, r, parts[0])
+	case "click":
+		h.handleItemClick(w, r, parts[0])
+	default:
+		http.Error(w, "not found", http.StatusNotFound)
+	}
+}
+
+func (h *Handler) handleItemClick(w http.ResponseWriter, r *http.Request, itemId string) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	itemId := parts[0]
+	super := permissions.NewSuperActor()
+	item, _, err := h.client.RegistryItem().SelectById(r.Context(), super, registry_item.SelectByIdQuery{Id: itemId}, registryitemapi.NewProjection(true))
+	if err != nil {
+		// Don't leak whether the item exists; the click is fire-and-forget.
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	event := bson.M{
+		"event":      "registry_item_purchase_click",
+		"registryId": item.RegistryId,
+		"itemId":     item.Id,
+		"retailer":   item.Retailer,
+		"clickedAt":  time.Now().UTC(),
+	}
+	if h.db != nil {
+		if _, err := h.db.Collection("purchase_clicks").InsertOne(r.Context(), event); err != nil {
+			log.Warn().Err(err).Msg("purchase click insert failed")
+		}
+	}
+	log.Info().
+		Str("event", "registry_item_purchase_click").
+		Str("registryId", item.RegistryId).
+		Str("itemId", item.Id).
+		Str("retailer", item.Retailer).
+		Msg("purchase click")
+	w.WriteHeader(http.StatusNoContent)
+}
 
+func (h *Handler) handleItemReserve(w http.ResponseWriter, r *http.Request, itemId string) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	var body reserveBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "invalid body", http.StatusBadRequest)

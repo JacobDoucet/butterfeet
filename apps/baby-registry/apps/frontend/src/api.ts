@@ -64,6 +64,8 @@ export interface RegistryItem {
   imageUrl?: string;
   imageBgColor?: string;
   productUrl?: string;
+  affiliateUrl?: string;
+  retailer?: string;
   source?: string;
   priceCents?: number;
   currency?: string;

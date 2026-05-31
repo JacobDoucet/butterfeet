@@ -7,6 +7,8 @@ import (
 
 type HTTPRecord struct {
 	Id                 *string                 `json:"id,omitempty"`
+	AffiliateUrl       *string                 `json:"affiliateUrl,omitempty"`
+	CanonicalUrl       *string                 `json:"canonicalUrl,omitempty"`
 	Category           *string                 `json:"category,omitempty"`
 	Created            *actor_trace.HTTPRecord `json:"created,omitempty"`
 	Currency           *string                 `json:"currency,omitempty"`
@@ -15,6 +17,7 @@ type HTTPRecord struct {
 	ImageUrl           *string                 `json:"imageUrl,omitempty"`
 	NoSubstitutes      *bool                   `json:"noSubstitutes,omitempty"`
 	Notes              *string                 `json:"notes,omitempty"`
+	OriginalUrl        *string                 `json:"originalUrl,omitempty"`
 	OwnerPurchased     *bool                   `json:"ownerPurchased,omitempty"`
 	ParentItemId       *string                 `json:"parentItemId,omitempty"`
 	Position           *int                    `json:"position,omitempty"`
@@ -23,6 +26,7 @@ type HTTPRecord struct {
 	Quantity           *int                    `json:"quantity,omitempty"`
 	QuantityUnlimited  *bool                   `json:"quantityUnlimited,omitempty"`
 	RegistryId         *string                 `json:"registryId,omitempty"`
+	Retailer           *string                 `json:"retailer,omitempty"`
 	Source             *enum_item_source.Value `json:"source,omitempty"`
 	Title              *string                 `json:"title,omitempty"`
 	Updated            *actor_trace.HTTPRecord `json:"updated,omitempty"`
@@ -34,6 +38,14 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 	if r.Id != nil {
 		elemid0 := r.Id
 		m.Id = *elemid0
+	}
+	if r.AffiliateUrl != nil {
+		elemaffiliateUrl0 := r.AffiliateUrl
+		m.AffiliateUrl = *elemaffiliateUrl0
+	}
+	if r.CanonicalUrl != nil {
+		elemcanonicalUrl0 := r.CanonicalUrl
+		m.CanonicalUrl = *elemcanonicalUrl0
 	}
 	if r.Category != nil {
 		elemcategory0 := r.Category
@@ -70,6 +82,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 		elemnotes0 := r.Notes
 		m.Notes = *elemnotes0
 	}
+	if r.OriginalUrl != nil {
+		elemoriginalUrl0 := r.OriginalUrl
+		m.OriginalUrl = *elemoriginalUrl0
+	}
 	if r.OwnerPurchased != nil {
 		elemownerPurchased0 := r.OwnerPurchased
 		m.OwnerPurchased = *elemownerPurchased0
@@ -102,6 +118,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 		elemregistryId0 := r.RegistryId
 		m.RegistryId = *elemregistryId0
 	}
+	if r.Retailer != nil {
+		elemretailer0 := r.Retailer
+		m.Retailer = *elemretailer0
+	}
 	if r.Source != nil {
 		elemsource0 := r.Source
 		m.Source = *elemsource0
@@ -132,6 +152,12 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	if r.Id != nil {
 		p.Id = true
 	}
+	if r.AffiliateUrl != nil {
+		p.AffiliateUrl = true
+	}
+	if r.CanonicalUrl != nil {
+		p.CanonicalUrl = true
+	}
 	if r.Category != nil {
 		p.Category = true
 	}
@@ -157,6 +183,9 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	if r.Notes != nil {
 		p.Notes = true
 	}
+	if r.OriginalUrl != nil {
+		p.OriginalUrl = true
+	}
 	if r.OwnerPurchased != nil {
 		p.OwnerPurchased = true
 	}
@@ -180,6 +209,9 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	}
 	if r.RegistryId != nil {
 		p.RegistryId = true
+	}
+	if r.Retailer != nil {
+		p.Retailer = true
 	}
 	if r.Source != nil {
 		p.Source = true
@@ -208,6 +240,30 @@ type HTTPWhereClause struct {
 	IdIn     *[]string `json:"idIn,omitempty"`
 	IdNin    *[]string `json:"idNin,omitempty"`
 	IdExists *bool     `json:"idExists,omitempty"`
+	// affiliateUrl (string) search options
+	AffiliateUrlEq     *string   `json:"affiliateUrlEq,omitempty"`
+	AffiliateUrlNe     *string   `json:"affiliateUrlNe,omitempty"`
+	AffiliateUrlGt     *string   `json:"affiliateUrlGt,omitempty"`
+	AffiliateUrlGte    *string   `json:"affiliateUrlGte,omitempty"`
+	AffiliateUrlLt     *string   `json:"affiliateUrlLt,omitempty"`
+	AffiliateUrlLte    *string   `json:"affiliateUrlLte,omitempty"`
+	AffiliateUrlIn     *[]string `json:"affiliateUrlIn,omitempty"`
+	AffiliateUrlNin    *[]string `json:"affiliateUrlNin,omitempty"`
+	AffiliateUrlExists *bool     `json:"affiliateUrlExists,omitempty"`
+	AffiliateUrlLike   *string   `json:"affiliateUrlLike,omitempty"`
+	AffiliateUrlNlike  *string   `json:"affiliateUrlNlike,omitempty"`
+	// canonicalUrl (string) search options
+	CanonicalUrlEq     *string   `json:"canonicalUrlEq,omitempty"`
+	CanonicalUrlNe     *string   `json:"canonicalUrlNe,omitempty"`
+	CanonicalUrlGt     *string   `json:"canonicalUrlGt,omitempty"`
+	CanonicalUrlGte    *string   `json:"canonicalUrlGte,omitempty"`
+	CanonicalUrlLt     *string   `json:"canonicalUrlLt,omitempty"`
+	CanonicalUrlLte    *string   `json:"canonicalUrlLte,omitempty"`
+	CanonicalUrlIn     *[]string `json:"canonicalUrlIn,omitempty"`
+	CanonicalUrlNin    *[]string `json:"canonicalUrlNin,omitempty"`
+	CanonicalUrlExists *bool     `json:"canonicalUrlExists,omitempty"`
+	CanonicalUrlLike   *string   `json:"canonicalUrlLike,omitempty"`
+	CanonicalUrlNlike  *string   `json:"canonicalUrlNlike,omitempty"`
 	// category (string) search options
 	CategoryEq     *string   `json:"categoryEq,omitempty"`
 	CategoryNe     *string   `json:"categoryNe,omitempty"`
@@ -292,6 +348,18 @@ type HTTPWhereClause struct {
 	NotesExists *bool     `json:"notesExists,omitempty"`
 	NotesLike   *string   `json:"notesLike,omitempty"`
 	NotesNlike  *string   `json:"notesNlike,omitempty"`
+	// originalUrl (string) search options
+	OriginalUrlEq     *string   `json:"originalUrlEq,omitempty"`
+	OriginalUrlNe     *string   `json:"originalUrlNe,omitempty"`
+	OriginalUrlGt     *string   `json:"originalUrlGt,omitempty"`
+	OriginalUrlGte    *string   `json:"originalUrlGte,omitempty"`
+	OriginalUrlLt     *string   `json:"originalUrlLt,omitempty"`
+	OriginalUrlLte    *string   `json:"originalUrlLte,omitempty"`
+	OriginalUrlIn     *[]string `json:"originalUrlIn,omitempty"`
+	OriginalUrlNin    *[]string `json:"originalUrlNin,omitempty"`
+	OriginalUrlExists *bool     `json:"originalUrlExists,omitempty"`
+	OriginalUrlLike   *string   `json:"originalUrlLike,omitempty"`
+	OriginalUrlNlike  *string   `json:"originalUrlNlike,omitempty"`
 	// ownerPurchased (bool) search options
 	OwnerPurchasedEq     *bool   `json:"ownerPurchasedEq,omitempty"`
 	OwnerPurchasedNe     *bool   `json:"ownerPurchasedNe,omitempty"`
@@ -364,6 +432,18 @@ type HTTPWhereClause struct {
 	RegistryIdIn     *[]string `json:"registryIdIn,omitempty"`
 	RegistryIdNin    *[]string `json:"registryIdNin,omitempty"`
 	RegistryIdExists *bool     `json:"registryIdExists,omitempty"`
+	// retailer (string) search options
+	RetailerEq     *string   `json:"retailerEq,omitempty"`
+	RetailerNe     *string   `json:"retailerNe,omitempty"`
+	RetailerGt     *string   `json:"retailerGt,omitempty"`
+	RetailerGte    *string   `json:"retailerGte,omitempty"`
+	RetailerLt     *string   `json:"retailerLt,omitempty"`
+	RetailerLte    *string   `json:"retailerLte,omitempty"`
+	RetailerIn     *[]string `json:"retailerIn,omitempty"`
+	RetailerNin    *[]string `json:"retailerNin,omitempty"`
+	RetailerExists *bool     `json:"retailerExists,omitempty"`
+	RetailerLike   *string   `json:"retailerLike,omitempty"`
+	RetailerNlike  *string   `json:"retailerNlike,omitempty"`
 	// source (ItemSource) search options
 	SourceEq     *enum_item_source.Value   `json:"sourceEq,omitempty"`
 	SourceNe     *enum_item_source.Value   `json:"sourceNe,omitempty"`
@@ -424,6 +504,110 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 	if o.IdExists != nil {
 		elemidExists0 := o.IdExists
 		to.IdExists = elemidExists0
+	}
+	if o.AffiliateUrlEq != nil {
+		elemaffiliateUrlEq0 := o.AffiliateUrlEq
+		to.AffiliateUrlEq = elemaffiliateUrlEq0
+	}
+	if o.AffiliateUrlNe != nil {
+		elemaffiliateUrlNe0 := o.AffiliateUrlNe
+		to.AffiliateUrlNe = elemaffiliateUrlNe0
+	}
+	if o.AffiliateUrlGt != nil {
+		elemaffiliateUrlGt0 := o.AffiliateUrlGt
+		to.AffiliateUrlGt = elemaffiliateUrlGt0
+	}
+	if o.AffiliateUrlGte != nil {
+		elemaffiliateUrlGte0 := o.AffiliateUrlGte
+		to.AffiliateUrlGte = elemaffiliateUrlGte0
+	}
+	if o.AffiliateUrlLt != nil {
+		elemaffiliateUrlLt0 := o.AffiliateUrlLt
+		to.AffiliateUrlLt = elemaffiliateUrlLt0
+	}
+	if o.AffiliateUrlLte != nil {
+		elemaffiliateUrlLte0 := o.AffiliateUrlLte
+		to.AffiliateUrlLte = elemaffiliateUrlLte0
+	}
+	if o.AffiliateUrlIn != nil {
+		elemaffiliateUrlIn0 := make([]string, 0)
+		for _, oaffiliateUrlIn0 := range *o.AffiliateUrlIn {
+			elemaffiliateUrlIn1 := oaffiliateUrlIn0
+			elemaffiliateUrlIn0 = append(elemaffiliateUrlIn0, elemaffiliateUrlIn1)
+		}
+		to.AffiliateUrlIn = &elemaffiliateUrlIn0
+	}
+	if o.AffiliateUrlNin != nil {
+		elemaffiliateUrlNin0 := make([]string, 0)
+		for _, oaffiliateUrlNin0 := range *o.AffiliateUrlNin {
+			elemaffiliateUrlNin1 := oaffiliateUrlNin0
+			elemaffiliateUrlNin0 = append(elemaffiliateUrlNin0, elemaffiliateUrlNin1)
+		}
+		to.AffiliateUrlNin = &elemaffiliateUrlNin0
+	}
+	if o.AffiliateUrlExists != nil {
+		elemaffiliateUrlExists0 := o.AffiliateUrlExists
+		to.AffiliateUrlExists = elemaffiliateUrlExists0
+	}
+	if o.AffiliateUrlLike != nil {
+		elemaffiliateUrlLike0 := o.AffiliateUrlLike
+		to.AffiliateUrlLike = elemaffiliateUrlLike0
+	}
+	if o.AffiliateUrlNlike != nil {
+		elemaffiliateUrlNlike0 := o.AffiliateUrlNlike
+		to.AffiliateUrlNlike = elemaffiliateUrlNlike0
+	}
+	if o.CanonicalUrlEq != nil {
+		elemcanonicalUrlEq0 := o.CanonicalUrlEq
+		to.CanonicalUrlEq = elemcanonicalUrlEq0
+	}
+	if o.CanonicalUrlNe != nil {
+		elemcanonicalUrlNe0 := o.CanonicalUrlNe
+		to.CanonicalUrlNe = elemcanonicalUrlNe0
+	}
+	if o.CanonicalUrlGt != nil {
+		elemcanonicalUrlGt0 := o.CanonicalUrlGt
+		to.CanonicalUrlGt = elemcanonicalUrlGt0
+	}
+	if o.CanonicalUrlGte != nil {
+		elemcanonicalUrlGte0 := o.CanonicalUrlGte
+		to.CanonicalUrlGte = elemcanonicalUrlGte0
+	}
+	if o.CanonicalUrlLt != nil {
+		elemcanonicalUrlLt0 := o.CanonicalUrlLt
+		to.CanonicalUrlLt = elemcanonicalUrlLt0
+	}
+	if o.CanonicalUrlLte != nil {
+		elemcanonicalUrlLte0 := o.CanonicalUrlLte
+		to.CanonicalUrlLte = elemcanonicalUrlLte0
+	}
+	if o.CanonicalUrlIn != nil {
+		elemcanonicalUrlIn0 := make([]string, 0)
+		for _, ocanonicalUrlIn0 := range *o.CanonicalUrlIn {
+			elemcanonicalUrlIn1 := ocanonicalUrlIn0
+			elemcanonicalUrlIn0 = append(elemcanonicalUrlIn0, elemcanonicalUrlIn1)
+		}
+		to.CanonicalUrlIn = &elemcanonicalUrlIn0
+	}
+	if o.CanonicalUrlNin != nil {
+		elemcanonicalUrlNin0 := make([]string, 0)
+		for _, ocanonicalUrlNin0 := range *o.CanonicalUrlNin {
+			elemcanonicalUrlNin1 := ocanonicalUrlNin0
+			elemcanonicalUrlNin0 = append(elemcanonicalUrlNin0, elemcanonicalUrlNin1)
+		}
+		to.CanonicalUrlNin = &elemcanonicalUrlNin0
+	}
+	if o.CanonicalUrlExists != nil {
+		elemcanonicalUrlExists0 := o.CanonicalUrlExists
+		to.CanonicalUrlExists = elemcanonicalUrlExists0
+	}
+	if o.CanonicalUrlLike != nil {
+		elemcanonicalUrlLike0 := o.CanonicalUrlLike
+		to.CanonicalUrlLike = elemcanonicalUrlLike0
+	}
+	if o.CanonicalUrlNlike != nil {
+		elemcanonicalUrlNlike0 := o.CanonicalUrlNlike
+		to.CanonicalUrlNlike = elemcanonicalUrlNlike0
 	}
 	if o.CategoryEq != nil {
 		elemcategoryEq0 := o.CategoryEq
@@ -788,6 +972,58 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 		elemnotesNlike0 := o.NotesNlike
 		to.NotesNlike = elemnotesNlike0
 	}
+	if o.OriginalUrlEq != nil {
+		elemoriginalUrlEq0 := o.OriginalUrlEq
+		to.OriginalUrlEq = elemoriginalUrlEq0
+	}
+	if o.OriginalUrlNe != nil {
+		elemoriginalUrlNe0 := o.OriginalUrlNe
+		to.OriginalUrlNe = elemoriginalUrlNe0
+	}
+	if o.OriginalUrlGt != nil {
+		elemoriginalUrlGt0 := o.OriginalUrlGt
+		to.OriginalUrlGt = elemoriginalUrlGt0
+	}
+	if o.OriginalUrlGte != nil {
+		elemoriginalUrlGte0 := o.OriginalUrlGte
+		to.OriginalUrlGte = elemoriginalUrlGte0
+	}
+	if o.OriginalUrlLt != nil {
+		elemoriginalUrlLt0 := o.OriginalUrlLt
+		to.OriginalUrlLt = elemoriginalUrlLt0
+	}
+	if o.OriginalUrlLte != nil {
+		elemoriginalUrlLte0 := o.OriginalUrlLte
+		to.OriginalUrlLte = elemoriginalUrlLte0
+	}
+	if o.OriginalUrlIn != nil {
+		elemoriginalUrlIn0 := make([]string, 0)
+		for _, ooriginalUrlIn0 := range *o.OriginalUrlIn {
+			elemoriginalUrlIn1 := ooriginalUrlIn0
+			elemoriginalUrlIn0 = append(elemoriginalUrlIn0, elemoriginalUrlIn1)
+		}
+		to.OriginalUrlIn = &elemoriginalUrlIn0
+	}
+	if o.OriginalUrlNin != nil {
+		elemoriginalUrlNin0 := make([]string, 0)
+		for _, ooriginalUrlNin0 := range *o.OriginalUrlNin {
+			elemoriginalUrlNin1 := ooriginalUrlNin0
+			elemoriginalUrlNin0 = append(elemoriginalUrlNin0, elemoriginalUrlNin1)
+		}
+		to.OriginalUrlNin = &elemoriginalUrlNin0
+	}
+	if o.OriginalUrlExists != nil {
+		elemoriginalUrlExists0 := o.OriginalUrlExists
+		to.OriginalUrlExists = elemoriginalUrlExists0
+	}
+	if o.OriginalUrlLike != nil {
+		elemoriginalUrlLike0 := o.OriginalUrlLike
+		to.OriginalUrlLike = elemoriginalUrlLike0
+	}
+	if o.OriginalUrlNlike != nil {
+		elemoriginalUrlNlike0 := o.OriginalUrlNlike
+		to.OriginalUrlNlike = elemoriginalUrlNlike0
+	}
 	if o.OwnerPurchasedEq != nil {
 		elemownerPurchasedEq0 := o.OwnerPurchasedEq
 		to.OwnerPurchasedEq = elemownerPurchasedEq0
@@ -1107,6 +1343,58 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 	if o.RegistryIdExists != nil {
 		elemregistryIdExists0 := o.RegistryIdExists
 		to.RegistryIdExists = elemregistryIdExists0
+	}
+	if o.RetailerEq != nil {
+		elemretailerEq0 := o.RetailerEq
+		to.RetailerEq = elemretailerEq0
+	}
+	if o.RetailerNe != nil {
+		elemretailerNe0 := o.RetailerNe
+		to.RetailerNe = elemretailerNe0
+	}
+	if o.RetailerGt != nil {
+		elemretailerGt0 := o.RetailerGt
+		to.RetailerGt = elemretailerGt0
+	}
+	if o.RetailerGte != nil {
+		elemretailerGte0 := o.RetailerGte
+		to.RetailerGte = elemretailerGte0
+	}
+	if o.RetailerLt != nil {
+		elemretailerLt0 := o.RetailerLt
+		to.RetailerLt = elemretailerLt0
+	}
+	if o.RetailerLte != nil {
+		elemretailerLte0 := o.RetailerLte
+		to.RetailerLte = elemretailerLte0
+	}
+	if o.RetailerIn != nil {
+		elemretailerIn0 := make([]string, 0)
+		for _, oretailerIn0 := range *o.RetailerIn {
+			elemretailerIn1 := oretailerIn0
+			elemretailerIn0 = append(elemretailerIn0, elemretailerIn1)
+		}
+		to.RetailerIn = &elemretailerIn0
+	}
+	if o.RetailerNin != nil {
+		elemretailerNin0 := make([]string, 0)
+		for _, oretailerNin0 := range *o.RetailerNin {
+			elemretailerNin1 := oretailerNin0
+			elemretailerNin0 = append(elemretailerNin0, elemretailerNin1)
+		}
+		to.RetailerNin = &elemretailerNin0
+	}
+	if o.RetailerExists != nil {
+		elemretailerExists0 := o.RetailerExists
+		to.RetailerExists = elemretailerExists0
+	}
+	if o.RetailerLike != nil {
+		elemretailerLike0 := o.RetailerLike
+		to.RetailerLike = elemretailerLike0
+	}
+	if o.RetailerNlike != nil {
+		elemretailerNlike0 := o.RetailerNlike
+		to.RetailerNlike = elemretailerNlike0
 	}
 	if o.SourceEq != nil {
 		elemsourceEq0 := o.SourceEq
