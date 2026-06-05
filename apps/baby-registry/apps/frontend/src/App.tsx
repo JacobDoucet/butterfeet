@@ -1,13 +1,14 @@
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
-import { AppBar, Toolbar, Box, Button, Typography, Container, Select, MenuItem } from '@mui/material';
+import { Suspense, lazy } from 'react';
+import { AppBar, Toolbar, Box, Button, Typography, Container, Select, MenuItem, CircularProgress } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import LandingPage from './pages/Landing';
-import LoginPage from './pages/Login';
-import AuthCallbackPage from './pages/AuthCallback';
-import OwnerDashboardPage from './pages/OwnerDashboard';
-import RegistryEditorPage from './pages/RegistryEditor';
-import PublicRegistryPage from './pages/PublicRegistry';
-import ShipPage from './pages/Ship';
+const LoginPage = lazy(() => import('./pages/Login'));
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallback'));
+const OwnerDashboardPage = lazy(() => import('./pages/OwnerDashboard'));
+const RegistryEditorPage = lazy(() => import('./pages/RegistryEditor'));
+const PublicRegistryPage = lazy(() => import('./pages/PublicRegistry'));
+const ShipPage = lazy(() => import('./pages/Ship'));
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { auth, type Me, SUPPORTED_CURRENCIES } from './api';
 import BrandLogo from './components/BrandLogo';
@@ -134,15 +135,23 @@ function Shell({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <Shell>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
-        <Route path="/owner" element={<OwnerDashboardPage />} />
-        <Route path="/owner/r/:slug" element={<RegistryEditorPage />} />
-        <Route path="/r/:slug" element={<PublicRegistryPage />} />
-        <Route path="/ship" element={<ShipPage />} />
-      </Routes>
+      <Suspense
+        fallback={
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+            <CircularProgress />
+          </Box>
+        }
+      >
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/owner" element={<OwnerDashboardPage />} />
+          <Route path="/owner/r/:slug" element={<RegistryEditorPage />} />
+          <Route path="/r/:slug" element={<PublicRegistryPage />} />
+          <Route path="/ship" element={<ShipPage />} />
+        </Routes>
+      </Suspense>
     </Shell>
   );
 }

@@ -157,24 +157,6 @@ func (h *Handler) Fetch(ctx context.Context, target string) (Result, error) {
 }
 
 func (h *Handler) fetch(ctx context.Context, target string, parsed *url.URL) (Result, error) {
-	// Etsy listing pages sit behind DataDome bot protection and return a
-	// captcha challenge to server IPs, so HTML scraping never works. Resolve
-	// the price via the official Open API instead when we can. On any failure
-	// (e.g. no ETSY_API_KEY configured) we fall through to the HTML path,
-	// which will return ErrBlocked and let callers use the fallback result.
-	if isEtsyURL(parsed.Host) {
-		if id := etsyListingID(parsed.Path); id != "" {
-			if res, err := h.fetchEtsyAPI(ctx, id); err == nil {
-				res.ProductUrl = target
-				res.Source = "Etsy"
-				log.Info().Str("url", target).Str("listingId", id).Bool("hasImage", res.ImageUrl != "").Float64("price", res.Price).Str("currency", res.Currency).Msg("scrape: etsy api ok")
-				return res, nil
-			} else {
-				log.Warn().Err(err).Str("url", target).Str("listingId", id).Msg("scrape: etsy api failed, falling back to html")
-			}
-		}
-	}
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
 	if err != nil {
 		return Result{}, err

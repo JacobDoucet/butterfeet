@@ -197,6 +197,12 @@ export const items = {
       oldCategory,
       newCategory,
     }),
+  renameSource: (registryId: string, oldSource: string, newSource: string) =>
+    api.post<{ ok: boolean; modifiedCount: number }>('/api/registry-admin/rename-source', {
+      registryId,
+      oldSource,
+      newSource,
+    }),
 };
 
 export type ReservationStatus = 'Reserved' | 'AwaitingConfirmation' | 'Purchased' | 'Received' | 'Cancelled';

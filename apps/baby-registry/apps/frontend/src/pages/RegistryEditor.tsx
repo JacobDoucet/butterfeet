@@ -34,7 +34,7 @@ import EditIcon from '@mui/icons-material/EditOutlined';
 import Inventory2Icon from '@mui/icons-material/Inventory2Outlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { registries, items, scrape, reservations, type RegistryItem, type Registry, type Reservation, type ReservationStatus } from '../api';
+import { registries, items, scrape, reservations, formatPriceCents, type RegistryItem, type Registry, type Reservation, type ReservationStatus } from '../api';
 import { useSetActiveThemeColor } from '../activeTheme';
 import PrivacyPanel from './PrivacyPanel';
 import BasicInfoPanel from './BasicInfoPanel';
@@ -44,6 +44,7 @@ import PaymentsPanel from '../components/editor/PaymentsPanel';
 import CartsPanel from '../components/editor/CartsPanel';
 import ReservationRow from '../components/editor/ReservationRow';
 import CategoryRenameDialog from '../components/editor/CategoryRenameDialog';
+import SourceRenameDialog from '../components/editor/SourceRenameDialog';
 import DeleteConfirmDialog, { type DeleteTarget } from '../components/editor/DeleteConfirmDialog';
 
 // The fulfillment dropdown adds an "Available" choice on top of the reservation
@@ -79,11 +80,17 @@ export default function RegistryEditor() {
   const [itemSearch, setItemSearch] = useState('');
   const [itemCategoryFilter, setItemCategoryFilter] = useState<string>('__all__');
   const [itemSourceFilter, setItemSourceFilter] = useState<string>('__all__');
+  const [itemPriceFilter, setItemPriceFilter] = useState<string>('__all__');
   const [renameCatOpen, setRenameCatOpen] = useState(false);
   const [renameCatFrom, setRenameCatFrom] = useState('');
   const [renameCatTo, setRenameCatTo] = useState('');
   const [renameCatError, setRenameCatError] = useState<string | null>(null);
   const [renameCatSnack, setRenameCatSnack] = useState<string | null>(null);
+  const [renameSrcOpen, setRenameSrcOpen] = useState(false);
+  const [renameSrcFrom, setRenameSrcFrom] = useState('');
+  const [renameSrcTo, setRenameSrcTo] = useState('');
+  const [renameSrcError, setRenameSrcError] = useState<string | null>(null);
+  const [renameSrcSnack, setRenameSrcSnack] = useState<string | null>(null);
 
   const regsQ = useQuery({
     queryKey: ['registries'],
@@ -137,6 +144,25 @@ export default function RegistryEditor() {
     },
     onError: (err: unknown) => {
       setRenameCatError(err instanceof Error ? err.message : 'Rename failed');
+    },
+  });
+
+  const renameSourceM = useMutation({
+    mutationFn: ({ from, to }: { from: string; to: string }) =>
+      items.renameSource(reg!.id, from, to),
+    onSuccess: (res, vars) => {
+      qc.invalidateQueries({ queryKey: ['items', reg?.id] });
+      if (res.modifiedCount > 0) {
+        const to = vars.to.trim();
+        setItemSourceFilter(to === '' ? '__nosource__' : to);
+      } else {
+        setItemSourceFilter('__all__');
+      }
+      setRenameSrcOpen(false);
+      setRenameSrcSnack(`Updated ${res.modifiedCount} item${res.modifiedCount === 1 ? '' : 's'}.`);
+    },
+    onError: (err: unknown) => {
+      setRenameSrcError(err instanceof Error ? err.message : 'Rename failed');
     },
   });
 
@@ -407,6 +433,11 @@ export default function RegistryEditor() {
     } else if (itemSourceFilter !== '__all__') {
       if ((it.source || '').trim() !== itemSourceFilter) return false;
     }
+    if (itemPriceFilter === '__missing__') {
+      const opts = [it, ...(alternativesByRootId[it.id] ?? [])];
+      const hasPrice = opts.some((o) => o.priceCents != null && o.priceCents > 0);
+      if (hasPrice) return false;
+    }
     if (!itemSearchQuery) return true;
     const opts = [it, ...(alternativesByRootId[it.id] ?? [])];
     return opts.some((o) =>
@@ -446,7 +477,43 @@ export default function RegistryEditor() {
           </Typography>
         </Stack>
         {activeTab === 'items' && (
-          <Stack direction="row" spacing={1}>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Button
+              variant="outlined"
+              startIcon={<EditIcon fontSize="small" />}
+              disabled={itemCategories.length === 0}
+              onClick={() => {
+                const preset =
+                  itemCategoryFilter !== '__all__' && itemCategoryFilter !== '__uncategorised__'
+                    ? itemCategoryFilter
+                    : itemCategories[0] ?? '';
+                setRenameCatFrom(preset);
+                setRenameCatTo(preset);
+                setRenameCatError(null);
+                setRenameCatOpen(true);
+              }}
+              sx={{ whiteSpace: 'nowrap' }}
+            >
+              Rename category
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<EditIcon fontSize="small" />}
+              disabled={itemSources.length === 0}
+              onClick={() => {
+                const preset =
+                  itemSourceFilter !== '__all__' && itemSourceFilter !== '__nosource__'
+                    ? itemSourceFilter
+                    : itemSources[0] ?? '';
+                setRenameSrcFrom(preset);
+                setRenameSrcTo(preset);
+                setRenameSrcError(null);
+                setRenameSrcOpen(true);
+              }}
+              sx={{ whiteSpace: 'nowrap' }}
+            >
+              Rename source
+            </Button>
             <Button variant="outlined" onClick={() => setCsvImportOpen(true)}>Import CSV</Button>
             <Button variant="contained" onClick={() => { reset(); setOpen(true); }}>Add item</Button>
           </Stack>
@@ -516,25 +583,16 @@ export default function RegistryEditor() {
             ))}
             <MenuItem value="__nosource__">No source</MenuItem>
           </Select>
-          <Button
+          <Select
             size="small"
-            variant="outlined"
-            startIcon={<EditIcon fontSize="small" />}
-            disabled={itemCategories.length === 0}
-            onClick={() => {
-              const preset =
-                itemCategoryFilter !== '__all__' && itemCategoryFilter !== '__uncategorised__'
-                  ? itemCategoryFilter
-                  : itemCategories[0] ?? '';
-              setRenameCatFrom(preset);
-              setRenameCatTo(preset);
-              setRenameCatError(null);
-              setRenameCatOpen(true);
-            }}
-            sx={{ whiteSpace: 'nowrap' }}
+            value={itemPriceFilter}
+            onChange={(e) => setItemPriceFilter(String(e.target.value))}
+            displayEmpty
+            sx={{ minWidth: 160, bgcolor: '#fff' }}
           >
-            Rename category
-          </Button>
+            <MenuItem value="__all__">All prices</MenuItem>
+            <MenuItem value="__missing__">Missing price</MenuItem>
+          </Select>
         </Stack>
       )}
 
@@ -549,6 +607,10 @@ export default function RegistryEditor() {
           const isUnlimited = !!it.quantityUnlimited;
           const fulfilled = !isUnlimited && activeCount >= requested;
           const optionCount = optionItems.length;
+          const pricedOption = optionItems.find((o) => o.priceCents != null && o.priceCents > 0);
+          const priceLabel = pricedOption
+            ? formatPriceCents(pricedOption.priceCents, pricedOption.currency)
+            : null;
           // Unified badge logic
           let badgeColor = 'default';
           if (fulfilled && activeCount > 0) badgeColor = 'success.main';
@@ -588,6 +650,11 @@ export default function RegistryEditor() {
                 topRightOverlay={topRightOverlay}
                 belowTitle={
                   <Stack direction="row" spacing={1} sx={{ my: 1, flexWrap: 'wrap', rowGap: 1 }}>
+                    {priceLabel ? (
+                      <Chip size="small" color="primary" variant="outlined" label={priceLabel} />
+                    ) : (
+                      <Chip size="small" color="warning" variant="outlined" label="No price" />
+                    )}
                     {it.source && <Chip size="small" label={it.source} />}
                     {it.category && <Chip size="small" variant="outlined" label={it.category} />}
                     {optionCount > 1 && <Chip size="small" variant="outlined" label={`${optionCount} options`} />}
@@ -1113,6 +1180,27 @@ export default function RegistryEditor() {
         onSubmit={() => {
           setRenameCatError(null);
           renameCategoryM.mutate({ from: renameCatFrom.trim(), to: renameCatTo.trim() });
+        }}
+      />
+      <Snackbar
+        open={!!renameSrcSnack}
+        autoHideDuration={4000}
+        onClose={() => setRenameSrcSnack(null)}
+        message={renameSrcSnack ?? ''}
+      />
+      <SourceRenameDialog
+        open={renameSrcOpen}
+        onClose={() => setRenameSrcOpen(false)}
+        sources={itemSources}
+        from={renameSrcFrom}
+        to={renameSrcTo}
+        onFromChange={setRenameSrcFrom}
+        onToChange={setRenameSrcTo}
+        error={renameSrcError}
+        pending={renameSourceM.isPending}
+        onSubmit={() => {
+          setRenameSrcError(null);
+          renameSourceM.mutate({ from: renameSrcFrom.trim(), to: renameSrcTo.trim() });
         }}
       />
     </Container>

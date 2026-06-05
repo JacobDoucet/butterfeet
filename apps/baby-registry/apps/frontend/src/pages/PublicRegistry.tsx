@@ -584,44 +584,6 @@ export default function PublicRegistry() {
       </Box>
 
       <Container maxWidth="lg" sx={{ pt: { xs: 1, md: 2 }, pb: { xs: 4, md: 6 } }}>
-        {cartLines.length > 0 && (
-          <Stack sx={{ mb: 3 }}>
-            <Alert
-              severity="info"
-              icon={false}
-              sx={{
-                borderRadius: 3,
-                bgcolor: 'primary.main',
-                color: '#fff',
-                '& .MuiAlert-message': { width: '100%' },
-              }}
-            >
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1.5}
-                alignItems={{ xs: 'flex-start', sm: 'center' }}
-                justifyContent="space-between"
-              >
-                <Box sx={{ color: '#fff' }}>
-                  <Typography sx={{ fontWeight: 600, color: '#fff' }}>
-                    {cartLines.length} {cartLines.length === 1 ? 'gift is' : 'gifts are'} waiting in your cart
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)' }}>
-                    Held just for you — review and check out when you're ready.
-                  </Typography>
-                </Box>
-                <Button
-                  size="small"
-                  variant="contained"
-                  onClick={() => setCartOpen(true)}
-                  sx={{ bgcolor: '#fff', color: 'primary.main', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
-                >
-                  Review cart
-                </Button>
-              </Stack>
-            </Alert>
-          </Stack>
-        )}
         {categories.length > 0 && (
           <Box
             sx={{
@@ -765,20 +727,9 @@ export default function PublicRegistry() {
             )}
             {targetOptions.length === 1 && targetOptions[0] ? (
               <Stack direction="row" spacing={2} alignItems="center">
-                <Box
-                  sx={{
-                    width: { xs: 64, sm: 120 },
-                    height: { xs: 64, sm: 120 },
-                    flexShrink: 0,
-                    bgcolor: targetOptions[0].imageBgColor || '#ffffff',
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {targetOptions[0].imageUrl ? (
+                {(() => {
+                  const href = purchaseHref(targetOptions[0]);
+                  const imageInner = targetOptions[0].imageUrl ? (
                     <Box
                       component="img"
                       src={targetOptions[0].imageUrl}
@@ -787,8 +738,34 @@ export default function PublicRegistry() {
                     />
                   ) : (
                     <Typography variant="caption" color="text.disabled">No image</Typography>
-                  )}
-                </Box>
+                  );
+                  return (
+                    <Box
+                      {...(href
+                        ? {
+                            component: 'a',
+                            href,
+                            target: '_blank',
+                            rel: 'noopener noreferrer',
+                          }
+                        : {})}
+                      sx={{
+                        width: { xs: 64, sm: 120 },
+                        height: { xs: 64, sm: 120 },
+                        flexShrink: 0,
+                        bgcolor: targetOptions[0].imageBgColor || '#ffffff',
+                        borderRadius: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        cursor: href ? 'pointer' : 'default',
+                      }}
+                    >
+                      {imageInner}
+                    </Box>
+                  );
+                })()}
                 <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
                   <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                     {targetOptions[0].title}

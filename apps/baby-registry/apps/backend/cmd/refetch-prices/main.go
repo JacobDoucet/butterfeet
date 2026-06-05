@@ -7,9 +7,12 @@
 //	go run ./cmd/refetch-prices -slug <registry-slug> -apply     # write changes
 //	go run ./cmd/refetch-prices -slug <registry-slug> -apply -force  # include items that already have a price
 //
-// Only items whose productUrl is an Amazon marketplace or an Etsy listing are
-// processed; the scraper resolves Amazon via per-domain currency rules and
-// Etsy via the official Open API (requires ETSY_API_KEY).
+// Only items from supported stores are processed (see supportedHosts):
+// Amazon (per-domain currency rules) and stores the generic JSON-LD/meta
+// scraper handles such as Marks & Spencer, Momcozy, John Lewis, IKEA, and
+// Mamas & Papas. Items from other domains, or stores behind unsolvable bot
+// protection (e.g. Etsy's DataDome, Jellycat's Cloudflare), are skipped or
+// counted as failures.
 package main
 
 import (
@@ -165,15 +168,34 @@ func main() {
 }
 
 // isSupportedURL reports whether the product URL points at a marketplace the
-// refetcher can price reliably: Amazon (per-domain currency rules) or Etsy
-// (official Open API). Other domains are skipped.
+// refetcher can price reliably: Amazon (per-domain currency rules) or any
+// store the generic JSON-LD/meta scraper handles well (Marks & Spencer,
+// Momcozy, John Lewis, IKEA, Mamas & Papas). Other domains are skipped. Sites
+// behind unsolvable bot protection (e.g. Etsy's DataDome, Jellycat's
+// Cloudflare challenge) simply return ErrBlocked and are counted as failures.
 func isSupportedURL(raw string) bool {
 	u, err := url.Parse(raw)
 	if err != nil {
 		return false
 	}
 	host := strings.ToLower(u.Hostname())
-	return strings.Contains(host, "amazon.") || strings.Contains(host, "etsy.")
+	for _, h := range supportedHosts {
+		if strings.Contains(host, h) {
+			return true
+		}
+	}
+	return false
+}
+
+// supportedHosts are the host substrings the refetcher will attempt. Keep this
+// in sync with internal/scrape detectSource as new stores are verified.
+var supportedHosts = []string{
+	"amazon.",
+	"marksandspencer",
+	"momcozy",
+	"johnlewis",
+	"ikea.",
+	"mamasandpapas",
 }
 
 // priceToCents converts a scraped price (e.g. 23.95) to integer cents,

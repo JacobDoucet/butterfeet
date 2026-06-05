@@ -30,6 +30,7 @@ func NewHandler(client api.Client, db *mongo.Database, resolver ActorResolver) *
 	h := &Handler{client: client, db: db, resolver: resolver}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/rename-category", h.handleRenameCategory)
+	mux.HandleFunc("/rename-source", h.handleRenameSource)
 	h.mux = mux
 	return h
 }
@@ -107,6 +108,85 @@ func (h *Handler) handleRenameCategory(w http.ResponseWriter, r *http.Request) {
 		update = bson.M{"$unset": bson.M{"category": ""}}
 	} else {
 		update = bson.M{"$set": bson.M{"category": newCat}}
+	}
+
+	res, err := coll.UpdateMany(r.Context(), filter, update)
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "modifiedCount": res.ModifiedCount})
+}
+
+type renameSourceBody struct {
+	RegistryId string `json:"registryId"`
+	OldSource  string `json:"oldSource"`
+	NewSource  string `json:"newSource"`
+}
+
+func (h *Handler) handleRenameSource(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	actor, err := h.requireOwner(w, r)
+	if err != nil {
+		return
+	}
+	var body renameSourceBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid body")
+		return
+	}
+	body.RegistryId = strings.TrimSpace(body.RegistryId)
+	oldSrc := strings.TrimSpace(body.OldSource)
+	newSrc := strings.TrimSpace(body.NewSource)
+	if body.RegistryId == "" {
+		writeJSONError(w, http.StatusBadRequest, "registryId required")
+		return
+	}
+	if oldSrc == newSrc {
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true, "modifiedCount": 0})
+		return
+	}
+
+	// Authorise: ensure the actor can read this registry (owner ACL via forge).
+	if _, _, err := h.client.Registry().SelectById(
+		r.Context(), actor,
+		registry.SelectByIdQuery{Id: body.RegistryId},
+		registryapi.NewProjection(true),
+	); err != nil {
+		writeJSONError(w, http.StatusNotFound, "registry not found")
+		return
+	}
+
+	coll := h.db.Collection(registryitemmongo.CollectionName)
+
+	regOID, err := primitive.ObjectIDFromHex(body.RegistryId)
+	if err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid registryId")
+		return
+	}
+
+	var filter bson.M
+	if oldSrc == "" {
+		filter = bson.M{
+			"registryId": regOID,
+			"$or": []bson.M{
+				{"source": ""},
+				{"source": nil},
+				{"source": bson.M{"$exists": false}},
+			},
+		}
+	} else {
+		filter = bson.M{"registryId": regOID, "source": oldSrc}
+	}
+
+	var update bson.M
+	if newSrc == "" {
+		update = bson.M{"$unset": bson.M{"source": ""}}
+	} else {
+		update = bson.M{"$set": bson.M{"source": newSrc}}
 	}
 
 	res, err := coll.UpdateMany(r.Context(), filter, update)
