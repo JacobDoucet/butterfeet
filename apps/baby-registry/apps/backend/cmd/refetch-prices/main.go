@@ -7,8 +7,9 @@
 //	go run ./cmd/refetch-prices -slug <registry-slug> -apply     # write changes
 //	go run ./cmd/refetch-prices -slug <registry-slug> -apply -force  # include items that already have a price
 //
-// Only items whose productUrl is an Amazon marketplace are processed; the
-// scraper's per-domain currency rules already make Amazon prices reliable.
+// Only items whose productUrl is an Amazon marketplace or an Etsy listing are
+// processed; the scraper resolves Amazon via per-domain currency rules and
+// Etsy via the official Open API (requires ETSY_API_KEY).
 package main
 
 import (
@@ -98,7 +99,7 @@ func main() {
 		if productURL == "" {
 			continue
 		}
-		if !isAmazonURL(productURL) {
+		if !isSupportedURL(productURL) {
 			continue
 		}
 		scanned++
@@ -155,7 +156,7 @@ func main() {
 	log.Info().
 		Str("mode", mode).
 		Str("slug", *slug).
-		Int("amazonItems", scanned).
+		Int("scannedItems", scanned).
 		Int("fetched", fetched).
 		Int("updated", updated).
 		Int("skipped", skipped).
@@ -163,15 +164,16 @@ func main() {
 		Msg("price refetch complete")
 }
 
-// isAmazonURL reports whether the product URL points at an Amazon
-// marketplace. Only Amazon items are processed because the scraper's
-// per-domain currency handling makes those prices reliable.
-func isAmazonURL(raw string) bool {
+// isSupportedURL reports whether the product URL points at a marketplace the
+// refetcher can price reliably: Amazon (per-domain currency rules) or Etsy
+// (official Open API). Other domains are skipped.
+func isSupportedURL(raw string) bool {
 	u, err := url.Parse(raw)
 	if err != nil {
 		return false
 	}
-	return strings.Contains(strings.ToLower(u.Hostname()), "amazon.")
+	host := strings.ToLower(u.Hostname())
+	return strings.Contains(host, "amazon.") || strings.Contains(host, "etsy.")
 }
 
 // priceToCents converts a scraped price (e.g. 23.95) to integer cents,

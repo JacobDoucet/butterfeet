@@ -28,6 +28,7 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3035,http://localhost:5173}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       MAIL_FROM: ${MAIL_FROM:-Stork Nest <onboarding@resend.dev>}
+      ETSY_API_KEY: ${ETSY_API_KEY:-}
     depends_on:
       - mongo
     ports:

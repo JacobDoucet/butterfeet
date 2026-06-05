@@ -78,6 +78,7 @@ export default function RegistryEditor() {
   const [csvImportSnack, setCsvImportSnack] = useState<string | null>(null);
   const [itemSearch, setItemSearch] = useState('');
   const [itemCategoryFilter, setItemCategoryFilter] = useState<string>('__all__');
+  const [itemSourceFilter, setItemSourceFilter] = useState<string>('__all__');
   const [renameCatOpen, setRenameCatOpen] = useState(false);
   const [renameCatFrom, setRenameCatFrom] = useState('');
   const [renameCatTo, setRenameCatTo] = useState('');
@@ -370,6 +371,9 @@ export default function RegistryEditor() {
   const categoryOptions = Array.from(new Set(list.map((it) => (it.category || '').trim()).filter(Boolean))).sort((a, b) =>
     a.localeCompare(b),
   );
+  const sourceOptions = Array.from(new Set(list.map((it) => (it.source || '').trim()).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b),
+  );
   const alternativesByRootId = list.reduce<Record<string, RegistryItem[]>>((acc, it) => {
     if (it.parentItemId && itemById[it.parentItemId]) {
       (acc[it.parentItemId] ??= []).push(it);
@@ -388,12 +392,20 @@ export default function RegistryEditor() {
   const itemCategories = Array.from(
     new Set(topLevelItems.map((it) => (it.category || '').trim()).filter(Boolean)),
   ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  const itemSources = Array.from(
+    new Set(topLevelItems.map((it) => (it.source || '').trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
   const itemSearchQuery = itemSearch.trim().toLowerCase();
   const filteredTopLevelItems = topLevelItems.filter((it) => {
     if (itemCategoryFilter === '__uncategorised__') {
       if ((it.category || '').trim()) return false;
     } else if (itemCategoryFilter !== '__all__') {
       if ((it.category || '').trim() !== itemCategoryFilter) return false;
+    }
+    if (itemSourceFilter === '__nosource__') {
+      if ((it.source || '').trim()) return false;
+    } else if (itemSourceFilter !== '__all__') {
+      if ((it.source || '').trim() !== itemSourceFilter) return false;
     }
     if (!itemSearchQuery) return true;
     const opts = [it, ...(alternativesByRootId[it.id] ?? [])];
@@ -490,6 +502,19 @@ export default function RegistryEditor() {
               <MenuItem key={cat} value={cat}>{cat}</MenuItem>
             ))}
             <MenuItem value="__uncategorised__">Uncategorised</MenuItem>
+          </Select>
+          <Select
+            size="small"
+            value={itemSourceFilter}
+            onChange={(e) => setItemSourceFilter(String(e.target.value))}
+            displayEmpty
+            sx={{ minWidth: 200, bgcolor: '#fff' }}
+          >
+            <MenuItem value="__all__">All sources</MenuItem>
+            {itemSources.map((src) => (
+              <MenuItem key={src} value={src}>{src}</MenuItem>
+            ))}
+            <MenuItem value="__nosource__">No source</MenuItem>
           </Select>
           <Button
             size="small"
@@ -698,7 +723,22 @@ export default function RegistryEditor() {
                     label="No substitutes"
                   />
                 )}
-                <TextField fullWidth label="Source" value={source} onChange={(e) => setSource(e.target.value)} />
+                <Autocomplete
+                  freeSolo
+                  options={sourceOptions}
+                  value={source}
+                  inputValue={source}
+                  onInputChange={(_, value) => setSource(value)}
+                  onChange={(_, value) => setSource(typeof value === 'string' ? value : value || '')}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      label="Source"
+                      placeholder="Select existing or create new"
+                    />
+                  )}
+                />
                 <TextField fullWidth label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} />
                 {error && <Alert severity="error">{error}</Alert>}
               </Stack>
@@ -848,7 +888,22 @@ export default function RegistryEditor() {
                           />
                         )}
                       />
-                      <TextField fullWidth label="Source" value={source} onChange={(e) => setSource(e.target.value)} />
+                      <Autocomplete
+                        freeSolo
+                        options={sourceOptions}
+                        value={source}
+                        inputValue={source}
+                        onInputChange={(_, value) => setSource(value)}
+                        onChange={(_, value) => setSource(typeof value === 'string' ? value : value || '')}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            fullWidth
+                            label="Source"
+                            placeholder="Select existing or create new"
+                          />
+                        )}
+                      />
                       <TextField fullWidth label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} />
                     </Stack>
                   </Box>
