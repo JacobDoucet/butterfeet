@@ -130,26 +130,50 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, target, nil)
+	res, err := h.fetch(r.Context(), target, parsed)
 	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		writeResult(w, fallbackResult(target, parsed))
 		return
+	}
+	writeResult(w, res)
+}
+
+// ErrBlocked is returned by Fetch when the page could not be scraped
+// (bot protection, non-200 status, or unparseable HTML). Callers that
+// want a best-effort title can fall back to FallbackResult.
+var ErrBlocked = errors.New("scrape: page blocked or unparseable")
+
+// Fetch scrapes a single product URL and returns the extracted Result.
+// It performs the same fetch, Amazon-interstitial handling, block
+// detection, and HTML parsing as the HTTP handler. It returns ErrBlocked
+// (wrapped) when the page can't be scraped into a real Result, so command
+// line tools can skip such items rather than persisting empty data.
+func (h *Handler) Fetch(ctx context.Context, target string) (Result, error) {
+	parsed, err := url.Parse(target)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+		return Result{}, fmt.Errorf("invalid url: %s", target)
+	}
+	return h.fetch(ctx, target, parsed)
+}
+
+func (h *Handler) fetch(ctx context.Context, target string, parsed *url.URL) (Result, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	if err != nil {
+		return Result{}, err
 	}
 	setBrowserHeaders(req)
 
 	resp, err := h.client.Do(req)
 	if err != nil {
 		log.Warn().Err(err).Str("url", target).Msg("scrape: fetch error")
-		writeResult(w, fallbackResult(target, parsed))
-		return
+		return Result{}, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 4*1024*1024))
 	if err != nil {
 		log.Warn().Err(err).Str("url", target).Msg("scrape: read error")
-		writeResult(w, fallbackResult(target, parsed))
-		return
+		return Result{}, err
 	}
 	initialStatus := resp.StatusCode
 	initialLen := len(body)
@@ -158,15 +182,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Amazon often serves a "Continue shopping" interstitial to fresh
 	// server IPs. Submitting the embedded form sets session cookies that
 	// unblock the real product page on retry.
-	if retryBody, ok := h.solveAmazonInterstitial(r.Context(), parsed, body); ok {
+	if retryBody, ok := h.solveAmazonInterstitial(ctx, parsed, body); ok {
 		body = retryBody
 		solved = true
 	}
 
 	if resp.StatusCode >= 400 || looksBlocked(body) {
 		log.Warn().Str("url", target).Int("status", initialStatus).Int("len", len(body)).Bool("solvedChallenge", solved).Msg("scrape: blocked, returning fallback")
-		writeResult(w, fallbackResult(target, parsed))
-		return
+		return Result{}, fmt.Errorf("%w: status=%d", ErrBlocked, initialStatus)
 	}
 
 	res, err := parseHTML(string(body), parsed)
@@ -174,15 +197,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Warn().Err(err).Str("url", target).Int("status", initialStatus).Int("len", len(body)).Bool("solvedChallenge", solved).Msg("scrape: parse failed, returning fallback")
 		// Couldn't extract a title — fall back to slug-derived metadata
 		// rather than a hard error so the user still gets a head start.
-		writeResult(w, fallbackResult(target, parsed))
-		return
+		return Result{}, fmt.Errorf("%w: %v", ErrBlocked, err)
 	}
 	res.ProductUrl = target
 	res.Source = detectSource(parsed.Host)
 
 	log.Info().Str("url", target).Int("initialStatus", initialStatus).Int("initialLen", initialLen).Int("finalLen", len(body)).Bool("solvedChallenge", solved).Bool("hasImage", res.ImageUrl != "").Str("source", res.Source).Msg("scrape: ok")
 
-	writeResult(w, res)
+	return res, nil
 }
 
 func writeResult(w http.ResponseWriter, res Result) {
@@ -364,6 +386,13 @@ func parseHTML(body string, pageURL *url.URL) (Result, error) {
 		if p.Match(pageURL.Hostname()) {
 			p.Apply(signals, &res)
 		}
+	}
+
+	// Amazon marketplaces are region-locked to a single currency, so the
+	// domain TLD is the authoritative currency signal (e.g. amazon.co.uk is
+	// always GBP). This overrides any stray symbol picked up from the page.
+	if cur := currencyFromAmazonHost(pageURL.Hostname()); cur != "" {
+		res.Currency = cur
 	}
 
 	res.ImageUrl = makeAbsoluteURL(pageURL, res.ImageUrl)
@@ -753,6 +782,13 @@ func nodeText(n *html.Node) string {
 	var walk func(*html.Node)
 	walk = func(cur *html.Node) {
 		if cur == nil {
+			return
+		}
+		// Skip <script>/<style> subtrees: their text is CSS/JS, not visible
+		// content. Including it pollutes price parsing (e.g. an inline style
+		// like "top: 0.8rem" inside Amazon's price container would otherwise
+		// be read as a £0.80 price).
+		if cur.Type == html.ElementNode && (cur.Data == "script" || cur.Data == "style") {
 			return
 		}
 		if cur.Type == html.TextNode {

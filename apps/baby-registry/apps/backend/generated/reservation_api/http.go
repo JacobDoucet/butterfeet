@@ -2,6 +2,7 @@ package reservation_api
 
 import (
 	"errors"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
@@ -51,6 +52,7 @@ func ToHTTPDeleteResult(id string) HTTPDeleteResult {
 
 type HTTPModel struct {
 	reservation.HTTPRecord `json:"reservation"`
+	Cart                   *cart.HTTPRecord          `json:"cart,omitempty"`
 	Item                   *registry_item.HTTPRecord `json:"item,omitempty"`
 	Registry               *registry.HTTPRecord      `json:"registry,omitempty"`
 }
@@ -61,6 +63,13 @@ func (r *HTTPModel) ToDomainModel() (Model, error) {
 	m := Model{}
 	var err error
 	m.Model, err = r.ToModel()
+	if r.Cart != nil {
+		val, toModelErr := r.Cart.ToModel()
+		if toModelErr != nil {
+			err = errors.Join(err, toModelErr)
+		}
+		m.Cart = &val
+	}
 	if r.Item != nil {
 		val, toModelErr := r.Item.ToModel()
 		if toModelErr != nil {
@@ -95,6 +104,14 @@ func ToHTTPModel(r Model, projection Projection) (HTTPModel, error) {
 	m := HTTPModel{}
 	var err error
 	m.HTTPRecord, err = r.ToHTTPRecord(projection.Projection)
+	if r.Cart != nil && projection.Cart != nil {
+		refProjection := *projection.Cart
+		val, toHTTPRecordErr := r.Cart.ToHTTPRecord(refProjection)
+		if toHTTPRecordErr != nil {
+			err = errors.Join(err, toHTTPRecordErr)
+		}
+		m.Cart = &val
+	}
 	if r.Item != nil && projection.Item != nil {
 		refProjection := *projection.Item
 		val, toHTTPRecordErr := r.Item.ToHTTPRecord(refProjection)

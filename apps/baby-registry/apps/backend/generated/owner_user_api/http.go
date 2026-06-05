@@ -3,9 +3,11 @@ package owner_user_api
 import (
 	"errors"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_payment_method"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 )
 
@@ -54,7 +56,9 @@ func ToHTTPDeleteResult(id string) HTTPDeleteResult {
 type HTTPModel struct {
 	owner_user.HTTPRecord   `json:"ownerUser"`
 	AddressAccessSessions   *[]address_access_session.HTTPRecord   `json:"addressAccessSessions,omitempty"`
+	Carts                   *[]cart.HTTPRecord                     `json:"carts,omitempty"`
 	RegistryApprovedGuests  *[]registry_approved_guest.HTTPRecord  `json:"registryApprovedGuests,omitempty"`
+	RegistryPaymentMethods  *[]registry_payment_method.HTTPRecord  `json:"registryPaymentMethods,omitempty"`
 	Registrys               *[]registry.HTTPRecord                 `json:"registrys,omitempty"`
 	ShippingAddressRequests *[]shipping_address_request.HTTPRecord `json:"shippingAddressRequests,omitempty"`
 }
@@ -77,6 +81,18 @@ func (r *HTTPModel) ToDomainModel() (Model, error) {
 		}
 		m.AddressAccessSessions = &val
 	}
+	if r.Carts != nil {
+		val := make([]cart.Model, 0)
+		var err error
+		for _, rr := range *r.Carts {
+			nextVal, nextErr := rr.ToModel()
+			if nextErr != nil {
+				err = errors.Join(err, nextErr)
+			}
+			val = append(val, nextVal)
+		}
+		m.Carts = &val
+	}
 	if r.RegistryApprovedGuests != nil {
 		val := make([]registry_approved_guest.Model, 0)
 		var err error
@@ -88,6 +104,18 @@ func (r *HTTPModel) ToDomainModel() (Model, error) {
 			val = append(val, nextVal)
 		}
 		m.RegistryApprovedGuests = &val
+	}
+	if r.RegistryPaymentMethods != nil {
+		val := make([]registry_payment_method.Model, 0)
+		var err error
+		for _, rr := range *r.RegistryPaymentMethods {
+			nextVal, nextErr := rr.ToModel()
+			if nextErr != nil {
+				err = errors.Join(err, nextErr)
+			}
+			val = append(val, nextVal)
+		}
+		m.RegistryPaymentMethods = &val
 	}
 	if r.Registrys != nil {
 		val := make([]registry.Model, 0)
@@ -145,6 +173,18 @@ func ToHTTPModel(r Model, projection Projection) (HTTPModel, error) {
 		}
 		m.AddressAccessSessions = &val
 	}
+	if r.Carts != nil && projection.Carts != nil {
+		refProjection := *projection.Carts
+		val := make([]cart.HTTPRecord, 0)
+		for _, rr := range *r.Carts {
+			nextVal, nextErr := rr.ToHTTPRecord(refProjection)
+			if nextErr != nil {
+				err = errors.Join(err, nextErr)
+			}
+			val = append(val, nextVal)
+		}
+		m.Carts = &val
+	}
 	if r.RegistryApprovedGuests != nil && projection.RegistryApprovedGuests != nil {
 		refProjection := *projection.RegistryApprovedGuests
 		val := make([]registry_approved_guest.HTTPRecord, 0)
@@ -156,6 +196,18 @@ func ToHTTPModel(r Model, projection Projection) (HTTPModel, error) {
 			val = append(val, nextVal)
 		}
 		m.RegistryApprovedGuests = &val
+	}
+	if r.RegistryPaymentMethods != nil && projection.RegistryPaymentMethods != nil {
+		refProjection := *projection.RegistryPaymentMethods
+		val := make([]registry_payment_method.HTTPRecord, 0)
+		for _, rr := range *r.RegistryPaymentMethods {
+			nextVal, nextErr := rr.ToHTTPRecord(refProjection)
+			if nextErr != nil {
+				err = errors.Join(err, nextErr)
+			}
+			val = append(val, nextVal)
+		}
+		m.RegistryPaymentMethods = &val
 	}
 	if r.Registrys != nil && projection.Registrys != nil {
 		refProjection := *projection.Registrys

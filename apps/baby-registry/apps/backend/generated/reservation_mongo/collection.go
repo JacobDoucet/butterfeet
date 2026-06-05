@@ -10,6 +10,9 @@ import (
 const CollectionName = "reservations"
 
 func CreateIndexes(ctx context.Context, db *mongo.Database) error {
+	if err := createCartIdxIndex(ctx, db); err != nil {
+		return err
+	}
 	if err := createCreatedAtIndex(ctx, db); err != nil {
 		return err
 	}
@@ -26,6 +29,18 @@ func CreateIndexes(ctx context.Context, db *mongo.Database) error {
 		return err
 	}
 	return nil
+}
+
+func createCartIdxIndex(ctx context.Context, db *mongo.Database) error {
+	collection := db.Collection(CollectionName)
+
+	_, err := collection.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "cartId", Value: 1},
+		},
+		Options: options.Index().SetName("cart_idx"),
+	})
+	return err
 }
 
 func createCreatedAtIndex(ctx context.Context, db *mongo.Database) error {

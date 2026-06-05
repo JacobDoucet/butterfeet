@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user_mongo"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_payment_method"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -31,7 +33,15 @@ func (m *mongoClient) Search(ctx context.Context, where WhereClause, options Que
 	if err != nil {
 		return QueryResult{}, err
 	}
+	mongoWhereClauseCarts, err := where.Carts.ToMongoWhereClause()
+	if err != nil {
+		return QueryResult{}, err
+	}
 	mongoWhereClauseRegistryApprovedGuests, err := where.RegistryApprovedGuests.ToMongoWhereClause()
+	if err != nil {
+		return QueryResult{}, err
+	}
+	mongoWhereClauseRegistryPaymentMethods, err := where.RegistryPaymentMethods.ToMongoWhereClause()
 	if err != nil {
 		return QueryResult{}, err
 	}
@@ -50,7 +60,9 @@ func (m *mongoClient) Search(ctx context.Context, where WhereClause, options Que
 		owner_user_mongo.WhereClause{
 			OwnerUser:               mongoWhereClause,
 			AddressAccessSessions:   mongoWhereClauseAddressAccessSessions,
+			Carts:                   mongoWhereClauseCarts,
 			RegistryApprovedGuests:  mongoWhereClauseRegistryApprovedGuests,
+			RegistryPaymentMethods:  mongoWhereClauseRegistryPaymentMethods,
 			Registrys:               mongoWhereClauseRegistrys,
 			ShippingAddressRequests: mongoWhereClauseShippingAddressRequests,
 		},
@@ -58,7 +70,9 @@ func (m *mongoClient) Search(ctx context.Context, where WhereClause, options Que
 			Projection:                        projection.Projection,
 			Sort:                              options.Sort.ToMongoSortParams(),
 			AddressAccessSessionsProjection:   projection.AddressAccessSessions,
+			CartsProjection:                   projection.Carts,
 			RegistryApprovedGuestsProjection:  projection.RegistryApprovedGuests,
+			RegistryPaymentMethodsProjection:  projection.RegistryPaymentMethods,
 			RegistrysProjection:               projection.Registrys,
 			ShippingAddressRequestsProjection: projection.ShippingAddressRequests,
 			Limit:                             options.Limit,
@@ -143,6 +157,18 @@ func FromMongoQueryResultData(r owner_user_mongo.Model) (Model, error) {
 		}
 		m.AddressAccessSessions = &val
 	}
+	if r.Carts != nil {
+		val := make([]cart.Model, 0)
+		var err error
+		for _, rr := range *r.Carts {
+			nextVal, nextErr := rr.ToModel()
+			if nextErr != nil {
+				err = errors.Join(err, nextErr)
+			}
+			val = append(val, nextVal)
+		}
+		m.Carts = &val
+	}
 	if r.RegistryApprovedGuests != nil {
 		val := make([]registry_approved_guest.Model, 0)
 		var err error
@@ -154,6 +180,18 @@ func FromMongoQueryResultData(r owner_user_mongo.Model) (Model, error) {
 			val = append(val, nextVal)
 		}
 		m.RegistryApprovedGuests = &val
+	}
+	if r.RegistryPaymentMethods != nil {
+		val := make([]registry_payment_method.Model, 0)
+		var err error
+		for _, rr := range *r.RegistryPaymentMethods {
+			nextVal, nextErr := rr.ToModel()
+			if nextErr != nil {
+				err = errors.Join(err, nextErr)
+			}
+			val = append(val, nextVal)
+		}
+		m.RegistryPaymentMethods = &val
 	}
 	if r.Registrys != nil {
 		val := make([]registry.Model, 0)

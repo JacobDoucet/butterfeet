@@ -11,8 +11,11 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
 	addressaccesssessionapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
+	cartapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_address_access_mode"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_address_request_status"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_cart_status"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_guest_access_level"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_guest_status"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_item_source"
@@ -30,6 +33,7 @@ import (
 	reservationapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	shippingaddressrequestapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request_api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/exchangerates"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/shipping"
 	"github.com/rs/zerolog/log"
@@ -44,10 +48,11 @@ type Handler struct {
 	mailer       mailer.Mailer
 	appBaseURL   string
 	resolveBuyer func(r *http.Request, slug string) (string, error)
+	rates        *exchangerates.Store
 }
 
 func NewHandler(client api.Client, db *mongo.Database, notificationMailer mailer.Mailer, appBaseURL string) *Handler {
-	h := &Handler{client: client, db: db, mailer: notificationMailer, appBaseURL: strings.TrimRight(appBaseURL, "/")}
+	h := &Handler{client: client, db: db, mailer: notificationMailer, appBaseURL: strings.TrimRight(appBaseURL, "/"), rates: exchangerates.NewStore(db)}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/r/", h.handleRegistryBySlug)
 	mux.HandleFunc("/items/", h.handleItemRoute)               // /items/:id/reserve and /items/:id/click
@@ -55,6 +60,10 @@ func NewHandler(client api.Client, db *mongo.Database, notificationMailer mailer
 	mux.HandleFunc("/shipping/resolve", h.handleShippingResolve)
 	mux.HandleFunc("/address-requests", h.handleAddressRequestCreate)
 	mux.HandleFunc("/registry-access/request", h.handleRegistryAccessRequest)
+	mux.HandleFunc("/exchange-rates", h.handleExchangeRates)        // GET cached FX rates for currency conversion
+	mux.HandleFunc("/payments/methods", h.handlePaymentMethods)     // GET ?slug= -> enabled methods
+	mux.HandleFunc("/payments/intent", h.handleCreatePaymentIntent) // POST create contribution payment
+	mux.HandleFunc("/payments/", h.handlePaymentRoute)              // /payments/:id/claim
 	h.mux = mux
 	return h
 }
@@ -71,6 +80,30 @@ func (h *Handler) SetBuyerResolver(f func(r *http.Request, slug string) (string,
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mux.ServeHTTP(w, r)
+}
+
+// handleExchangeRates returns the cached foreign-exchange rates so the public
+// page can convert item prices into a viewer-chosen currency. The response is
+// served entirely from the cached Mongo document; the upstream provider is only
+// contacted by the background poller. GET /exchange-rates
+func (h *Handler) handleExchangeRates(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	snap, ok := h.rates.Get(r.Context())
+	if !ok {
+		http.Error(w, "rates unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"base":      snap.Base,
+		"rates":     snap.Rates,
+		"date":      snap.Date,
+		"fetchedAt": snap.FetchedAt,
+	})
 }
 
 func (h *Handler) brand() mailer.Brand {
@@ -151,6 +184,7 @@ type publicRegistry struct {
 	ShippingDeliveryNotes string          `json:"shippingDeliveryNotes,omitempty"`
 	Items                 []publicItem    `json:"items"`
 	MyReservations        []myReservation `json:"myReservations,omitempty"`
+	MyCarts               []myCart        `json:"myCarts,omitempty"`
 }
 
 // myReservation surfaces the buyer's own active reservations so the UI can
@@ -162,6 +196,19 @@ type myReservation struct {
 	Quantity  int    `json:"quantity"`
 	CreatedAt string `json:"createdAt"`
 	ExpiresAt string `json:"expiresAt"`
+}
+
+// myCart surfaces a cart the buyer has started (and possibly claimed as sent)
+// so the UI can show its status while parents confirm receipt.
+type myCart struct {
+	Id                string             `json:"id"`
+	ReferenceCode     string             `json:"referenceCode"`
+	Status            string             `json:"status"`
+	AmountCents       int                `json:"amountCents"`
+	Currency          string             `json:"currency"`
+	MethodDisplayName string             `json:"methodDisplayName"`
+	CreatedAt         string             `json:"createdAt"`
+	Items             []cartItemSnapshot `json:"items"`
 }
 
 // gatedRegistry is the minimal payload returned when the viewer has not been
@@ -360,6 +407,61 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 
 	if buyerEmail != "" {
 		lowerEmail := strings.ToLower(buyerEmail)
+
+		// Group the buyer's reservations by the cart they belong to so each
+		// cart can show its line items without an extra query per cart.
+		cartItems := map[string][]cartItemSnapshot{}
+		for _, rsv := range resvResult.Data {
+			cid := strings.TrimSpace(rsv.CartId)
+			// Reserved/Cancelled reservations can carry a stale CartId (empty
+			// Refs cannot be unset on update), so only reservations actually
+			// committed to a cart should surface as that cart's line items.
+			if cid == "" ||
+				rsv.Status == enum_reservation_status.Reserved ||
+				rsv.Status == enum_reservation_status.Cancelled {
+				continue
+			}
+			qty := rsv.Quantity
+			if qty <= 0 {
+				qty = 1
+			}
+			it := itemByID[rsv.ItemId]
+			cartItems[cid] = append(cartItems[cid], cartItemSnapshot{
+				ReservationId: rsv.Id,
+				ItemId:        rsv.ItemId,
+				Title:         it.Title,
+				Quantity:      qty,
+				PriceCents:    it.PriceCents,
+				Currency:      it.Currency,
+			})
+		}
+
+		// Surface the buyer's active carts (anything not rejected) so the UI
+		// can show their status while parents confirm receipt. Reservations in
+		// these carts are already AwaitingConfirmation, so they are naturally
+		// excluded from the open-cart list below.
+		cartResult, _, cartErr := h.client.Cart().Search(r.Context(), super, cart.WhereClause{
+			RegistryIdEq:       &reg.Id,
+			ContributorEmailEq: &lowerEmail,
+		}, cartapi.QueryOptions{Limit: 200})
+		if cartErr == nil {
+			for _, c := range cartResult.Data {
+				if c.Status == enum_cart_status.Rejected {
+					continue
+				}
+				resp.MyCarts = append(resp.MyCarts, myCart{
+					Id:                c.Id,
+					ReferenceCode:     c.ReferenceCode,
+					Status:            string(c.Status),
+					AmountCents:       c.AmountCents,
+					Currency:          c.Currency,
+					MethodDisplayName: c.MethodDisplayName,
+					CreatedAt:         c.Created.At.UTC().Format(time.RFC3339),
+					Items:             cartItems[c.Id],
+				})
+			}
+		}
+
 		for _, rsv := range resvResult.Data {
 			if rsv.Status != enum_reservation_status.Reserved {
 				continue
@@ -370,6 +472,8 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 			if !rsv.ExpiresAt.IsZero() && rsv.ExpiresAt.Before(now) {
 				continue
 			}
+			// A Reserved reservation is by definition open; any CartId it still
+			// carries is stale and must not hide it from the buyer's cart.
 			title := ""
 			if it, ok := itemByID[rsv.ItemId]; ok {
 				title = it.Title

@@ -8,6 +8,7 @@ import (
 
 type HTTPRecord struct {
 	Id                 *string                        `json:"id,omitempty"`
+	CartId             *string                        `json:"cartId,omitempty"`
 	ContactEmail       *string                        `json:"contactEmail,omitempty"`
 	Created            *actor_trace.HTTPRecord        `json:"created,omitempty"`
 	ExpiresAt          *time.Time                     `json:"expiresAt,omitempty"`
@@ -28,6 +29,10 @@ func (r *HTTPRecord) ToModel() (Model, error) {
 	if r.Id != nil {
 		elemid0 := r.Id
 		m.Id = *elemid0
+	}
+	if r.CartId != nil {
+		elemcartId0 := r.CartId
+		m.CartId = *elemcartId0
 	}
 	if r.ContactEmail != nil {
 		elemcontactEmail0 := r.ContactEmail
@@ -98,6 +103,9 @@ func (r *HTTPRecord) ToProjection() (Projection, error) {
 	if r.Id != nil {
 		p.Id = true
 	}
+	if r.CartId != nil {
+		p.CartId = true
+	}
 	if r.ContactEmail != nil {
 		p.ContactEmail = true
 	}
@@ -153,6 +161,11 @@ type HTTPWhereClause struct {
 	IdIn     *[]string `json:"idIn,omitempty"`
 	IdNin    *[]string `json:"idNin,omitempty"`
 	IdExists *bool     `json:"idExists,omitempty"`
+	// cartId (Ref<Cart>) search options
+	CartIdEq     *string   `json:"cartIdEq,omitempty"`
+	CartIdIn     *[]string `json:"cartIdIn,omitempty"`
+	CartIdNin    *[]string `json:"cartIdNin,omitempty"`
+	CartIdExists *bool     `json:"cartIdExists,omitempty"`
 	// contactEmail (string) search options
 	ContactEmailEq     *string   `json:"contactEmailEq,omitempty"`
 	ContactEmailNe     *string   `json:"contactEmailNe,omitempty"`
@@ -289,6 +302,30 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 	if o.IdExists != nil {
 		elemidExists0 := o.IdExists
 		to.IdExists = elemidExists0
+	}
+	if o.CartIdEq != nil {
+		elemcartIdEq0 := o.CartIdEq
+		to.CartIdEq = elemcartIdEq0
+	}
+	if o.CartIdIn != nil {
+		elemcartIdIn0 := make([]string, 0)
+		for _, ocartIdIn0 := range *o.CartIdIn {
+			elemcartIdIn1 := ocartIdIn0
+			elemcartIdIn0 = append(elemcartIdIn0, elemcartIdIn1)
+		}
+		to.CartIdIn = &elemcartIdIn0
+	}
+	if o.CartIdNin != nil {
+		elemcartIdNin0 := make([]string, 0)
+		for _, ocartIdNin0 := range *o.CartIdNin {
+			elemcartIdNin1 := ocartIdNin0
+			elemcartIdNin0 = append(elemcartIdNin0, elemcartIdNin1)
+		}
+		to.CartIdNin = &elemcartIdNin0
+	}
+	if o.CartIdExists != nil {
+		elemcartIdExists0 := o.CartIdExists
+		to.CartIdExists = elemcartIdExists0
 	}
 	if o.ContactEmailEq != nil {
 		elemcontactEmailEq0 := o.ContactEmailEq
@@ -739,6 +776,7 @@ func (o HTTPWhereClause) ToWhereClause() (WhereClause, error) {
 }
 
 type HTTPSortParams struct {
+	CartId     *int8 `json:"cartId,omitempty"`
 	CreatedAt  *int8 `json:"createdAt,omitempty"`
 	ExpiresAt  *int8 `json:"expiresAt,omitempty"`
 	ItemId     *int8 `json:"itemId,omitempty"`
@@ -748,6 +786,9 @@ type HTTPSortParams struct {
 
 func (s HTTPSortParams) ToSortParams() SortParams {
 	to := SortParams{}
+	if s.CartId != nil {
+		to.CartId = *s.CartId
+	}
 	if s.CreatedAt != nil {
 		to.CreatedAt = *s.CreatedAt
 	}

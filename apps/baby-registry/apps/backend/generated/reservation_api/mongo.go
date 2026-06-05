@@ -23,6 +23,10 @@ func (m *mongoClient) Search(ctx context.Context, where WhereClause, options Que
 	if err != nil {
 		return QueryResult{}, err
 	}
+	mongoWhereClauseCart, err := where.Cart.ToMongoWhereClause()
+	if err != nil {
+		return QueryResult{}, err
+	}
 	mongoWhereClauseItem, err := where.Item.ToMongoWhereClause()
 	if err != nil {
 		return QueryResult{}, err
@@ -37,12 +41,14 @@ func (m *mongoClient) Search(ctx context.Context, where WhereClause, options Que
 		m.db,
 		reservation_mongo.WhereClause{
 			Reservation: mongoWhereClause,
+			Cart:        mongoWhereClauseCart,
 			Item:        mongoWhereClauseItem,
 			Registry:    mongoWhereClauseRegistry,
 		},
 		reservation_mongo.LookupOptions{
 			Projection:         projection.Projection,
 			Sort:               options.Sort.ToMongoSortParams(),
+			CartProjection:     projection.Cart,
 			ItemProjection:     projection.Item,
 			RegistryProjection: projection.Registry,
 			Limit:              options.Limit,
@@ -115,6 +121,13 @@ func FromMongoQueryResultData(r reservation_mongo.Model) (Model, error) {
 	m := Model{}
 	var err error
 	m.Model, err = r.ToModel()
+	if r.Cart != nil {
+		val, toModelErr := r.Cart.ToModel()
+		if toModelErr != nil {
+			err = errors.Join(err, toModelErr)
+		}
+		m.Cart = &val
+	}
 	if r.Item != nil {
 		val, toModelErr := r.Item.ToModel()
 		if toModelErr != nil {
@@ -170,6 +183,7 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 	mongoAggOptions := reservation_mongo.AggregateOptions{
 		Fields:             mongoAggFields,
 		GroupBy:            mongoGroupBy,
+		CartProjection:     options.CartProjection,
 		ItemProjection:     options.ItemProjection,
 		RegistryProjection: options.RegistryProjection,
 	}
@@ -195,6 +209,10 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 			AggregateKeys: r.AggregateKeys,
 		}
 		// Copy group-by fields (with type conversion for refs)
+		if r.CartId != nil {
+			s := r.CartId.Hex()
+			row.CartId = &s
+		}
 		row.ContactEmail = r.ContactEmail
 		row.ExpiresAt = r.ExpiresAt
 		row.IsAnonymous = r.IsAnonymous
@@ -211,6 +229,14 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 		row.ReminderSentAt = r.ReminderSentAt
 		row.ReserverName = r.ReserverName
 		// Copy aggregate fields (only those not in group-by)
+		// Copy ref field Cart
+		if r.Cart != nil {
+			val, toModelErr := r.Cart.ToModel()
+			if toModelErr != nil {
+				err = errors.Join(err, toModelErr)
+			}
+			row.Cart = &val
+		}
 		// Copy ref field Item
 		if r.Item != nil {
 			val, toModelErr := r.Item.ToModel()

@@ -2,6 +2,7 @@ package reservation_mongo
 
 import (
 	"context"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"go.mongodb.org/mongo-driver/bson"
@@ -64,6 +65,8 @@ type AggregateOptions struct {
 	Fields []AggregateFieldSpec
 	// Fields to group by
 	GroupBy []string
+	// Projection for Cart ref field
+	CartProjection *cart.Projection
 	// Projection for Item ref field
 	ItemProjection *registry_item.Projection
 	// Projection for Registry ref field
@@ -73,6 +76,7 @@ type AggregateOptions struct {
 // AggregateResultRow holds a single aggregation result row with flat structure
 type AggregateResultRow struct {
 	// Group-by fields (original types)
+	CartId         *primitive.ObjectID `bson:"cartId" json:"cartId,omitempty"`
 	ContactEmail   *string             `bson:"contactEmail" json:"contactEmail,omitempty"`
 	ExpiresAt      *time.Time          `bson:"expiresAt" json:"expiresAt,omitempty"`
 	IsAnonymous    *bool               `bson:"isAnonymous" json:"isAnonymous,omitempty"`
@@ -83,6 +87,8 @@ type AggregateResultRow struct {
 	ReminderSentAt *time.Time          `bson:"reminderSentAt" json:"reminderSentAt,omitempty"`
 	ReserverName   *string             `bson:"reserverName" json:"reserverName,omitempty"`
 	// Aggregate fields - always float64 since they're results of sum/avg/etc
+	// Ref field Cart
+	Cart *cart.MongoRecord `bson:"cart,omitempty" json:"cart,omitempty"`
 	// Ref field Item
 	Item *registry_item.MongoRecord `bson:"item,omitempty" json:"item,omitempty"`
 	// Ref field Registry
@@ -175,6 +181,28 @@ func executeAggregation(ctx context.Context, where WhereClause, collection *mong
 
 	pipeline := mongo.Pipeline{matchStage, groupStageWrapper, projectStageWrapper}
 
+	// Add $lookup stage for Cart if projection is specified
+	if options.CartProjection != nil {
+		objectProject := bson.E{Key: "$project", Value: options.CartProjection.ToBson()}
+		objectPipeline := bson.D{objectProject}
+
+		pipeline = append(pipeline, bson.D{
+			{Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "carts"},
+				{Key: "localField", Value: "cartId"},
+				{Key: "foreignField", Value: "_id"},
+				{Key: "as", Value: "cart"},
+				{Key: "pipeline", Value: bson.A{objectPipeline}},
+			}},
+		})
+
+		pipeline = append(pipeline, bson.D{
+			{Key: "$unwind", Value: bson.D{
+				{Key: "path", Value: "$cart"},
+				{Key: "preserveNullAndEmptyArrays", Value: true},
+			}},
+		})
+	}
 	// Add $lookup stage for Item if projection is specified
 	if options.ItemProjection != nil {
 		objectProject := bson.E{Key: "$project", Value: options.ItemProjection.ToBson()}

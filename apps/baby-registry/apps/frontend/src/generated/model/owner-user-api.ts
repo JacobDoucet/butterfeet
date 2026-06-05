@@ -2,8 +2,10 @@
 
 import { OwnerUser, OwnerUserProjection } from './owner-user-model';
 import { AddressAccessSession, AddressAccessSessionProjection } from './address-access-session-model';
+import { Cart, CartProjection } from './cart-model';
 import { Registry, RegistryProjection } from './registry-model';
 import { RegistryApprovedGuest, RegistryApprovedGuestProjection } from './registry-approved-guest-model';
+import { RegistryPaymentMethod, RegistryPaymentMethodProjection } from './registry-payment-method-model';
 import { ShippingAddressRequest, ShippingAddressRequestProjection } from './shipping-address-request-model';
 import { ActorRoleSearchQuery } from './actor-role-api';
 import { ActorTraceSearchQuery } from './actor-trace-api';
@@ -11,14 +13,18 @@ import { ActorTraceSearchQuery } from './actor-trace-api';
 export type OwnerUserWithRefs = {
     ownerUser: OwnerUser;
     addressAccessSessions?: AddressAccessSession[];
+    carts?: Cart[];
     registryApprovedGuests?: RegistryApprovedGuest[];
+    registryPaymentMethods?: RegistryPaymentMethod[];
     registrys?: Registry[];
     shippingAddressRequests?: ShippingAddressRequest[];
 }
 
 export type OwnerUserWithRefsProjection = OwnerUserProjection & {
     AddressAccessSessions?: AddressAccessSessionProjection;
+    Carts?: CartProjection;
     RegistryApprovedGuests?: RegistryApprovedGuestProjection;
+    RegistryPaymentMethods?: RegistryPaymentMethodProjection;
     Registrys?: RegistryProjection;
     ShippingAddressRequests?: ShippingAddressRequestProjection;
 }

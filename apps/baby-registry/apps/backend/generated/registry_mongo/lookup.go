@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_payment_method"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"go.mongodb.org/mongo-driver/bson"
@@ -18,8 +20,10 @@ type LookupOptions struct {
 	Projection                        registry.Projection
 	Sort                              registry.MongoSortParams
 	AddressAccessSessionsProjection   *address_access_session.Projection
+	CartsProjection                   *cart.Projection
 	RegistryApprovedGuestsProjection  *registry_approved_guest.Projection
 	RegistryItemsProjection           *registry_item.Projection
+	RegistryPaymentMethodsProjection  *registry_payment_method.Projection
 	ReservationsProjection            *reservation.Projection
 	ShippingAddressRequestsProjection *shipping_address_request.Projection
 	OwnerProjection                   *owner_user.Projection
@@ -37,8 +41,10 @@ func (lo *LookupOptions) limit() int {
 type WhereClause struct {
 	Registry                registry.MongoWhereClause
 	AddressAccessSessions   address_access_session.MongoWhereClause
+	Carts                   cart.MongoWhereClause
 	RegistryApprovedGuests  registry_approved_guest.MongoWhereClause
 	RegistryItems           registry_item.MongoWhereClause
+	RegistryPaymentMethods  registry_payment_method.MongoWhereClause
 	Reservations            reservation.MongoWhereClause
 	ShippingAddressRequests shipping_address_request.MongoWhereClause
 	Owner                   owner_user.MongoWhereClause
@@ -80,10 +86,16 @@ func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo
 	if lookupOptions.AddressAccessSessionsProjection != nil {
 		lookupOptions.Projection.Id = true
 	}
+	if lookupOptions.CartsProjection != nil {
+		lookupOptions.Projection.Id = true
+	}
 	if lookupOptions.RegistryApprovedGuestsProjection != nil {
 		lookupOptions.Projection.Id = true
 	}
 	if lookupOptions.RegistryItemsProjection != nil {
+		lookupOptions.Projection.Id = true
+	}
+	if lookupOptions.RegistryPaymentMethodsProjection != nil {
 		lookupOptions.Projection.Id = true
 	}
 	if lookupOptions.ReservationsProjection != nil {
@@ -174,6 +186,30 @@ func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo
 			}},
 		})
 	}
+	// Add $lookup stage for Carts
+	if lookupOptions.CartsProjection != nil {
+		// whereCarts, err := where.Carts.GetLookupQuery()
+		// if err != nil {
+		//     return QueryResult{}, err
+		// }
+		objectProject := bson.E{Key: "$project", Value: lookupOptions.CartsProjection.ToBson()}
+		objectPipeline := bson.D{objectProject}
+		// if len(whereCarts) > 0 {
+		//     objectPipeline = bson.D{
+		//         {Key: "$match", Value: whereCarts},
+		//         objectProject,
+		//     }
+		// }
+		dataPipeline = append(dataPipeline, bson.D{
+			{Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "carts"},
+				{Key: "localField", Value: "_id"},
+				{Key: "foreignField", Value: "registryId"},
+				{Key: "as", Value: "Carts"},
+				{Key: "pipeline", Value: bson.A{objectPipeline}},
+			}},
+		})
+	}
 	// Add $lookup stage for RegistryApprovedGuests
 	if lookupOptions.RegistryApprovedGuestsProjection != nil {
 		// whereRegistryApprovedGuests, err := where.RegistryApprovedGuests.GetLookupQuery()
@@ -218,6 +254,30 @@ func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo
 				{Key: "localField", Value: "_id"},
 				{Key: "foreignField", Value: "registryId"},
 				{Key: "as", Value: "RegistryItems"},
+				{Key: "pipeline", Value: bson.A{objectPipeline}},
+			}},
+		})
+	}
+	// Add $lookup stage for RegistryPaymentMethods
+	if lookupOptions.RegistryPaymentMethodsProjection != nil {
+		// whereRegistryPaymentMethods, err := where.RegistryPaymentMethods.GetLookupQuery()
+		// if err != nil {
+		//     return QueryResult{}, err
+		// }
+		objectProject := bson.E{Key: "$project", Value: lookupOptions.RegistryPaymentMethodsProjection.ToBson()}
+		objectPipeline := bson.D{objectProject}
+		// if len(whereRegistryPaymentMethods) > 0 {
+		//     objectPipeline = bson.D{
+		//         {Key: "$match", Value: whereRegistryPaymentMethods},
+		//         objectProject,
+		//     }
+		// }
+		dataPipeline = append(dataPipeline, bson.D{
+			{Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "registry_payment_methods"},
+				{Key: "localField", Value: "_id"},
+				{Key: "foreignField", Value: "registryId"},
+				{Key: "as", Value: "RegistryPaymentMethods"},
 				{Key: "pipeline", Value: bson.A{objectPipeline}},
 			}},
 		})

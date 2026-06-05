@@ -5,9 +5,11 @@ import { SelectManyResponse, MutationResponse, AggregateResponse } from './model
 import { ApiError } from './errors';
 import { Registry, RegistrySortParams } from '../model/registry-model';
 import { AddressAccessSession, AddressAccessSessionProjection } from '../model/address-access-session-model';
+import { Cart, CartProjection } from '../model/cart-model';
 import { OwnerUser, OwnerUserProjection } from '../model/owner-user-model';
 import { RegistryApprovedGuest, RegistryApprovedGuestProjection } from '../model/registry-approved-guest-model';
 import { RegistryItem, RegistryItemProjection } from '../model/registry-item-model';
+import { RegistryPaymentMethod, RegistryPaymentMethodProjection } from '../model/registry-payment-method-model';
 import { Reservation, ReservationProjection } from '../model/reservation-model';
 import { ShippingAddressRequest, ShippingAddressRequestProjection } from '../model/shipping-address-request-model';
 
@@ -220,10 +222,14 @@ export type RegistryAggregateResultRow = {
     owner?: OwnerUser | null;
     // Ref field addressAccessSessions
     addressAccessSessions?: AddressAccessSession[] | null;
+    // Ref field carts
+    carts?: Cart[] | null;
     // Ref field registryApprovedGuests
     registryApprovedGuests?: RegistryApprovedGuest[] | null;
     // Ref field registryItems
     registryItems?: RegistryItem[] | null;
+    // Ref field registryPaymentMethods
+    registryPaymentMethods?: RegistryPaymentMethod[] | null;
     // Ref field reservations
     reservations?: Reservation[] | null;
     // Ref field shippingAddressRequests
@@ -244,8 +250,10 @@ export type AggregateRegistryParams = {
     fields: AggregateFieldSpec[];
     groupBy: RegistryGroupByField[];
     addressAccessSessionsProjection?: AddressAccessSessionProjection;
+    cartsProjection?: CartProjection;
     registryApprovedGuestsProjection?: RegistryApprovedGuestProjection;
     registryItemsProjection?: RegistryItemProjection;
+    registryPaymentMethodsProjection?: RegistryPaymentMethodProjection;
     reservationsProjection?: ReservationProjection;
     shippingAddressRequestsProjection?: ShippingAddressRequestProjection;
     ownerProjection?: OwnerUserProjection;
@@ -262,8 +270,10 @@ export function aggregateRegistrys(params: AggregateRegistryParams): Promise<Reg
             fields: params.fields,
             groupBy: params.groupBy,
             addressAccessSessionsProjection: params.addressAccessSessionsProjection,
+            cartsProjection: params.cartsProjection,
             registryApprovedGuestsProjection: params.registryApprovedGuestsProjection,
             registryItemsProjection: params.registryItemsProjection,
+            registryPaymentMethodsProjection: params.registryPaymentMethodsProjection,
             reservationsProjection: params.reservationsProjection,
             shippingAddressRequestsProjection: params.shippingAddressRequestsProjection,
             ownerProjection: params.ownerProjection,

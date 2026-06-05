@@ -3,12 +3,14 @@ package http_server
 import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session_http"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart_http"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/event_http"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user_http"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest_http"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_http"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item_http"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_payment_method_http"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation_http"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request_http"
 	"net/http"
@@ -17,11 +19,13 @@ import (
 type ServeMuxProps struct {
 	ResolveActor                        func(r *http.Request) (permissions.Actor, error)
 	AddressAccessSessionMetadataHooks   []address_access_session_http.MetadataHooks
+	CartMetadataHooks                   []cart_http.MetadataHooks
 	EventMetadataHooks                  []event_http.MetadataHooks
 	OwnerUserMetadataHooks              []owner_user_http.MetadataHooks
 	RegistryMetadataHooks               []registry_http.MetadataHooks
 	RegistryApprovedGuestMetadataHooks  []registry_approved_guest_http.MetadataHooks
 	RegistryItemMetadataHooks           []registry_item_http.MetadataHooks
+	RegistryPaymentMethodMetadataHooks  []registry_payment_method_http.MetadataHooks
 	ReservationMetadataHooks            []reservation_http.MetadataHooks
 	ShippingAddressRequestMetadataHooks []shipping_address_request_http.MetadataHooks
 	OnError                             func(handler string, e error)
@@ -41,6 +45,18 @@ func ServeMux(client api.Client, props ServeMuxProps) (*http.ServeMux, error) {
 		return nil, err
 	}
 	serveMux.Handle("/address-access-sessions/", http.StripPrefix("/address-access-sessions", addressAccessSessionServeMux))
+
+	cartApi := client.Cart()
+	cartServeMux, err := cart_http.RegisterRoutes(cart_http.HandlerProps{
+		Api:           cartApi,
+		ResolveActor:  props.ResolveActor,
+		MetadataHooks: props.CartMetadataHooks,
+		OnError:       props.OnError,
+	})
+	if err != nil {
+		return nil, err
+	}
+	serveMux.Handle("/carts/", http.StripPrefix("/carts", cartServeMux))
 
 	eventApi := client.Event()
 	eventServeMux, err := event_http.RegisterRoutes(event_http.HandlerProps{
@@ -101,6 +117,18 @@ func ServeMux(client api.Client, props ServeMuxProps) (*http.ServeMux, error) {
 		return nil, err
 	}
 	serveMux.Handle("/registry-items/", http.StripPrefix("/registry-items", registryItemServeMux))
+
+	registryPaymentMethodApi := client.RegistryPaymentMethod()
+	registryPaymentMethodServeMux, err := registry_payment_method_http.RegisterRoutes(registry_payment_method_http.HandlerProps{
+		Api:           registryPaymentMethodApi,
+		ResolveActor:  props.ResolveActor,
+		MetadataHooks: props.RegistryPaymentMethodMetadataHooks,
+		OnError:       props.OnError,
+	})
+	if err != nil {
+		return nil, err
+	}
+	serveMux.Handle("/registry-payment-methods/", http.StripPrefix("/registry-payment-methods", registryPaymentMethodServeMux))
 
 	reservationApi := client.Reservation()
 	reservationServeMux, err := reservation_http.RegisterRoutes(reservation_http.HandlerProps{

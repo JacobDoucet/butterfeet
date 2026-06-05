@@ -4,6 +4,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { GridFilterModel, GridSortModel, GridColDef, GridColumnVisibilityModel } from '@mui/x-data-grid';
 import { ReservationProjection, ReservationSortParams } from '../../model/reservation-model';
 import { ReservationWithRefs } from '../../model/reservation-api';
+import { Cart } from '../../model/cart-model';
+import { useSearchCarts } from '../tanstack-query/cart-queries';
 import { Registry } from '../../model/registry-model';
 import { useSearchRegistrys } from '../tanstack-query/registry-queries';
 import { RegistryItem } from '../../model/registry-item-model';
@@ -151,6 +153,54 @@ export function useReservationMuiDataGridFilterModel(options: FilterOptions = {}
                             },
                             searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
                                 idExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                }
+            case "cartId":
+                switch(gridFilterModel?.items?.[0]?.operator) { 
+                    case "equals":
+                        return { 
+                            searchQuery: { 
+                                cartIdEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                cartIdEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        };
+                    case "is":
+                        return { 
+                            searchQuery: { 
+                                cartIdEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value ? undefined :  { 
+                                cartIdEq: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "in":
+                        return { 
+                            searchQuery: { 
+                                cartIdIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                cartIdIn: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "notIn":
+                        return { 
+                            searchQuery: { 
+                                cartIdNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: !gridFilterModel?.items?.[0]?.value?.length ? undefined :  { 
+                                cartIdNin: gridFilterModel?.items?.[0]?.value,
+                            },
+                        }; 
+                    case "isEmpty":
+                        return { 
+                            searchQuery: { 
+                                cartIdExists: gridFilterModel?.items?.[0]?.value,
+                            },
+                            searchQueryExcludingIncompleteFilters: gridFilterModel?.items?.[0]?.value == null ? undefined :  { 
+                                cartIdExists: gridFilterModel?.items?.[0]?.value,
                             },
                         };
                 }
@@ -1393,6 +1443,50 @@ export function useReservationIdDataGridColumn(options: ReservationIdDataGridCol
     ]);
 }
 
+type ReservationCartIdDataGridColumnOptions = {
+    headerName?: string;
+    width?: number;
+    sortable?: boolean;
+    hideable?: boolean;
+    getValue: (obj: ReservationWithRefs | undefined) => string;
+    renderCell?: GridColDef<ReservationWithRefs>['renderCell']; 
+    optionLabelField: keyof Cart;
+};
+
+export const ReservationCartIdDataGridColumnKey = 'cartId' as const;
+
+export function useReservationCartIdDataGridColumn(options: ReservationCartIdDataGridColumnOptions) { 
+    const carts = useSearchCarts({
+        queryKey: ['cart-data-grid-options'],
+        query: {},
+        projection: { id: true, [options.optionLabelField]: true },
+    });
+
+    return useMemo<GridColDef<ReservationWithRefs>>(() => ({
+        headerName: options.headerName ?? ReservationCartIdDataGridColumnKey,
+        width: options.width,
+        sortable: options.sortable,
+        hideable: options.hideable,
+        field: ReservationCartIdDataGridColumnKey,
+        valueGetter: (_, row) => {
+            return options.getValue(row);
+        }, 
+        type: 'singleSelect',
+        valueOptions: carts.data?.data?.map((obj) => ({
+            value: obj.cart.id,
+            label: obj.cart[options.optionLabelField],
+        })),
+        renderCell: options.renderCell,
+    }), [
+        options.headerName, 
+        options.width, 
+        options.sortable,
+        options.hideable,
+        options.getValue,
+        options.renderCell,
+    ]);
+}
+
 type ReservationContactEmailDataGridColumnOptions = {
     headerName?: string;
     width?: number;
@@ -1772,6 +1866,10 @@ export function useReservationStatusDataGridColumn(options: ReservationStatusDat
                 label: options.getOptionLabel('Reserved'),
             },
             {
+                value: 'AwaitingConfirmation',
+                label: options.getOptionLabel('AwaitingConfirmation'),
+            },
+            {
                 value: 'Purchased',
                 label: options.getOptionLabel('Purchased'),
             },
@@ -1881,6 +1979,7 @@ export function getReservationColumnVisibilityModel(
 ): GridColumnVisibilityModel {
     return {
         id: projection.id ?? false,
+        cartId: projection.cartId ?? false,
         contactEmail: projection.contactEmail ?? false,
         created: projection.created ?? false,
         expiresAt: projection.expiresAt ?? false,

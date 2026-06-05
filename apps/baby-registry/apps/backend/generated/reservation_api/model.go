@@ -2,6 +2,7 @@ package reservation_api
 
 import (
 	"context"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
@@ -35,12 +36,14 @@ type QueryResult struct {
 
 type Model struct {
 	reservation.Model
+	Cart     *cart.Model
 	Item     *registry_item.Model
 	Registry *registry.Model
 }
 
 type WhereClause struct {
 	Reservation reservation.WhereClause
+	Cart        cart.WhereClause
 	Item        registry_item.WhereClause
 	Registry    registry.WhereClause
 }
@@ -74,15 +77,18 @@ func (qo *PaginationOptions) GetProjection() Projection {
 
 type Projection struct {
 	reservation.Projection `json:",inline"`
+	Cart                   *cart.Projection          `json:"Cart,omitempty"`
 	Item                   *registry_item.Projection `json:"Item,omitempty"`
 	Registry               *registry.Projection      `json:"Registry,omitempty"`
 }
 
 func NewProjection(defaultVal bool) Projection {
+	cartProjection := cart.NewProjection(defaultVal)
 	itemProjection := registry_item.NewProjection(defaultVal)
 	registryProjection := registry.NewProjection(defaultVal)
 	return Projection{
 		Projection: reservation.NewProjection(defaultVal),
+		Cart:       &cartProjection,
 		Item:       &itemProjection,
 		Registry:   &registryProjection,
 	}
@@ -90,6 +96,10 @@ func NewProjection(defaultVal bool) Projection {
 
 func projectReadPermissions(actor permissions.Actor, projection Projection) Projection {
 	projection.Projection = reservation.ProjectReadPermissions(projection.Projection, actor)
+	if projection.Cart != nil {
+		cartProjection := cart.ProjectReadPermissions(*projection.Cart, actor)
+		projection.Cart = &cartProjection
+	}
 	if projection.Item != nil {
 		itemProjection := registry_item.ProjectReadPermissions(*projection.Item, actor)
 		projection.Item = &itemProjection
@@ -102,6 +112,12 @@ func projectReadPermissions(actor permissions.Actor, projection Projection) Proj
 	return projection
 }
 
+func (m *Model) GetCart() cart.Model {
+	if m.Cart == nil {
+		return cart.Model{}
+	}
+	return *m.Cart
+}
 func (m *Model) GetItem() registry_item.Model {
 	if m.Item == nil {
 		return registry_item.Model{}
@@ -148,6 +164,7 @@ type GroupByField string
 
 // Valid group-by fields for Reservation
 const (
+	GroupByFieldCartId         GroupByField = "cartId"
 	GroupByFieldContactEmail   GroupByField = "contactEmail"
 	GroupByFieldExpiresAt      GroupByField = "expiresAt"
 	GroupByFieldIsAnonymous    GroupByField = "isAnonymous"
@@ -162,6 +179,7 @@ const (
 // ValidGroupByFields returns all valid group-by fields
 func ValidGroupByFields() []GroupByField {
 	return []GroupByField{
+		GroupByFieldCartId,
 		GroupByFieldContactEmail,
 		GroupByFieldExpiresAt,
 		GroupByFieldIsAnonymous,
@@ -228,6 +246,8 @@ type AggregateOptions struct {
 	Fields []AggregateFieldSpec `json:"fields"`
 	// Fields to group by
 	GroupBy []GroupByField `json:"groupBy"`
+	// Projection for Cart ref field
+	CartProjection *cart.Projection `json:"cartProjection,omitempty"`
 	// Projection for Item ref field
 	ItemProjection *registry_item.Projection `json:"itemProjection,omitempty"`
 	// Projection for Registry ref field
@@ -237,6 +257,7 @@ type AggregateOptions struct {
 // AggregateResultRow holds a single aggregation result row with a partial model structure
 type AggregateResultRow struct {
 	// Group-by fields (original types)
+	CartId         *string    `json:"cartId,omitempty"`
 	ContactEmail   *string    `json:"contactEmail,omitempty"`
 	ExpiresAt      *time.Time `json:"expiresAt,omitempty"`
 	IsAnonymous    *bool      `json:"isAnonymous,omitempty"`
@@ -247,6 +268,8 @@ type AggregateResultRow struct {
 	ReminderSentAt *time.Time `json:"reminderSentAt,omitempty"`
 	ReserverName   *string    `json:"reserverName,omitempty"`
 	// Aggregate fields - always float64 since they're results of sum/avg/etc
+	// Ref field Cart
+	Cart *cart.Model `json:"cart,omitempty"`
 	// Ref field Item
 	Item *registry_item.Model `json:"item,omitempty"`
 	// Ref field Registry

@@ -2,22 +2,26 @@ package api
 
 import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session_api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/event_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item_api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_payment_method_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request_api"
 )
 
 type Client interface {
 	AddressAccessSession() address_access_session_api.Client
+	Cart() cart_api.Client
 	Event() event_api.Client
 	OwnerUser() owner_user_api.Client
 	Registry() registry_api.Client
 	RegistryApprovedGuest() registry_approved_guest_api.Client
 	RegistryItem() registry_item_api.Client
+	RegistryPaymentMethod() registry_payment_method_api.Client
 	Reservation() reservation_api.Client
 	ShippingAddressRequest() shipping_address_request_api.Client
 	ValidateClients() error
@@ -25,11 +29,13 @@ type Client interface {
 
 type CustomClient struct {
 	addressAccessSession   address_access_session_api.Client
+	cart                   cart_api.Client
 	event                  event_api.Client
 	ownerUser              owner_user_api.Client
 	registry               registry_api.Client
 	registryApprovedGuest  registry_approved_guest_api.Client
 	registryItem           registry_item_api.Client
+	registryPaymentMethod  registry_payment_method_api.Client
 	reservation            reservation_api.Client
 	shippingAddressRequest shipping_address_request_api.Client
 }
@@ -43,6 +49,9 @@ func NewUnimplementedClient() CustomClient {
 func (c *CustomClient) ValidateClients() error {
 	if c.addressAccessSession == nil {
 		c.addressAccessSession = address_access_session_api.New(&address_access_session_api.UnimplementedClient{})
+	}
+	if c.cart == nil {
+		c.cart = cart_api.New(&cart_api.UnimplementedClient{})
 	}
 	if c.event == nil {
 		c.event = event_api.New(&event_api.UnimplementedClient{})
@@ -58,6 +67,9 @@ func (c *CustomClient) ValidateClients() error {
 	}
 	if c.registryItem == nil {
 		c.registryItem = registry_item_api.New(&registry_item_api.UnimplementedClient{})
+	}
+	if c.registryPaymentMethod == nil {
+		c.registryPaymentMethod = registry_payment_method_api.New(&registry_payment_method_api.UnimplementedClient{})
 	}
 	if c.reservation == nil {
 		c.reservation = reservation_api.New(&reservation_api.UnimplementedClient{})
@@ -78,6 +90,18 @@ func (c *CustomClient) UseAddressAccessSessionClient(client address_access_sessi
 
 func (c *CustomClient) AddressAccessSession() address_access_session_api.Client {
 	return c.addressAccessSession
+}
+func (c *CustomClient) UseCartClient(client cart_api.Client) *CustomClient {
+	if client == nil {
+		c.cart = cart_api.New(&cart_api.UnimplementedClient{})
+		return c
+	}
+	c.cart = client
+	return c
+}
+
+func (c *CustomClient) Cart() cart_api.Client {
+	return c.cart
 }
 func (c *CustomClient) UseEventClient(client event_api.Client) *CustomClient {
 	if client == nil {
@@ -138,6 +162,18 @@ func (c *CustomClient) UseRegistryItemClient(client registry_item_api.Client) *C
 
 func (c *CustomClient) RegistryItem() registry_item_api.Client {
 	return c.registryItem
+}
+func (c *CustomClient) UseRegistryPaymentMethodClient(client registry_payment_method_api.Client) *CustomClient {
+	if client == nil {
+		c.registryPaymentMethod = registry_payment_method_api.New(&registry_payment_method_api.UnimplementedClient{})
+		return c
+	}
+	c.registryPaymentMethod = client
+	return c
+}
+
+func (c *CustomClient) RegistryPaymentMethod() registry_payment_method_api.Client {
+	return c.registryPaymentMethod
 }
 func (c *CustomClient) UseReservationClient(client reservation_api.Client) *CustomClient {
 	if client == nil {

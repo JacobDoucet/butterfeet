@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_mongo"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_payment_method"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -32,11 +34,19 @@ func (m *mongoClient) Search(ctx context.Context, where WhereClause, options Que
 	if err != nil {
 		return QueryResult{}, err
 	}
+	mongoWhereClauseCarts, err := where.Carts.ToMongoWhereClause()
+	if err != nil {
+		return QueryResult{}, err
+	}
 	mongoWhereClauseRegistryApprovedGuests, err := where.RegistryApprovedGuests.ToMongoWhereClause()
 	if err != nil {
 		return QueryResult{}, err
 	}
 	mongoWhereClauseRegistryItems, err := where.RegistryItems.ToMongoWhereClause()
+	if err != nil {
+		return QueryResult{}, err
+	}
+	mongoWhereClauseRegistryPaymentMethods, err := where.RegistryPaymentMethods.ToMongoWhereClause()
 	if err != nil {
 		return QueryResult{}, err
 	}
@@ -59,8 +69,10 @@ func (m *mongoClient) Search(ctx context.Context, where WhereClause, options Que
 		registry_mongo.WhereClause{
 			Registry:                mongoWhereClause,
 			AddressAccessSessions:   mongoWhereClauseAddressAccessSessions,
+			Carts:                   mongoWhereClauseCarts,
 			RegistryApprovedGuests:  mongoWhereClauseRegistryApprovedGuests,
 			RegistryItems:           mongoWhereClauseRegistryItems,
+			RegistryPaymentMethods:  mongoWhereClauseRegistryPaymentMethods,
 			Reservations:            mongoWhereClauseReservations,
 			ShippingAddressRequests: mongoWhereClauseShippingAddressRequests,
 			Owner:                   mongoWhereClauseOwner,
@@ -69,8 +81,10 @@ func (m *mongoClient) Search(ctx context.Context, where WhereClause, options Que
 			Projection:                        projection.Projection,
 			Sort:                              options.Sort.ToMongoSortParams(),
 			AddressAccessSessionsProjection:   projection.AddressAccessSessions,
+			CartsProjection:                   projection.Carts,
 			RegistryApprovedGuestsProjection:  projection.RegistryApprovedGuests,
 			RegistryItemsProjection:           projection.RegistryItems,
+			RegistryPaymentMethodsProjection:  projection.RegistryPaymentMethods,
 			ReservationsProjection:            projection.Reservations,
 			ShippingAddressRequestsProjection: projection.ShippingAddressRequests,
 			OwnerProjection:                   projection.Owner,
@@ -156,6 +170,18 @@ func FromMongoQueryResultData(r registry_mongo.Model) (Model, error) {
 		}
 		m.AddressAccessSessions = &val
 	}
+	if r.Carts != nil {
+		val := make([]cart.Model, 0)
+		var err error
+		for _, rr := range *r.Carts {
+			nextVal, nextErr := rr.ToModel()
+			if nextErr != nil {
+				err = errors.Join(err, nextErr)
+			}
+			val = append(val, nextVal)
+		}
+		m.Carts = &val
+	}
 	if r.RegistryApprovedGuests != nil {
 		val := make([]registry_approved_guest.Model, 0)
 		var err error
@@ -179,6 +205,18 @@ func FromMongoQueryResultData(r registry_mongo.Model) (Model, error) {
 			val = append(val, nextVal)
 		}
 		m.RegistryItems = &val
+	}
+	if r.RegistryPaymentMethods != nil {
+		val := make([]registry_payment_method.Model, 0)
+		var err error
+		for _, rr := range *r.RegistryPaymentMethods {
+			nextVal, nextErr := rr.ToModel()
+			if nextErr != nil {
+				err = errors.Join(err, nextErr)
+			}
+			val = append(val, nextVal)
+		}
+		m.RegistryPaymentMethods = &val
 	}
 	if r.Reservations != nil {
 		val := make([]reservation.Model, 0)
@@ -253,8 +291,10 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 		Fields:                            mongoAggFields,
 		GroupBy:                           mongoGroupBy,
 		AddressAccessSessionsProjection:   options.AddressAccessSessionsProjection,
+		CartsProjection:                   options.CartsProjection,
 		RegistryApprovedGuestsProjection:  options.RegistryApprovedGuestsProjection,
 		RegistryItemsProjection:           options.RegistryItemsProjection,
+		RegistryPaymentMethodsProjection:  options.RegistryPaymentMethodsProjection,
 		ReservationsProjection:            options.ReservationsProjection,
 		ShippingAddressRequestsProjection: options.ShippingAddressRequestsProjection,
 		OwnerProjection:                   options.OwnerProjection,
@@ -324,6 +364,18 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 			}
 			row.AddressAccessSessions = val
 		}
+		// Copy ref field Carts
+		if r.Carts != nil {
+			val := make([]cart.Model, 0)
+			for _, rr := range r.Carts {
+				nextVal, nextErr := rr.ToModel()
+				if nextErr != nil {
+					err = errors.Join(err, nextErr)
+				}
+				val = append(val, nextVal)
+			}
+			row.Carts = val
+		}
 		// Copy ref field RegistryApprovedGuests
 		if r.RegistryApprovedGuests != nil {
 			val := make([]registry_approved_guest.Model, 0)
@@ -347,6 +399,18 @@ func (m *mongoClient) Aggregate(ctx context.Context, where WhereClause, options 
 				val = append(val, nextVal)
 			}
 			row.RegistryItems = val
+		}
+		// Copy ref field RegistryPaymentMethods
+		if r.RegistryPaymentMethods != nil {
+			val := make([]registry_payment_method.Model, 0)
+			for _, rr := range r.RegistryPaymentMethods {
+				nextVal, nextErr := rr.ToModel()
+				if nextErr != nil {
+					err = errors.Join(err, nextErr)
+				}
+				val = append(val, nextVal)
+			}
+			row.RegistryPaymentMethods = val
 		}
 		// Copy ref field Reservations
 		if r.Reservations != nil {

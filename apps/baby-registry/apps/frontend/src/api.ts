@@ -83,6 +83,7 @@ export interface RegistryItem {
 export interface PublicRegistry extends Registry {
   items: (RegistryItem & { reserved: number })[];
   myReservations?: MyReservation[];
+  myCarts?: MyCart[];
 }
 
 export interface MyReservation {
@@ -92,6 +93,26 @@ export interface MyReservation {
   quantity: number;
   createdAt: string;
   expiresAt: string;
+}
+
+export interface CartItem {
+  reservationId: string;
+  itemId: string;
+  title: string;
+  quantity: number;
+  priceCents: number;
+  currency: string;
+}
+
+export interface MyCart {
+  id: string;
+  referenceCode: string;
+  status: CartStatus;
+  amountCents: number;
+  currency: string;
+  methodDisplayName: string;
+  createdAt: string;
+  items: CartItem[];
 }
 
 export type RegistryAccessRequestStatus = 'none' | 'pending' | 'rejected';
@@ -178,7 +199,7 @@ export const items = {
     }),
 };
 
-export type ReservationStatus = 'Reserved' | 'Purchased' | 'Received' | 'Cancelled';
+export type ReservationStatus = 'Reserved' | 'AwaitingConfirmation' | 'Purchased' | 'Received' | 'Cancelled';
 
 export interface Reservation {
   id: string;
@@ -224,6 +245,45 @@ export const pub = {
     api.post<{ ok: boolean; status: 'pending' | 'approved' | 'rejected' }>('/api/public/registry-access/request', body),
 };
 
+export interface ExchangeRates {
+  base: string;
+  rates: Record<string, number>;
+  date: string;
+  fetchedAt: string;
+}
+
+export const exchangeRates = {
+  get: () => api.get<ExchangeRates>('/api/public/exchange-rates'),
+};
+
+// Currencies the public page lets a viewer convert prices into.
+export const SUPPORTED_CURRENCIES: { code: string; label: string }[] = [
+  { code: 'USD', label: 'USD · US Dollar' },
+  { code: 'CAD', label: 'CAD · Canadian Dollar' },
+  { code: 'GBP', label: 'GBP · British Pound' },
+  { code: 'EUR', label: 'EUR · Euro' },
+];
+
+// convertCents converts an amount in minor units from one currency to another
+// using a rates table keyed against `rates.base`. Returns null when either
+// currency is missing from the table so callers can fall back to the original.
+export function convertCents(
+  cents: number,
+  from: string,
+  to: string,
+  rates?: ExchangeRates,
+): number | null {
+  const fromCur = (from || 'USD').toUpperCase();
+  const toCur = (to || 'USD').toUpperCase();
+  if (fromCur === toCur) return cents;
+  if (!rates) return null;
+  const fromRate = rates.rates[fromCur];
+  const toRate = rates.rates[toCur];
+  if (!fromRate || !toRate) return null;
+  // Convert via the base currency: amount_base = amount_from / fromRate.
+  return Math.round((cents / fromRate) * toRate);
+}
+
 export interface BuyerSession {
   email: string;
   name?: string;
@@ -243,6 +303,21 @@ export const buyer = {
 export const scrape = {
   url: (u: string) => api.get<ScrapeResult>(`/api/scrape?url=${encodeURIComponent(u)}`),
 };
+
+// formatPriceCents renders a price stored in minor units (cents) using the
+// shopper's locale. Returns null when no price is available so callers can
+// gracefully omit the amount.
+export function formatPriceCents(cents?: number, currency?: string): string | null {
+  if (cents == null || Number.isNaN(cents)) return null;
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: (currency || 'USD').toUpperCase(),
+    }).format(cents / 100);
+  } catch {
+    return `$${(cents / 100).toFixed(2)}`;
+  }
+}
 
 export type GuestAccessLevel = 'ViewShippingAddress' | 'ReserveOnly';
 export type GuestStatus = 'Pending' | 'Active' | 'Revoked' | 'Blocked';
@@ -314,3 +389,108 @@ export const shippingShare = {
   resolve: (token: string) =>
     api.post<ResolvedShippingAddress>('/api/public/shipping/resolve', { token }),
 };
+
+// ---------------------------------------------------------------------------
+// Manual (parent-to-parent) payments
+// ---------------------------------------------------------------------------
+
+export type PaymentMethodType =
+  | 'PayPal'
+  | 'Revolut'
+  | 'Wise'
+  | 'InteracETransfer'
+  | 'BankTransfer'
+  | 'Other';
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethodType, string> = {
+  PayPal: 'PayPal',
+  Revolut: 'Revolut',
+  Wise: 'Wise',
+  InteracETransfer: 'Interac e-Transfer',
+  BankTransfer: 'Bank transfer',
+  Other: 'Other',
+};
+
+export interface PaymentMethod {
+  id: string;
+  registryId: string;
+  type: PaymentMethodType;
+  displayName?: string;
+  instructions?: string;
+  paymentUrl?: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  bankName?: string;
+  bankAccountName?: string;
+  bankAccountNumber?: string;
+  bankRoutingNumber?: string;
+  bankIban?: string;
+  bankSwift?: string;
+  enabled?: boolean;
+  position?: number;
+}
+
+export type CartStatus = 'Pending' | 'AwaitingConfirmation' | 'Completed' | 'Rejected';
+
+export interface Cart {
+  id: string;
+  registryId: string;
+  paymentMethodId?: string;
+  methodType: PaymentMethodType;
+  methodDisplayName?: string;
+  referenceCode: string;
+  amountCents: number;
+  currency: string;
+  contributorEmail?: string;
+  contributorName?: string;
+  message?: string;
+  status: CartStatus;
+  decisionReason?: string;
+  createdAt?: string;
+  claimedAt?: string;
+  decidedAt?: string;
+  items: CartItem[];
+}
+
+// Owner-facing payment configuration + cart review.
+export const payments = {
+  listMethods: (registryId: string) =>
+    api.get<{ data: PaymentMethod[] }>(`/api/payments/registries/${registryId}/payment-methods`).then((r) => r.data),
+  createMethod: (registryId: string, body: Partial<PaymentMethod>) =>
+    api.post<PaymentMethod>(`/api/payments/registries/${registryId}/payment-methods`, body),
+  updateMethod: (id: string, body: Partial<PaymentMethod>) =>
+    api.patch<PaymentMethod>(`/api/payments/payment-methods/${id}`, body),
+  removeMethod: (id: string) => api.del<{ ok: boolean }>(`/api/payments/payment-methods/${id}`),
+  listCarts: (registryId: string, status?: string) =>
+    api
+      .get<{ data: Cart[] }>(
+        `/api/payments/registries/${registryId}/carts${status ? `?status=${encodeURIComponent(status)}` : ''}`,
+      )
+      .then((r) => r.data),
+  approve: (id: string) => api.post<Cart>(`/api/payments/carts/${id}/approve`, {}),
+  reject: (id: string, reason?: string) =>
+    api.post<Cart>(`/api/payments/carts/${id}/reject`, { reason }),
+};
+
+// Public (contributor-facing) payment helpers.
+export interface PaymentIntent {
+  ok: boolean;
+  id: string;
+  referenceCode: string;
+  amountCents: number;
+  currency: string;
+  status: CartStatus;
+  items: CartItem[];
+}
+
+export const publicPayments = {
+  methods: (slug: string) =>
+    api.get<{ data: PaymentMethod[] }>(`/api/public/payments/methods?slug=${encodeURIComponent(slug)}`).then((r) => r.data),
+  createIntent: (slug: string, paymentMethodId: string) =>
+    api.post<PaymentIntent>('/api/public/payments/intent', { slug, paymentMethodId }),
+  claim: (id: string, slug: string, message?: string) =>
+    api.post<{ ok: boolean; status: CartStatus }>(`/api/public/payments/${encodeURIComponent(id)}/claim`, { slug, message }),
+  cancel: (id: string, slug: string) =>
+    api.post<{ ok: boolean; status: string }>(`/api/public/payments/${encodeURIComponent(id)}/cancel`, { slug }),
+};
+

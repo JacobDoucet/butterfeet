@@ -3,11 +3,13 @@ package registry_api
 import (
 	"context"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_payment_method"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"time"
@@ -41,8 +43,10 @@ type QueryResult struct {
 type Model struct {
 	registry.Model
 	AddressAccessSessions   *[]address_access_session.Model
+	Carts                   *[]cart.Model
 	RegistryApprovedGuests  *[]registry_approved_guest.Model
 	RegistryItems           *[]registry_item.Model
+	RegistryPaymentMethods  *[]registry_payment_method.Model
 	Reservations            *[]reservation.Model
 	ShippingAddressRequests *[]shipping_address_request.Model
 	Owner                   *owner_user.Model
@@ -51,8 +55,10 @@ type Model struct {
 type WhereClause struct {
 	Registry                registry.WhereClause
 	AddressAccessSessions   address_access_session.WhereClause
+	Carts                   cart.WhereClause
 	RegistryApprovedGuests  registry_approved_guest.WhereClause
 	RegistryItems           registry_item.WhereClause
+	RegistryPaymentMethods  registry_payment_method.WhereClause
 	Reservations            reservation.WhereClause
 	ShippingAddressRequests shipping_address_request.WhereClause
 	Owner                   owner_user.WhereClause
@@ -88,8 +94,10 @@ func (qo *PaginationOptions) GetProjection() Projection {
 type Projection struct {
 	registry.Projection     `json:",inline"`
 	AddressAccessSessions   *address_access_session.Projection   `json:"AddressAccessSessions,omitempty"`
+	Carts                   *cart.Projection                     `json:"Carts,omitempty"`
 	RegistryApprovedGuests  *registry_approved_guest.Projection  `json:"RegistryApprovedGuests,omitempty"`
 	RegistryItems           *registry_item.Projection            `json:"RegistryItems,omitempty"`
+	RegistryPaymentMethods  *registry_payment_method.Projection  `json:"RegistryPaymentMethods,omitempty"`
 	Reservations            *reservation.Projection              `json:"Reservations,omitempty"`
 	ShippingAddressRequests *shipping_address_request.Projection `json:"ShippingAddressRequests,omitempty"`
 	Owner                   *owner_user.Projection               `json:"Owner,omitempty"`
@@ -97,16 +105,20 @@ type Projection struct {
 
 func NewProjection(defaultVal bool) Projection {
 	addressAccessSessionsProjection := address_access_session.NewProjection(defaultVal)
+	cartsProjection := cart.NewProjection(defaultVal)
 	registryApprovedGuestsProjection := registry_approved_guest.NewProjection(defaultVal)
 	registryItemsProjection := registry_item.NewProjection(defaultVal)
+	registryPaymentMethodsProjection := registry_payment_method.NewProjection(defaultVal)
 	reservationsProjection := reservation.NewProjection(defaultVal)
 	shippingAddressRequestsProjection := shipping_address_request.NewProjection(defaultVal)
 	ownerProjection := owner_user.NewProjection(defaultVal)
 	return Projection{
 		Projection:              registry.NewProjection(defaultVal),
 		AddressAccessSessions:   &addressAccessSessionsProjection,
+		Carts:                   &cartsProjection,
 		RegistryApprovedGuests:  &registryApprovedGuestsProjection,
 		RegistryItems:           &registryItemsProjection,
+		RegistryPaymentMethods:  &registryPaymentMethodsProjection,
 		Reservations:            &reservationsProjection,
 		ShippingAddressRequests: &shippingAddressRequestsProjection,
 		Owner:                   &ownerProjection,
@@ -119,6 +131,10 @@ func projectReadPermissions(actor permissions.Actor, projection Projection) Proj
 		addressAccessSessionsProjection := address_access_session.ProjectReadPermissions(*projection.AddressAccessSessions, actor)
 		projection.AddressAccessSessions = &addressAccessSessionsProjection
 	}
+	if projection.Carts != nil {
+		cartsProjection := cart.ProjectReadPermissions(*projection.Carts, actor)
+		projection.Carts = &cartsProjection
+	}
 	if projection.RegistryApprovedGuests != nil {
 		registryApprovedGuestsProjection := registry_approved_guest.ProjectReadPermissions(*projection.RegistryApprovedGuests, actor)
 		projection.RegistryApprovedGuests = &registryApprovedGuestsProjection
@@ -126,6 +142,10 @@ func projectReadPermissions(actor permissions.Actor, projection Projection) Proj
 	if projection.RegistryItems != nil {
 		registryItemsProjection := registry_item.ProjectReadPermissions(*projection.RegistryItems, actor)
 		projection.RegistryItems = &registryItemsProjection
+	}
+	if projection.RegistryPaymentMethods != nil {
+		registryPaymentMethodsProjection := registry_payment_method.ProjectReadPermissions(*projection.RegistryPaymentMethods, actor)
+		projection.RegistryPaymentMethods = &registryPaymentMethodsProjection
 	}
 	if projection.Reservations != nil {
 		reservationsProjection := reservation.ProjectReadPermissions(*projection.Reservations, actor)
@@ -149,6 +169,12 @@ func (m *Model) GetAddressAccessSessions() []address_access_session.Model {
 	}
 	return *m.AddressAccessSessions
 }
+func (m *Model) GetCarts() []cart.Model {
+	if m.Carts == nil {
+		return []cart.Model{}
+	}
+	return *m.Carts
+}
 func (m *Model) GetRegistryApprovedGuests() []registry_approved_guest.Model {
 	if m.RegistryApprovedGuests == nil {
 		return []registry_approved_guest.Model{}
@@ -160,6 +186,12 @@ func (m *Model) GetRegistryItems() []registry_item.Model {
 		return []registry_item.Model{}
 	}
 	return *m.RegistryItems
+}
+func (m *Model) GetRegistryPaymentMethods() []registry_payment_method.Model {
+	if m.RegistryPaymentMethods == nil {
+		return []registry_payment_method.Model{}
+	}
+	return *m.RegistryPaymentMethods
 }
 func (m *Model) GetReservations() []reservation.Model {
 	if m.Reservations == nil {
@@ -315,10 +347,14 @@ type AggregateOptions struct {
 	GroupBy []GroupByField `json:"groupBy"`
 	// Projection for AddressAccessSessions ref field
 	AddressAccessSessionsProjection *address_access_session.Projection `json:"addressAccessSessionsProjection,omitempty"`
+	// Projection for Carts ref field
+	CartsProjection *cart.Projection `json:"cartsProjection,omitempty"`
 	// Projection for RegistryApprovedGuests ref field
 	RegistryApprovedGuestsProjection *registry_approved_guest.Projection `json:"registryApprovedGuestsProjection,omitempty"`
 	// Projection for RegistryItems ref field
 	RegistryItemsProjection *registry_item.Projection `json:"registryItemsProjection,omitempty"`
+	// Projection for RegistryPaymentMethods ref field
+	RegistryPaymentMethodsProjection *registry_payment_method.Projection `json:"registryPaymentMethodsProjection,omitempty"`
 	// Projection for Reservations ref field
 	ReservationsProjection *reservation.Projection `json:"reservationsProjection,omitempty"`
 	// Projection for ShippingAddressRequests ref field
@@ -354,10 +390,14 @@ type AggregateResultRow struct {
 	Owner *owner_user.Model `json:"owner,omitempty"`
 	// Ref field AddressAccessSessions
 	AddressAccessSessions []address_access_session.Model `json:"addressAccessSessions,omitempty"`
+	// Ref field Carts
+	Carts []cart.Model `json:"carts,omitempty"`
 	// Ref field RegistryApprovedGuests
 	RegistryApprovedGuests []registry_approved_guest.Model `json:"registryApprovedGuests,omitempty"`
 	// Ref field RegistryItems
 	RegistryItems []registry_item.Model `json:"registryItems,omitempty"`
+	// Ref field RegistryPaymentMethods
+	RegistryPaymentMethods []registry_payment_method.Model `json:"registryPaymentMethods,omitempty"`
 	// Ref field Reservations
 	Reservations []reservation.Model `json:"reservations,omitempty"`
 	// Ref field ShippingAddressRequests

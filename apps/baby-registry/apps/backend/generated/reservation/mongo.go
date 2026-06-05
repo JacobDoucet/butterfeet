@@ -10,6 +10,7 @@ import (
 
 type MongoRecord struct {
 	Id                 *primitive.ObjectID            `bson:"_id,omitempty"`
+	CartId             *primitive.ObjectID            `bson:"cartId,omitempty"`
 	ContactEmail       *string                        `bson:"contactEmail,omitempty"`
 	Created            *actor_trace.MongoRecord       `bson:"created,omitempty"`
 	ExpiresAt          *time.Time                     `bson:"expiresAt,omitempty"`
@@ -34,6 +35,10 @@ func (r *MongoRecord) ToModel() (Model, error) {
 	if r.Id != nil {
 		elemid0 := r.Id.Hex()
 		m.Id = elemid0
+	}
+	if r.CartId != nil {
+		elemcartId0 := r.CartId.Hex()
+		m.CartId = elemcartId0
 	}
 	if r.ContactEmail != nil {
 		elemcontactEmail0 := r.ContactEmail
@@ -109,6 +114,11 @@ type MongoWhereClause struct {
 	IdIn     *[]primitive.ObjectID
 	IdNin    *[]primitive.ObjectID
 	IdExists *bool
+	// cartId (Ref<Cart>) search options
+	CartIdEq     *primitive.ObjectID
+	CartIdIn     *[]primitive.ObjectID
+	CartIdNin    *[]primitive.ObjectID
+	CartIdExists *bool
 	// contactEmail (string) search options
 	ContactEmailEq     *string
 	ContactEmailNe     *string
@@ -250,6 +260,26 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 	if o.IdExists != nil {
 		query := bson.M{}
 		query["_id"] = bson.M{"$exists": *o.IdExists}
+		and = append(and, query)
+	}
+	if o.CartIdEq != nil {
+		query := bson.M{}
+		query["cartId"] = o.CartIdEq
+		and = append(and, query)
+	}
+	if o.CartIdIn != nil {
+		query := bson.M{}
+		query["cartId"] = bson.M{"$in": o.CartIdIn}
+		and = append(and, query)
+	}
+	if o.CartIdNin != nil {
+		query := bson.M{}
+		query["cartId"] = bson.M{"$nin": o.CartIdNin}
+		and = append(and, query)
+	}
+	if o.CartIdExists != nil {
+		query := bson.M{}
+		query["cartId"] = bson.M{"$exists": *o.CartIdExists}
 		and = append(and, query)
 	}
 	if o.ContactEmailEq != nil {
@@ -737,6 +767,7 @@ func (o MongoWhereClause) GetQueryParts() (bson.A, error) {
 }
 
 type MongoSortParams struct {
+	CartId     int8
 	CreatedAt  int8
 	ExpiresAt  int8
 	ItemId     int8

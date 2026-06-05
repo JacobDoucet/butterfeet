@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/coded_error"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
@@ -632,12 +633,14 @@ type AggregateRequest struct {
 	Query              reservation.HTTPWhereClause `json:"query"`
 	Fields             []HTTPAggregateFieldSpec    `json:"fields"`
 	GroupBy            []string                    `json:"groupBy"`
+	CartProjection     *cart.Projection            `json:"cartProjection,omitempty"`
 	ItemProjection     *registry_item.Projection   `json:"itemProjection,omitempty"`
 	RegistryProjection *registry.Projection        `json:"registryProjection,omitempty"`
 }
 
 // AggregateResultRowHTTP is the HTTP response type for a single aggregate result row
 type AggregateResultRowHTTP struct {
+	CartId         any `json:"cartId,omitempty"`
 	ContactEmail   any `json:"contactEmail,omitempty"`
 	ExpiresAt      any `json:"expiresAt,omitempty"`
 	IsAnonymous    any `json:"isAnonymous,omitempty"`
@@ -647,6 +650,8 @@ type AggregateResultRowHTTP struct {
 	RegistryId     any `json:"registryId,omitempty"`
 	ReminderSentAt any `json:"reminderSentAt,omitempty"`
 	ReserverName   any `json:"reserverName,omitempty"`
+	// Ref field Cart
+	Cart any `json:"cart,omitempty"`
 	// Ref field Item
 	Item any `json:"item,omitempty"`
 	// Ref field Registry
@@ -720,6 +725,7 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 		aggregateResult, err := props.Api.Aggregate(ctx, actor, searchQuery, reservation_api.AggregateOptions{
 			Fields:             apiFields,
 			GroupBy:            apiGroupBy,
+			CartProjection:     aggregateRequest.CartProjection,
 			ItemProjection:     aggregateRequest.ItemProjection,
 			RegistryProjection: aggregateRequest.RegistryProjection,
 		})
@@ -738,6 +744,7 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 				AggregateKeys: row.AggregateKeys,
 			}
 			// Copy group-by fields
+			httpRow.CartId = row.CartId
 			httpRow.ContactEmail = row.ContactEmail
 			httpRow.ExpiresAt = row.ExpiresAt
 			httpRow.IsAnonymous = row.IsAnonymous
@@ -748,6 +755,12 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 			httpRow.ReminderSentAt = row.ReminderSentAt
 			httpRow.ReserverName = row.ReserverName
 			// Convert ref fields to HTTP records
+			if row.Cart != nil {
+				if aggregateRequest.CartProjection != nil {
+					httpRec, _ := row.Cart.ToHTTPRecord(*aggregateRequest.CartProjection)
+					httpRow.Cart = httpRec
+				}
+			}
 			if row.Item != nil {
 				if aggregateRequest.ItemProjection != nil {
 					httpRec, _ := row.Item.ToHTTPRecord(*aggregateRequest.ItemProjection)

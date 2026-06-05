@@ -4,11 +4,13 @@ import (
 	"context"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/actor_trace"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/coded_error"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_payment_method"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"strings"
 )
@@ -77,9 +79,17 @@ func (c *clientWithPermissions) Search(ctx context.Context, actor permissions.Ac
 	if err != nil {
 		projection.AddressAccessSessions = nil
 	}
+	whereCart, err := cart.ApplyActorReadPermissionsToWhereClause(actor, cart.WhereClause{})
+	if err != nil {
+		projection.Carts = nil
+	}
 	whereRegistryApprovedGuest, err := registry_approved_guest.ApplyActorReadPermissionsToWhereClause(actor, registry_approved_guest.WhereClause{})
 	if err != nil {
 		projection.RegistryApprovedGuests = nil
+	}
+	whereRegistryPaymentMethod, err := registry_payment_method.ApplyActorReadPermissionsToWhereClause(actor, registry_payment_method.WhereClause{})
+	if err != nil {
+		projection.RegistryPaymentMethods = nil
 	}
 	whereRegistry, err := registry.ApplyActorReadPermissionsToWhereClause(actor, registry.WhereClause{})
 	if err != nil {
@@ -94,7 +104,9 @@ func (c *clientWithPermissions) Search(ctx context.Context, actor permissions.Ac
 	result, err := c.client.Search(ctx, WhereClause{
 		OwnerUser:               where,
 		AddressAccessSessions:   whereAddressAccessSession,
+		Carts:                   whereCart,
 		RegistryApprovedGuests:  whereRegistryApprovedGuest,
+		RegistryPaymentMethods:  whereRegistryPaymentMethod,
 		Registrys:               whereRegistry,
 		ShippingAddressRequests: whereShippingAddressRequest,
 	}, options)

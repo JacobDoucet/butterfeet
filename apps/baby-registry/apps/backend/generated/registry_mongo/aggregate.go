@@ -3,9 +3,11 @@ package registry_mongo
 import (
 	"context"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_payment_method"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"go.mongodb.org/mongo-driver/bson"
@@ -70,10 +72,14 @@ type AggregateOptions struct {
 	GroupBy []string
 	// Projection for AddressAccessSessions ref field
 	AddressAccessSessionsProjection *address_access_session.Projection
+	// Projection for Carts ref field
+	CartsProjection *cart.Projection
 	// Projection for RegistryApprovedGuests ref field
 	RegistryApprovedGuestsProjection *registry_approved_guest.Projection
 	// Projection for RegistryItems ref field
 	RegistryItemsProjection *registry_item.Projection
+	// Projection for RegistryPaymentMethods ref field
+	RegistryPaymentMethodsProjection *registry_payment_method.Projection
 	// Projection for Reservations ref field
 	ReservationsProjection *reservation.Projection
 	// Projection for ShippingAddressRequests ref field
@@ -109,10 +115,14 @@ type AggregateResultRow struct {
 	Owner *owner_user.MongoRecord `bson:"owner,omitempty" json:"owner,omitempty"`
 	// Ref field AddressAccessSessions
 	AddressAccessSessions []address_access_session.MongoRecord `bson:"addressAccessSessions,omitempty" json:"addressAccessSessions,omitempty"`
+	// Ref field Carts
+	Carts []cart.MongoRecord `bson:"carts,omitempty" json:"carts,omitempty"`
 	// Ref field RegistryApprovedGuests
 	RegistryApprovedGuests []registry_approved_guest.MongoRecord `bson:"registryApprovedGuests,omitempty" json:"registryApprovedGuests,omitempty"`
 	// Ref field RegistryItems
 	RegistryItems []registry_item.MongoRecord `bson:"registryItems,omitempty" json:"registryItems,omitempty"`
+	// Ref field RegistryPaymentMethods
+	RegistryPaymentMethods []registry_payment_method.MongoRecord `bson:"registryPaymentMethods,omitempty" json:"registryPaymentMethods,omitempty"`
 	// Ref field Reservations
 	Reservations []reservation.MongoRecord `bson:"reservations,omitempty" json:"reservations,omitempty"`
 	// Ref field ShippingAddressRequests
@@ -242,6 +252,21 @@ func executeAggregation(ctx context.Context, where WhereClause, collection *mong
 			}},
 		})
 	}
+	// Add $lookup stage for Carts if projection is specified
+	if options.CartsProjection != nil {
+		objectProject := bson.E{Key: "$project", Value: options.CartsProjection.ToBson()}
+		objectPipeline := bson.D{objectProject}
+
+		pipeline = append(pipeline, bson.D{
+			{Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "carts"},
+				{Key: "localField", Value: "_id"},
+				{Key: "foreignField", Value: "registryId"},
+				{Key: "as", Value: "carts"},
+				{Key: "pipeline", Value: bson.A{objectPipeline}},
+			}},
+		})
+	}
 	// Add $lookup stage for RegistryApprovedGuests if projection is specified
 	if options.RegistryApprovedGuestsProjection != nil {
 		objectProject := bson.E{Key: "$project", Value: options.RegistryApprovedGuestsProjection.ToBson()}
@@ -268,6 +293,21 @@ func executeAggregation(ctx context.Context, where WhereClause, collection *mong
 				{Key: "localField", Value: "_id"},
 				{Key: "foreignField", Value: "registryId"},
 				{Key: "as", Value: "registryItems"},
+				{Key: "pipeline", Value: bson.A{objectPipeline}},
+			}},
+		})
+	}
+	// Add $lookup stage for RegistryPaymentMethods if projection is specified
+	if options.RegistryPaymentMethodsProjection != nil {
+		objectProject := bson.E{Key: "$project", Value: options.RegistryPaymentMethodsProjection.ToBson()}
+		objectPipeline := bson.D{objectProject}
+
+		pipeline = append(pipeline, bson.D{
+			{Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "registry_payment_methods"},
+				{Key: "localField", Value: "_id"},
+				{Key: "foreignField", Value: "registryId"},
+				{Key: "as", Value: "registryPaymentMethods"},
 				{Key: "pipeline", Value: bson.A{objectPipeline}},
 			}},
 		})

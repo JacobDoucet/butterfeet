@@ -16,6 +16,7 @@ import (
 
 	addressaccesssessionmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session_mongo"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/api"
+	cartmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart_mongo"
 	eventmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/event_mongo"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/http_server"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
@@ -24,13 +25,16 @@ import (
 	registryapprovedguestmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest_mongo"
 	registryitemmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item_mongo"
 	registrymongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_mongo"
+	registrypaymentmethodmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_payment_method_mongo"
 	reservationmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation_mongo"
 	shippingaddressrequestmongo "github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request_mongo"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/affiliate"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/affiliatehttp"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/auth"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/buyer"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/exchangerates"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/mailer"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/payments"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/public"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/registryadmin"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/internal/reminders"
@@ -139,6 +143,9 @@ func main() {
 	registryAdminHandler := registryadmin.NewHandler(apiClient, db, registryadmin.ActorResolver(resolveActor))
 	root.Handle("/api/registry-admin/", http.StripPrefix("/api/registry-admin", registryAdminHandler))
 
+	paymentsHandler := payments.NewHandler(apiClient, payments.ActorResolver(resolveActor))
+	root.Handle("/api/payments/", http.StripPrefix("/api/payments", paymentsHandler))
+
 	// Mount forge mux behind /api (owner-authenticated CRUD).
 	amazonTag := getEnv("AMAZON_UK_ASSOCIATE_TAG", "butterfeetlab-21")
 	affiliate.RegisterProvider(affiliate.NewAmazonUK(amazonTag))
@@ -174,6 +181,10 @@ func main() {
 		Mailer:     mailSvc,
 		AppBaseURL: appBaseURL,
 	})
+
+	ratesCtx, ratesCancel := context.WithCancel(context.Background())
+	defer ratesCancel()
+	go exchangerates.Run(ratesCtx, exchangerates.Config{DB: db})
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -262,6 +273,8 @@ func ensureIndexes(ctx context.Context, db *mongo.Database) error {
 		{name: "registry_approved_guest", fn: registryapprovedguestmongo.CreateIndexes},
 		{name: "shipping_address_request", fn: shippingaddressrequestmongo.CreateIndexes},
 		{name: "address_access_session", fn: addressaccesssessionmongo.CreateIndexes},
+		{name: "registry_payment_method", fn: registrypaymentmethodmongo.CreateIndexes},
+		{name: "cart", fn: cartmongo.CreateIndexes},
 		{name: "event", fn: eventmongo.CreateIndexes},
 	}
 

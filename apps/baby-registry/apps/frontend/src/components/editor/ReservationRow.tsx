@@ -51,6 +51,9 @@ export default function ReservationRow({
         sx={{ minWidth: 130 }}
       >
         <MenuItem value="Reserved">Reserved</MenuItem>
+        <MenuItem value="AwaitingConfirmation" disabled>
+          Awaiting payment
+        </MenuItem>
         <MenuItem value="Purchased">Purchased</MenuItem>
         <MenuItem value="Received">Received</MenuItem>
         <MenuItem value="Cancelled">Cancelled</MenuItem>

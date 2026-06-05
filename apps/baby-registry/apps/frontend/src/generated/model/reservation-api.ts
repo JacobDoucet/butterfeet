@@ -1,6 +1,7 @@
 // This file is auto-generated. DO NOT EDIT.
 
 import { Reservation, ReservationProjection } from './reservation-model';
+import { Cart, CartProjection } from './cart-model';
 import { Registry, RegistryProjection } from './registry-model';
 import { RegistryItem, RegistryItemProjection } from './registry-item-model';
 import { ActorTraceSearchQuery } from './actor-trace-api';
@@ -8,11 +9,13 @@ import { ReservationStatus } from './reservation-status-enum';
 
 export type ReservationWithRefs = {
     reservation: Reservation;
+    cart?: Cart;
     item?: RegistryItem;
     registry?: Registry;
 }
 
 export type ReservationWithRefsProjection = ReservationProjection & {
+    Cart?: CartProjection;
     Item?: RegistryItemProjection;
     Registry?: RegistryProjection;
 }
@@ -27,6 +30,11 @@ export type ReservationSearchQuery = {
     idIn?: string[];
     idNin?: string[];
     idExists?: boolean;
+    // cartId (Ref<Cart>) search options
+    cartIdEq?: string;
+    cartIdIn?: string[];
+    cartIdNin?: string[];
+    cartIdExists?: boolean;
     // contactEmail (string) search options
     contactEmailEq?: string;
     contactEmailNe?: string;

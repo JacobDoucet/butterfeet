@@ -40,15 +40,40 @@ import PrivacyPanel from './PrivacyPanel';
 import BasicInfoPanel from './BasicInfoPanel';
 import CsvImportDialog from '../components/CsvImportDialog';
 import ItemCard from '../components/ItemCard';
-import PurchasesPanel from '../components/editor/PurchasesPanel';
+import PaymentsPanel from '../components/editor/PaymentsPanel';
+import CartsPanel from '../components/editor/CartsPanel';
 import ReservationRow from '../components/editor/ReservationRow';
 import CategoryRenameDialog from '../components/editor/CategoryRenameDialog';
 import DeleteConfirmDialog, { type DeleteTarget } from '../components/editor/DeleteConfirmDialog';
 
+// The fulfillment dropdown adds an "Available" choice on top of the reservation
+// statuses. "Available" represents an item with no active reservation; picking
+// it never creates a reservation (and frees an item that currently has one).
+type FulfillmentChoice = ReservationStatus | 'Available';
+
+// Currencies offered when setting an item's price.
+const CURRENCIES = [
+  { code: 'USD', symbol: '$' },
+  { code: 'EUR', symbol: '€' },
+  { code: 'GBP', symbol: '£' },
+  { code: 'CAD', symbol: 'C$' },
+  { code: 'AUD', symbol: 'A$' },
+];
+
+// priceToCents converts a user-entered major-unit price string into integer
+// minor units (cents). Returns 0 for blank or invalid input.
+function priceToCents(raw: string): number {
+  const trimmed = raw.trim();
+  if (!trimmed) return 0;
+  const parsed = parseFloat(trimmed);
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return Math.round(parsed * 100);
+}
+
 export default function RegistryEditor() {
   const { slug = '' } = useParams();
   const qc = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'items' | 'purchases' | 'details' | 'shipping' | 'access'>('items');
+  const [activeTab, setActiveTab] = useState<'items' | 'to-review' | 'completed' | 'details' | 'payments' | 'access'>('items');
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [csvImportSnack, setCsvImportSnack] = useState<string | null>(null);
   const [itemSearch, setItemSearch] = useState('');
@@ -118,7 +143,7 @@ export default function RegistryEditor() {
   const [editOpen, setEditOpen] = useState(false);
   const [editTab, setEditTab] = useState<'details' | 'substitutes' | 'fulfillment'>('details');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [fulfillmentStatus, setFulfillmentStatus] = useState<ReservationStatus>('Purchased');
+  const [fulfillmentStatus, setFulfillmentStatus] = useState<FulfillmentChoice>('Available');
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [url, setUrl] = useState('');
   const [scraping, setScraping] = useState(false);
@@ -127,6 +152,8 @@ export default function RegistryEditor() {
   const [imageUrl, setImageUrl] = useState('');
   const [imageBgColor, setImageBgColor] = useState('');
   const [source, setSource] = useState('');
+  const [price, setPrice] = useState('');
+  const [currency, setCurrency] = useState('USD');
   const [quantity, setQuantity] = useState('1');
   const [quantityUnlimited, setQuantityUnlimited] = useState(false);
   const [category, setCategory] = useState('');
@@ -150,6 +177,8 @@ export default function RegistryEditor() {
     setImageUrl('');
     setImageBgColor('');
     setSource('');
+    setPrice('');
+    setCurrency('USD');
     setQuantity('1');
     setQuantityUnlimited(false);
     setCategory('');
@@ -169,13 +198,15 @@ export default function RegistryEditor() {
     setImageUrl(it.imageUrl || '');
     setImageBgColor(it.imageBgColor || '');
     setSource(it.source || '');
+    setPrice(it.priceCents != null && it.priceCents > 0 ? (it.priceCents / 100).toString() : '');
+    setCurrency(it.currency || 'USD');
     setQuantity(String(it.quantity || 1));
     setQuantityUnlimited(!!it.quantityUnlimited);
     setCategory(it.category || '');
     setNoSubstitutes(!!it.noSubstitutes);
     setParentItemId(it.parentItemId || '');
     setNotes(it.notes || '');
-    setFulfillmentStatus('Purchased');
+    setFulfillmentStatus('Available');
     setError(null);
     setEditOpen(true);
   };
@@ -194,8 +225,13 @@ export default function RegistryEditor() {
     try {
       const r = await scrape.url(url);
       setTitle(r.title || '');
-      setImageUrl(r.imageUrl || '');
+      // Don't clear an already-set image when a re-fetch returns no image
+      // (bot protection, JS-only render, etc.) — only replace it when the
+      // scrape actually found one.
+      if (r.imageUrl) setImageUrl(r.imageUrl);
       setSource(r.source || 'Other');
+      if (r.price && r.price > 0) setPrice(r.price.toString());
+      if (r.currency) setCurrency(r.currency.toUpperCase());
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -214,6 +250,8 @@ export default function RegistryEditor() {
         imageBgColor,
         productUrl: url,
         source,
+        priceCents: priceToCents(price),
+        currency,
         quantity: qty,
         quantityUnlimited,
         category: category.trim(),
@@ -245,6 +283,8 @@ export default function RegistryEditor() {
         imageBgColor,
         productUrl: url,
         source,
+        priceCents: priceToCents(price),
+        currency,
         quantity: qty,
         quantityUnlimited,
         category: category.trim(),
@@ -268,8 +308,16 @@ export default function RegistryEditor() {
     }: {
       item: RegistryItem;
       activeReservations: Reservation[];
-      status: ReservationStatus;
+      status: FulfillmentChoice;
     }) => {
+      // "Available" means the item should have no active reservation. Free any
+      // existing ones by cancelling them; never create a new reservation.
+      if (status === 'Available') {
+        if (activeReservations.length > 0) {
+          await Promise.all(activeReservations.map((r) => reservations.setStatus(r.id, 'Cancelled')));
+        }
+        return;
+      }
       if (activeReservations.length > 0) {
         await Promise.all(activeReservations.map((r) => reservations.setStatus(r.id, status)));
         return;
@@ -334,23 +382,9 @@ export default function RegistryEditor() {
     acc[rootId] = (acc[rootId] ?? 0) + 1;
     return acc;
   }, {});
-  const isItemFulfilled = (it: RegistryItem) => {
-    if (it.quantityUnlimited) return false;
-    const opts = [it, ...(alternativesByRootId[it.id] ?? [])];
-    const active = opts
-      .flatMap((o) => reservationsByItem[o.id] ?? [])
-      .filter((r) => r.status !== 'Cancelled')
-      .reduce((sum, r) => sum + (r.quantity ?? 1), 0);
-    return active >= (it.quantity ?? 1);
-  };
   const topLevelItems = list
     .filter((it) => !it.parentItemId || !itemById[it.parentItemId])
-    .sort((a, b) => {
-      const aFulfilled = isItemFulfilled(a);
-      const bFulfilled = isItemFulfilled(b);
-      if (aFulfilled !== bFulfilled) return aFulfilled ? 1 : -1;
-      return (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' });
-    });
+    .sort((a, b) => (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' }));
   const itemCategories = Array.from(
     new Set(topLevelItems.map((it) => (it.category || '').trim()).filter(Boolean)),
   ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
@@ -415,9 +449,10 @@ export default function RegistryEditor() {
           scrollButtons="auto"
         >
           <Tab value="items" label="Items" />
-          <Tab value="purchases" label="Reservations" />
+          <Tab value="to-review" label="To review" />
+          <Tab value="completed" label="Completed" />
+          <Tab value="payments" label="Payments" />
           <Tab value="details" label="Details" />
-          <Tab value="shipping" label="Shipping" />
           <Tab
             value="access"
             label="Privacy"
@@ -429,25 +464,10 @@ export default function RegistryEditor() {
       </Box>
 
       {activeTab === 'details' && <BasicInfoPanel reg={reg} />}
-      {activeTab === 'shipping' && <PrivacyPanel reg={reg} section="shipping" />}
+      {activeTab === 'payments' && <PaymentsPanel reg={reg} />}
       {activeTab === 'access' && <PrivacyPanel reg={reg} section="access" />}
-      {activeTab === 'purchases' && (
-        <PurchasesPanel
-          reservations={allReservations}
-          itemById={itemById}
-          onOpenItem={(itemId) => {
-            const it = itemById[itemId];
-            if (it) beginEdit(it);
-          }}
-          onSetStatus={(id, status) => setStatusM.mutate({ id, status })}
-          onDelete={(r) => {
-            const who = r.isAnonymous
-              ? 'Anonymous'
-              : r.reserverName?.trim() || r.contactEmail?.trim() || 'Someone';
-            setDeleteTarget({ kind: 'reservation', id: r.id, title: who });
-          }}
-        />
-      )}
+      {activeTab === 'to-review' && <CartsPanel reg={reg} mode="to-review" />}
+      {activeTab === 'completed' && <CartsPanel reg={reg} mode="completed" />}
 
       {activeTab === 'items' && (
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
@@ -636,6 +656,14 @@ export default function RegistryEditor() {
                 )}
                 <TextField fullWidth label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
                 <TextField fullWidth label="Description" value={description} onChange={(e) => setDescription(e.target.value)} multiline minRows={2} />
+                <Stack direction="row" spacing={1}>
+                  <Select value={currency} onChange={(e) => setCurrency(e.target.value)} sx={{ minWidth: 104 }}>
+                    {CURRENCIES.map((c) => (
+                      <MenuItem key={c.code} value={c.code}>{c.symbol} {c.code}</MenuItem>
+                    ))}
+                  </Select>
+                  <TextField fullWidth label="Price" type="number" inputProps={{ min: 0, step: '0.01' }} placeholder="0.00" value={price} onChange={(e) => setPrice(e.target.value)} />
+                </Stack>
                 <FormControlLabel
                   control={<Checkbox checked={quantityUnlimited} onChange={(e) => setQuantityUnlimited(e.target.checked)} />}
                   label="Allow unlimited reservations"
@@ -708,8 +736,10 @@ export default function RegistryEditor() {
               value={editTab}
               onChange={(_, value) => {
                 setEditTab(value);
-                if (value === 'fulfillment' && editActiveReservations.length > 0) {
-                  setFulfillmentStatus(editActiveReservations[0].status);
+                if (value === 'fulfillment') {
+                  setFulfillmentStatus(
+                    editActiveReservations.length > 0 ? editActiveReservations[0].status : 'Available',
+                  );
                 }
               }}
               variant="fullWidth"
@@ -787,6 +817,14 @@ export default function RegistryEditor() {
                       )}
                       <TextField fullWidth label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
                       <TextField fullWidth label="Description" value={description} onChange={(e) => setDescription(e.target.value)} multiline minRows={2} />
+                      <Stack direction="row" spacing={1}>
+                        <Select value={currency} onChange={(e) => setCurrency(e.target.value)} sx={{ minWidth: 104 }}>
+                          {CURRENCIES.map((c) => (
+                            <MenuItem key={c.code} value={c.code}>{c.symbol} {c.code}</MenuItem>
+                          ))}
+                        </Select>
+                        <TextField fullWidth label="Price" type="number" inputProps={{ min: 0, step: '0.01' }} placeholder="0.00" value={price} onChange={(e) => setPrice(e.target.value)} />
+                      </Stack>
                       <FormControlLabel
                         control={<Checkbox checked={quantityUnlimited} onChange={(e) => setQuantityUnlimited(e.target.checked)} />}
                         label="Allow unlimited reservations"
@@ -876,16 +914,20 @@ export default function RegistryEditor() {
                       <strong>Status: Available</strong> — This item has no active reservations and is available for fulfillment.
                     </Alert>
                   )}
-                  <Alert severity="info">
-                    {editActiveReservations.length > 0
-                      ? `This will update ${editActiveReservations.length} active reservation${editActiveReservations.length === 1 ? '' : 's'} for this item.`
-                      : 'No active reservations found. Saving will create an owner reservation so status stays consistent.'}
-                  </Alert>
+                  {editActiveReservations.length > 0 && (
+                    <Alert severity="info">
+                      {`This will update ${editActiveReservations.length} active reservation${editActiveReservations.length === 1 ? '' : 's'} for this item.`}
+                    </Alert>
+                  )}
                   <Select
                     value={fulfillmentStatus}
-                    onChange={(e) => setFulfillmentStatus(e.target.value as ReservationStatus)}
+                    onChange={(e) => setFulfillmentStatus(e.target.value as FulfillmentChoice)}
                   >
+                    <MenuItem value="Available">Available</MenuItem>
                     <MenuItem value="Reserved">Reserved</MenuItem>
+                    <MenuItem value="AwaitingConfirmation" disabled>
+                      Awaiting payment
+                    </MenuItem>
                     <MenuItem value="Purchased">Purchased</MenuItem>
                     <MenuItem value="Received">Received</MenuItem>
                     <MenuItem value="Cancelled">Cancelled</MenuItem>
@@ -946,6 +988,12 @@ export default function RegistryEditor() {
             onClick={() => {
               if (editTab === 'fulfillment') {
                 if (!editingItem) return;
+                // "Available" with no active reservations is a no-op: don't
+                // create a phantom owner reservation just because Save was hit.
+                if (fulfillmentStatus === 'Available' && editActiveReservations.length === 0) {
+                  setEditOpen(false);
+                  return;
+                }
                 markPurchasedM.mutate({
                   item: editingItem,
                   activeReservations: editActiveReservations,

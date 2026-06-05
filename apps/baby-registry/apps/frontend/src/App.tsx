@@ -1,5 +1,5 @@
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
-import { AppBar, Toolbar, Box, Button, Typography, Container } from '@mui/material';
+import { AppBar, Toolbar, Box, Button, Typography, Container, Select, MenuItem } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import LandingPage from './pages/Landing';
 import LoginPage from './pages/Login';
@@ -9,9 +9,10 @@ import RegistryEditorPage from './pages/RegistryEditor';
 import PublicRegistryPage from './pages/PublicRegistry';
 import ShipPage from './pages/Ship';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { auth, type Me } from './api';
+import { auth, type Me, SUPPORTED_CURRENCIES } from './api';
 import BrandLogo from './components/BrandLogo';
 import { useActiveThemeColor } from './activeTheme';
+import { useViewerCurrency } from './viewerCurrency';
 import { themeForColor } from './themePalettes';
 
 function Shell({ children }: { children: React.ReactNode }) {
@@ -38,8 +39,10 @@ function Shell({ children }: { children: React.ReactNode }) {
   const hideHeaderActions = location.pathname.startsWith('/r/');
   const hideLogo = location.pathname === '/';
   const toolbarSx = hideHeaderActions
-    ? { gap: 2, minHeight: { xs: 64, sm: 68 }, justifyContent: 'center' }
+    ? { gap: 2, minHeight: { xs: 64, sm: 68 }, justifyContent: 'center', position: 'relative' }
     : { gap: 2 };
+
+  const { currency, setCurrency } = useViewerCurrency();
 
   const activeColor = useActiveThemeColor();
   const themed = themeForColor(activeColor);
@@ -79,6 +82,26 @@ function Shell({ children }: { children: React.ReactNode }) {
             <BrandLogo variant="lockup" height={35} markScale={1.12} wordmarkScale={1.1} />
           </Typography>
           {!hideHeaderActions && <Box sx={{ flexGrow: 1 }} />}
+          {hideHeaderActions && (
+            <Select
+              size="small"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              sx={{
+                position: 'absolute',
+                right: { xs: 8, sm: 16 },
+                top: '50%',
+                transform: 'translateY(-50%)',
+                '& .MuiSelect-select': { py: 0.5, fontWeight: 600, fontSize: '0.85rem' },
+                borderRadius: 2,
+                bgcolor: 'background.paper',
+              }}
+            >
+              {SUPPORTED_CURRENCIES.map((c) => (
+                <MenuItem key={c.code} value={c.code}>{c.code}</MenuItem>
+              ))}
+            </Select>
+          )}
           {!hideHeaderActions && (me ? (
             <>
               <Button component={Link} to="/owner" color="primary">

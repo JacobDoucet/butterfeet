@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/coded_error"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
@@ -12,6 +13,7 @@ import (
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_api"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_payment_method"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/utils"
@@ -70,8 +72,10 @@ func (sr *SearchRequest) ResolveProjection() *registry_api.Projection {
 	}
 	projection := registry_api.NewProjection(true)
 	projection.AddressAccessSessions = nil
+	projection.Carts = nil
 	projection.RegistryApprovedGuests = nil
 	projection.RegistryItems = nil
+	projection.RegistryPaymentMethods = nil
 	projection.Reservations = nil
 	projection.ShippingAddressRequests = nil
 
@@ -820,8 +824,10 @@ type AggregateRequest struct {
 	Fields                            []HTTPAggregateFieldSpec             `json:"fields"`
 	GroupBy                           []string                             `json:"groupBy"`
 	AddressAccessSessionsProjection   *address_access_session.Projection   `json:"addressAccessSessionsProjection,omitempty"`
+	CartsProjection                   *cart.Projection                     `json:"cartsProjection,omitempty"`
 	RegistryApprovedGuestsProjection  *registry_approved_guest.Projection  `json:"registryApprovedGuestsProjection,omitempty"`
 	RegistryItemsProjection           *registry_item.Projection            `json:"registryItemsProjection,omitempty"`
+	RegistryPaymentMethodsProjection  *registry_payment_method.Projection  `json:"registryPaymentMethodsProjection,omitempty"`
 	ReservationsProjection            *reservation.Projection              `json:"reservationsProjection,omitempty"`
 	ShippingAddressRequestsProjection *shipping_address_request.Projection `json:"shippingAddressRequestsProjection,omitempty"`
 	OwnerProjection                   *owner_user.Projection               `json:"ownerProjection,omitempty"`
@@ -852,10 +858,14 @@ type AggregateResultRowHTTP struct {
 	Owner any `json:"owner,omitempty"`
 	// Ref field AddressAccessSessions
 	AddressAccessSessions any `json:"addressAccessSessions,omitempty"`
+	// Ref field Carts
+	Carts any `json:"carts,omitempty"`
 	// Ref field RegistryApprovedGuests
 	RegistryApprovedGuests any `json:"registryApprovedGuests,omitempty"`
 	// Ref field RegistryItems
 	RegistryItems any `json:"registryItems,omitempty"`
+	// Ref field RegistryPaymentMethods
+	RegistryPaymentMethods any `json:"registryPaymentMethods,omitempty"`
 	// Ref field Reservations
 	Reservations any `json:"reservations,omitempty"`
 	// Ref field ShippingAddressRequests
@@ -930,8 +940,10 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 			Fields:                            apiFields,
 			GroupBy:                           apiGroupBy,
 			AddressAccessSessionsProjection:   aggregateRequest.AddressAccessSessionsProjection,
+			CartsProjection:                   aggregateRequest.CartsProjection,
 			RegistryApprovedGuestsProjection:  aggregateRequest.RegistryApprovedGuestsProjection,
 			RegistryItemsProjection:           aggregateRequest.RegistryItemsProjection,
+			RegistryPaymentMethodsProjection:  aggregateRequest.RegistryPaymentMethodsProjection,
 			ReservationsProjection:            aggregateRequest.ReservationsProjection,
 			ShippingAddressRequestsProjection: aggregateRequest.ShippingAddressRequestsProjection,
 			OwnerProjection:                   aggregateRequest.OwnerProjection,
@@ -985,6 +997,14 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 				}
 				httpRow.AddressAccessSessions = httpRecs
 			}
+			if row.Carts != nil && aggregateRequest.CartsProjection != nil {
+				httpRecs := make([]any, len(row.Carts))
+				for j, rec := range row.Carts {
+					httpRec, _ := rec.ToHTTPRecord(*aggregateRequest.CartsProjection)
+					httpRecs[j] = httpRec
+				}
+				httpRow.Carts = httpRecs
+			}
 			if row.RegistryApprovedGuests != nil && aggregateRequest.RegistryApprovedGuestsProjection != nil {
 				httpRecs := make([]any, len(row.RegistryApprovedGuests))
 				for j, rec := range row.RegistryApprovedGuests {
@@ -1000,6 +1020,14 @@ func GetAggregateHandler(props HandlerProps) (http.HandlerFunc, error) {
 					httpRecs[j] = httpRec
 				}
 				httpRow.RegistryItems = httpRecs
+			}
+			if row.RegistryPaymentMethods != nil && aggregateRequest.RegistryPaymentMethodsProjection != nil {
+				httpRecs := make([]any, len(row.RegistryPaymentMethods))
+				for j, rec := range row.RegistryPaymentMethods {
+					httpRec, _ := rec.ToHTTPRecord(*aggregateRequest.RegistryPaymentMethodsProjection)
+					httpRecs[j] = httpRec
+				}
+				httpRow.RegistryPaymentMethods = httpRecs
 			}
 			if row.Reservations != nil && aggregateRequest.ReservationsProjection != nil {
 				httpRecs := make([]any, len(row.Reservations))

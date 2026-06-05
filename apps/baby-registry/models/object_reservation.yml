@@ -7,6 +7,8 @@ objects:
       - name: registryId
         type: Ref<Registry>
         required: true
+      - name: cartId
+        type: Ref<Cart>
       - name: reserverName
         type: string
       - name: isAnonymous
@@ -36,6 +38,9 @@ objects:
       - name: registry_idx
         fields:
           - name: registryId
+      - name: cart_idx
+        fields:
+          - name: cartId
       - name: expiresAt
         fields:
           - name: expiresAt

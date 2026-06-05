@@ -1,0 +1,79 @@
+objects:
+  - name: Cart
+    fields:
+      - name: ownerId
+        type: Ref<OwnerUser>
+        required: true
+      - name: registryId
+        type: Ref<Registry>
+        required: true
+      - name: paymentMethodId
+        type: Ref<RegistryPaymentMethod>
+      - name: methodType
+        type: PaymentMethodType
+      - name: methodDisplayName
+        type: string
+      - name: referenceCode
+        type: string
+        required: true
+      - name: amountCents
+        type: int
+      - name: currency
+        type: string
+      - name: contributorEmail
+        type: string
+      - name: contributorName
+        type: string
+      - name: message
+        type: string
+      - name: status
+        type: CartStatus
+        required: true
+      - name: claimedAt
+        type: timestamp
+      - name: decidedAt
+        type: timestamp
+      - name: decisionReason
+        type: string
+
+    collection:
+      - type: mongo
+        name: carts
+
+    indexes:
+      - name: reference_unique
+        unique: true
+        fields:
+          - name: referenceCode
+      - name: registry_idx
+        fields:
+          - name: registryId
+      - name: owner_idx
+        fields:
+          - name: ownerId
+      - name: contributor_idx
+        fields:
+          - name: registryId
+          - name: contributorEmail
+
+    http:
+      endpoint: carts
+      methods:
+        - GET
+        - POST
+        - PATCH
+        - DELETE
+
+    abac:
+      - name: OwnerId
+        field: ownerId
+
+    permissions:
+      read:
+        - rbac: Owner
+          abac:
+            - OwnerId
+      write:
+        - rbac: Owner
+          abac:
+            - OwnerId

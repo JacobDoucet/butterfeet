@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import { theme } from './theme';
 import { ActiveThemeProvider } from './activeTheme';
+import { ViewerCurrencyProvider } from './viewerCurrency';
 
 const qc = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -18,9 +19,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <CssBaseline />
         <GlobalStyles styles={{ 'html, body': { overflowX: 'hidden', maxWidth: '100vw' } }} />
         <ActiveThemeProvider>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
+          <ViewerCurrencyProvider>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </ViewerCurrencyProvider>
         </ActiveThemeProvider>
       </ThemeProvider>
     </QueryClientProvider>

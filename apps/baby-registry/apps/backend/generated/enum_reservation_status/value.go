@@ -7,15 +7,18 @@ import (
 type Value string
 
 const (
-	Reserved  Value = "Reserved"
-	Purchased Value = "Purchased"
-	Received  Value = "Received"
-	Cancelled Value = "Cancelled"
+	Reserved             Value = "Reserved"
+	AwaitingConfirmation Value = "AwaitingConfirmation"
+	Purchased            Value = "Purchased"
+	Received             Value = "Received"
+	Cancelled            Value = "Cancelled"
 )
 
 func (v Value) ToString() (string, error) {
 	switch v {
 	case Reserved:
+		return string(v), nil
+	case AwaitingConfirmation:
 		return string(v), nil
 	case Purchased:
 		return string(v), nil
@@ -31,6 +34,8 @@ func (v Value) ToString() (string, error) {
 func Validate(v Value) error {
 	switch v {
 	case Reserved:
+		return nil
+	case AwaitingConfirmation:
 		return nil
 	case Purchased:
 		return nil

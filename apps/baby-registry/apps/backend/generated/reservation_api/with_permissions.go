@@ -3,6 +3,7 @@ package reservation_api
 import (
 	"context"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/actor_trace"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/coded_error"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_reservation_status"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
@@ -68,6 +69,10 @@ func (c *clientWithPermissions) Search(ctx context.Context, actor permissions.Ac
 	if err != nil {
 		return QueryResult{}, Projection{}, err
 	}
+	whereCart, err := cart.ApplyActorReadPermissionsToWhereClause(actor, cart.WhereClause{})
+	if err != nil {
+		projection.Cart = nil
+	}
 	whereRegistryItem, err := registry_item.ApplyActorReadPermissionsToWhereClause(actor, registry_item.WhereClause{})
 	if err != nil {
 		projection.Item = nil
@@ -80,6 +85,7 @@ func (c *clientWithPermissions) Search(ctx context.Context, actor permissions.Ac
 	options.Projection = &projection
 	result, err := c.client.Search(ctx, WhereClause{
 		Reservation: where,
+		Cart:        whereCart,
 		Item:        whereRegistryItem,
 		Registry:    whereRegistry,
 	}, options)

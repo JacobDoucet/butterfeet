@@ -4,6 +4,7 @@ import { ReservationSearchQuery, ReservationWithRefs, ReservationWithRefsProject
 import { SelectManyResponse, MutationResponse, AggregateResponse } from './model';
 import { ApiError } from './errors';
 import { Reservation, ReservationSortParams } from '../model/reservation-model';
+import { Cart, CartProjection } from '../model/cart-model';
 import { Registry, RegistryProjection } from '../model/registry-model';
 import { RegistryItem, RegistryItemProjection } from '../model/registry-item-model';
 
@@ -136,6 +137,7 @@ export type ReservationAggregateField = typeof ReservationAggregateFields[keyof 
 
 // Type-safe group-by fields
 export const ReservationGroupByFields = {
+    CartId: 'cartId',
     ContactEmail: 'contactEmail',
     ExpiresAt: 'expiresAt',
     IsAnonymous: 'isAnonymous',
@@ -158,6 +160,7 @@ export type AggregateFieldSpec = {
 // Aggregate result row with partial model fields and metadata
 export type ReservationAggregateResultRow = {
     // Group-by fields (original types)
+    cartId?: string | null;
     contactEmail?: string | null;
     expiresAt?: string | null;
     isAnonymous?: boolean | null;
@@ -168,6 +171,8 @@ export type ReservationAggregateResultRow = {
     reminderSentAt?: string | null;
     reserverName?: string | null;
     // Aggregate fields - always numbers since they're results of sum/avg/etc
+    // Ref field cart
+    cart?: Cart | null;
     // Ref field item
     item?: RegistryItem | null;
     // Ref field registry
@@ -187,6 +192,7 @@ export type AggregateReservationParams = {
     query: ReservationSearchQuery;
     fields: AggregateFieldSpec[];
     groupBy: ReservationGroupByField[];
+    cartProjection?: CartProjection;
     itemProjection?: RegistryItemProjection;
     registryProjection?: RegistryProjection;
 }
@@ -201,6 +207,7 @@ export function aggregateReservations(params: AggregateReservationParams): Promi
             query: params.query,
             fields: params.fields,
             groupBy: params.groupBy,
+            cartProjection: params.cartProjection,
             itemProjection: params.itemProjection,
             registryProjection: params.registryProjection,
         }),

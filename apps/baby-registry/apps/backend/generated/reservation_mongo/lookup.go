@@ -3,6 +3,7 @@ package reservation_mongo
 import (
 	"context"
 	"errors"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
@@ -13,6 +14,7 @@ import (
 type LookupOptions struct {
 	Projection         reservation.Projection
 	Sort               reservation.MongoSortParams
+	CartProjection     *cart.Projection
 	ItemProjection     *registry_item.Projection
 	RegistryProjection *registry.Projection
 	Limit              int
@@ -28,6 +30,7 @@ func (lo *LookupOptions) limit() int {
 
 type WhereClause struct {
 	Reservation reservation.MongoWhereClause
+	Cart        cart.MongoWhereClause
 	Item        registry_item.MongoWhereClause
 	Registry    registry.MongoWhereClause
 }
@@ -40,6 +43,11 @@ func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo
 
 	sortStage := bson.D{}
 
+	if lookupOptions.Sort.CartId > 0 {
+		sortStage = append(sortStage, bson.E{Key: "cartId", Value: 1})
+	} else if lookupOptions.Sort.CartId < 0 {
+		sortStage = append(sortStage, bson.E{Key: "cartId", Value: -1})
+	}
 	if lookupOptions.Sort.CreatedAt > 0 {
 		sortStage = append(sortStage, bson.E{Key: "created.at", Value: 1})
 	} else if lookupOptions.Sort.CreatedAt < 0 {
@@ -66,6 +74,9 @@ func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo
 		sortStage = append(sortStage, bson.E{Key: "updated.at", Value: -1})
 	}
 
+	if lookupOptions.CartProjection != nil {
+		lookupOptions.Projection.CartId = true
+	}
 	if lookupOptions.ItemProjection != nil {
 		lookupOptions.Projection.ItemId = true
 	}
@@ -98,6 +109,38 @@ func aggregateWithRefs(ctx context.Context, where WhereClause, collection *mongo
 		{Key: "$limit", Value: lookupOptions.limit()},
 	})
 
+	// Add $lookup stage for Cart
+	if lookupOptions.CartProjection != nil {
+		// whereCartId, err := where.Cart.GetLookupQuery()
+		// if err != nil {
+		//     return QueryResult{}, err
+		// }
+		objectProject := bson.E{Key: "$project", Value: lookupOptions.CartProjection.ToBson()}
+		objectPipeline := bson.D{objectProject}
+		// if len(whereCartId) > 0 {
+		//     objectPipeline = bson.D{
+		//         {Key: "$match", Value: whereCartId},
+		//         objectProject,
+		//     }
+		// }
+		dataPipeline = append(dataPipeline, bson.D{
+			{Key: "$lookup", Value: bson.D{
+				// TODO get actual collection name
+				{Key: "from", Value: "carts"},
+				{Key: "localField", Value: "cartId"},
+				{Key: "foreignField", Value: "_id"},
+				{Key: "as", Value: "Cart"},
+				{Key: "pipeline", Value: bson.A{objectPipeline}},
+			}},
+		})
+
+		dataPipeline = append(dataPipeline, bson.D{
+			{Key: "$unwind", Value: bson.D{
+				{Key: "path", Value: "$Cart"},
+				{Key: "preserveNullAndEmptyArrays", Value: true},
+			}},
+		})
+	}
 	// Add $lookup stage for Item
 	if lookupOptions.ItemProjection != nil {
 		// whereItemId, err := where.Item.GetLookupQuery()

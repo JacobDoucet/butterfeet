@@ -6,7 +6,8 @@ import (
 )
 
 type Projection struct {
-	Id                       bool                   `json:"id"`
+	Id                       bool `json:"id"`
+	CartId                   bool
 	ContactEmail             bool                   `json:"contactEmail"`
 	Created                  bool                   `json:"created"`
 	CreatedFields            actor_trace.Projection `json:"createdFields,omitempty"`
@@ -28,6 +29,7 @@ type Projection struct {
 func NewProjection(defaultVal bool) Projection {
 	return Projection{
 		Id:                       defaultVal,
+		CartId:                   defaultVal,
 		ContactEmail:             defaultVal,
 		Created:                  defaultVal,
 		CreatedFields:            actor_trace.NewProjection(defaultVal),
@@ -50,6 +52,9 @@ func NewProjection(defaultVal bool) Projection {
 func (p Projection) ToBson() bson.M {
 	projection := bson.M{}
 	projection["_id"] = 1
+	if p.CartId {
+		projection["cartId"] = 1
+	}
 	if p.ContactEmail {
 		projection["contactEmail"] = 1
 	}

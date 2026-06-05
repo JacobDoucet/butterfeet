@@ -5,6 +5,7 @@ import { ReservationStatus } from './reservation-status-enum';
 
 export type Reservation = {
   id?: string;
+  cartId?: string;
   contactEmail?: string;
   created?: ActorTrace;
   expiresAt?: string;
@@ -22,6 +23,7 @@ export type Reservation = {
 
 export type ReservationProjection = {
     id?: boolean;
+    cartId?: boolean;
     contactEmail?: boolean;
     created?: boolean;
 		createdFields?: ActorTraceProjection;
@@ -41,6 +43,7 @@ export type ReservationProjection = {
 }
 
 export type ReservationSortParams = {
+    cartId?: -1 | 1;
     createdAt?: -1 | 1;
     expiresAt?: -1 | 1;
     itemId?: -1 | 1;

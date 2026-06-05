@@ -1,0 +1,72 @@
+objects:
+  - name: RegistryPaymentMethod
+    fields:
+      - name: ownerId
+        type: Ref<OwnerUser>
+        required: true
+      - name: registryId
+        type: Ref<Registry>
+        required: true
+      - name: type
+        type: PaymentMethodType
+        required: true
+      - name: displayName
+        type: string
+      - name: instructions
+        type: string
+      - name: paymentUrl
+        type: string
+      - name: recipientEmail
+        type: string
+      - name: recipientPhone
+        type: string
+      - name: bankName
+        type: string
+      - name: bankAccountName
+        type: string
+      - name: bankAccountNumber
+        type: string
+      - name: bankRoutingNumber
+        type: string
+      - name: bankIban
+        type: string
+      - name: bankSwift
+        type: string
+      - name: enabled
+        type: bool
+      - name: position
+        type: int
+
+    collection:
+      - type: mongo
+        name: registry_payment_methods
+
+    indexes:
+      - name: registry_idx
+        fields:
+          - name: registryId
+      - name: owner_idx
+        fields:
+          - name: ownerId
+
+    http:
+      endpoint: registry-payment-methods
+      methods:
+        - GET
+        - POST
+        - PATCH
+        - DELETE
+
+    abac:
+      - name: OwnerId
+        field: ownerId
+
+    permissions:
+      read:
+        - rbac: Owner
+          abac:
+            - OwnerId
+      write:
+        - rbac: Owner
+          abac:
+            - OwnerId

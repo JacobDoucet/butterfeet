@@ -2,9 +2,11 @@
 
 import { Registry, RegistryProjection } from './registry-model';
 import { AddressAccessSession, AddressAccessSessionProjection } from './address-access-session-model';
+import { Cart, CartProjection } from './cart-model';
 import { OwnerUser, OwnerUserProjection } from './owner-user-model';
 import { RegistryApprovedGuest, RegistryApprovedGuestProjection } from './registry-approved-guest-model';
 import { RegistryItem, RegistryItemProjection } from './registry-item-model';
+import { RegistryPaymentMethod, RegistryPaymentMethodProjection } from './registry-payment-method-model';
 import { Reservation, ReservationProjection } from './reservation-model';
 import { ShippingAddressRequest, ShippingAddressRequestProjection } from './shipping-address-request-model';
 import { ActorTraceSearchQuery } from './actor-trace-api';
@@ -13,8 +15,10 @@ import { AddressAccessMode } from './address-access-mode-enum';
 export type RegistryWithRefs = {
     registry: Registry;
     addressAccessSessions?: AddressAccessSession[];
+    carts?: Cart[];
     registryApprovedGuests?: RegistryApprovedGuest[];
     registryItems?: RegistryItem[];
+    registryPaymentMethods?: RegistryPaymentMethod[];
     reservations?: Reservation[];
     shippingAddressRequests?: ShippingAddressRequest[];
     owner?: OwnerUser;
@@ -22,8 +26,10 @@ export type RegistryWithRefs = {
 
 export type RegistryWithRefsProjection = RegistryProjection & {
     AddressAccessSessions?: AddressAccessSessionProjection;
+    Carts?: CartProjection;
     RegistryApprovedGuests?: RegistryApprovedGuestProjection;
     RegistryItems?: RegistryItemProjection;
+    RegistryPaymentMethods?: RegistryPaymentMethodProjection;
     Reservations?: ReservationProjection;
     ShippingAddressRequests?: ShippingAddressRequestProjection;
     Owner?: OwnerUserProjection;

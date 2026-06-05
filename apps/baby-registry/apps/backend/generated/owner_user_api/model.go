@@ -3,10 +3,12 @@ package owner_user_api
 import (
 	"context"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/address_access_session"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/owner_user"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_approved_guest"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_payment_method"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/shipping_address_request"
 )
 
@@ -36,7 +38,9 @@ type QueryResult struct {
 type Model struct {
 	owner_user.Model
 	AddressAccessSessions   *[]address_access_session.Model
+	Carts                   *[]cart.Model
 	RegistryApprovedGuests  *[]registry_approved_guest.Model
+	RegistryPaymentMethods  *[]registry_payment_method.Model
 	Registrys               *[]registry.Model
 	ShippingAddressRequests *[]shipping_address_request.Model
 }
@@ -44,7 +48,9 @@ type Model struct {
 type WhereClause struct {
 	OwnerUser               owner_user.WhereClause
 	AddressAccessSessions   address_access_session.WhereClause
+	Carts                   cart.WhereClause
 	RegistryApprovedGuests  registry_approved_guest.WhereClause
+	RegistryPaymentMethods  registry_payment_method.WhereClause
 	Registrys               registry.WhereClause
 	ShippingAddressRequests shipping_address_request.WhereClause
 }
@@ -79,20 +85,26 @@ func (qo *PaginationOptions) GetProjection() Projection {
 type Projection struct {
 	owner_user.Projection   `json:",inline"`
 	AddressAccessSessions   *address_access_session.Projection   `json:"AddressAccessSessions,omitempty"`
+	Carts                   *cart.Projection                     `json:"Carts,omitempty"`
 	RegistryApprovedGuests  *registry_approved_guest.Projection  `json:"RegistryApprovedGuests,omitempty"`
+	RegistryPaymentMethods  *registry_payment_method.Projection  `json:"RegistryPaymentMethods,omitempty"`
 	Registrys               *registry.Projection                 `json:"Registrys,omitempty"`
 	ShippingAddressRequests *shipping_address_request.Projection `json:"ShippingAddressRequests,omitempty"`
 }
 
 func NewProjection(defaultVal bool) Projection {
 	addressAccessSessionsProjection := address_access_session.NewProjection(defaultVal)
+	cartsProjection := cart.NewProjection(defaultVal)
 	registryApprovedGuestsProjection := registry_approved_guest.NewProjection(defaultVal)
+	registryPaymentMethodsProjection := registry_payment_method.NewProjection(defaultVal)
 	registrysProjection := registry.NewProjection(defaultVal)
 	shippingAddressRequestsProjection := shipping_address_request.NewProjection(defaultVal)
 	return Projection{
 		Projection:              owner_user.NewProjection(defaultVal),
 		AddressAccessSessions:   &addressAccessSessionsProjection,
+		Carts:                   &cartsProjection,
 		RegistryApprovedGuests:  &registryApprovedGuestsProjection,
+		RegistryPaymentMethods:  &registryPaymentMethodsProjection,
 		Registrys:               &registrysProjection,
 		ShippingAddressRequests: &shippingAddressRequestsProjection,
 	}
@@ -104,9 +116,17 @@ func projectReadPermissions(actor permissions.Actor, projection Projection) Proj
 		addressAccessSessionsProjection := address_access_session.ProjectReadPermissions(*projection.AddressAccessSessions, actor)
 		projection.AddressAccessSessions = &addressAccessSessionsProjection
 	}
+	if projection.Carts != nil {
+		cartsProjection := cart.ProjectReadPermissions(*projection.Carts, actor)
+		projection.Carts = &cartsProjection
+	}
 	if projection.RegistryApprovedGuests != nil {
 		registryApprovedGuestsProjection := registry_approved_guest.ProjectReadPermissions(*projection.RegistryApprovedGuests, actor)
 		projection.RegistryApprovedGuests = &registryApprovedGuestsProjection
+	}
+	if projection.RegistryPaymentMethods != nil {
+		registryPaymentMethodsProjection := registry_payment_method.ProjectReadPermissions(*projection.RegistryPaymentMethods, actor)
+		projection.RegistryPaymentMethods = &registryPaymentMethodsProjection
 	}
 	if projection.Registrys != nil {
 		registrysProjection := registry.ProjectReadPermissions(*projection.Registrys, actor)
@@ -126,11 +146,23 @@ func (m *Model) GetAddressAccessSessions() []address_access_session.Model {
 	}
 	return *m.AddressAccessSessions
 }
+func (m *Model) GetCarts() []cart.Model {
+	if m.Carts == nil {
+		return []cart.Model{}
+	}
+	return *m.Carts
+}
 func (m *Model) GetRegistryApprovedGuests() []registry_approved_guest.Model {
 	if m.RegistryApprovedGuests == nil {
 		return []registry_approved_guest.Model{}
 	}
 	return *m.RegistryApprovedGuests
+}
+func (m *Model) GetRegistryPaymentMethods() []registry_payment_method.Model {
+	if m.RegistryPaymentMethods == nil {
+		return []registry_payment_method.Model{}
+	}
+	return *m.RegistryPaymentMethods
 }
 func (m *Model) GetRegistrys() []registry.Model {
 	if m.Registrys == nil {

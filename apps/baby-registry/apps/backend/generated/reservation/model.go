@@ -10,6 +10,7 @@ import (
 
 type Model struct {
 	Id                 string
+	CartId             string
 	ContactEmail       string
 	Created            actor_trace.Model
 	ExpiresAt          time.Time
@@ -33,6 +34,13 @@ func (m *Model) ToMongoRecord(projection Projection) (MongoRecord, error) {
 			return r, errors.Join(errors.New("invalid m.Id"), err)
 		}
 		r.Id = &elemid0
+	}
+	if projection.CartId && m.CartId != "" {
+		elemcartId0, err := primitive.ObjectIDFromHex(m.CartId)
+		if err != nil {
+			return r, errors.Join(errors.New("invalid m.CartId"), err)
+		}
+		r.CartId = &elemcartId0
 	}
 	if projection.ContactEmail {
 		elemcontactEmail0 := m.ContactEmail
@@ -110,6 +118,10 @@ func (m *Model) ToHTTPRecord(projection Projection) (HTTPRecord, error) {
 		elemid0 := m.Id
 		r.Id = &elemid0
 	}
+	if projection.CartId && m.CartId != "" {
+		elemcartId0 := m.CartId
+		r.CartId = &elemcartId0
+	}
 	if projection.ContactEmail {
 		elemcontactEmail0 := m.ContactEmail
 		r.ContactEmail = &elemcontactEmail0
@@ -184,6 +196,11 @@ type WhereClause struct {
 	IdIn     *[]string
 	IdNin    *[]string
 	IdExists *bool
+	// cartId (Ref<Cart>) search options
+	CartIdEq     *string
+	CartIdIn     *[]string
+	CartIdNin    *[]string
+	CartIdExists *bool
 	// contactEmail (string) search options
 	ContactEmailEq     *string
 	ContactEmailNe     *string
@@ -332,6 +349,39 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 	if o.IdExists != nil {
 		elemidExists0 := o.IdExists
 		to.IdExists = elemidExists0
+	}
+	if o.CartIdEq != nil {
+		elemcartIdEq0, err := primitive.ObjectIDFromHex(*o.CartIdEq)
+		if err != nil {
+			return to, errors.Join(errors.New("invalid o.CartIdEq"), err)
+		}
+		to.CartIdEq = &elemcartIdEq0
+	}
+	if o.CartIdIn != nil {
+		elemcartIdIn0 := make([]primitive.ObjectID, 0)
+		for _, ocartIdIn0 := range *o.CartIdIn {
+			elemcartIdIn1, err := primitive.ObjectIDFromHex(ocartIdIn0)
+			if err != nil {
+				return to, errors.Join(errors.New("invalid ocartIdIn0"), err)
+			}
+			elemcartIdIn0 = append(elemcartIdIn0, elemcartIdIn1)
+		}
+		to.CartIdIn = &elemcartIdIn0
+	}
+	if o.CartIdNin != nil {
+		elemcartIdNin0 := make([]primitive.ObjectID, 0)
+		for _, ocartIdNin0 := range *o.CartIdNin {
+			elemcartIdNin1, err := primitive.ObjectIDFromHex(ocartIdNin0)
+			if err != nil {
+				return to, errors.Join(errors.New("invalid ocartIdNin0"), err)
+			}
+			elemcartIdNin0 = append(elemcartIdNin0, elemcartIdNin1)
+		}
+		to.CartIdNin = &elemcartIdNin0
+	}
+	if o.CartIdExists != nil {
+		elemcartIdExists0 := o.CartIdExists
+		to.CartIdExists = elemcartIdExists0
 	}
 	if o.ContactEmailEq != nil {
 		elemcontactEmailEq0 := o.ContactEmailEq
@@ -800,6 +850,7 @@ func (o WhereClause) ToMongoWhereClause() (MongoWhereClause, error) {
 }
 
 type SortParams struct {
+	CartId     int8
 	CreatedAt  int8
 	ExpiresAt  int8
 	ItemId     int8
@@ -809,6 +860,7 @@ type SortParams struct {
 
 func (s SortParams) ToMongoSortParams() MongoSortParams {
 	to := MongoSortParams{}
+	to.CartId = s.CartId
 	to.CreatedAt = s.CreatedAt
 	to.ExpiresAt = s.ExpiresAt
 	to.ItemId = s.ItemId

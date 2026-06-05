@@ -148,6 +148,48 @@ func currencyFromValue(v string) string {
 	}
 }
 
+// currencyFromAmazonHost maps an Amazon marketplace domain to its single
+// authoritative currency. Returns "" for non-Amazon or unknown TLDs.
+func currencyFromAmazonHost(host string) string {
+	host = strings.ToLower(strings.TrimSpace(host))
+	if !strings.Contains(host, "amazon.") {
+		return ""
+	}
+	suffixes := []struct {
+		tld      string
+		currency string
+	}{
+		{".co.uk", "GBP"},
+		{".com.au", "AUD"},
+		{".com.br", "BRL"},
+		{".com.mx", "MXN"},
+		{".com.tr", "TRY"},
+		{".com", "USD"},
+		{".ca", "CAD"},
+		{".de", "EUR"},
+		{".fr", "EUR"},
+		{".es", "EUR"},
+		{".it", "EUR"},
+		{".nl", "EUR"},
+		{".be", "EUR"},
+		{".ie", "EUR"},
+		{".pl", "PLN"},
+		{".se", "SEK"},
+		{".sg", "SGD"},
+		{".ae", "AED"},
+		{".sa", "SAR"},
+		{".in", "INR"},
+		{".jp", "JPY"},
+		{".cn", "CNY"},
+	}
+	for _, s := range suffixes {
+		if strings.HasSuffix(host, s.tld) {
+			return s.currency
+		}
+	}
+	return ""
+}
+
 func parseLargestImageFromDynamicAttr(raw string) string {
 	type dims []float64
 	var m map[string]dims

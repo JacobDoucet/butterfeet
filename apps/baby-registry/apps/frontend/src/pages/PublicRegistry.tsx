@@ -24,15 +24,18 @@ import {
   MenuItem,
   Tabs,
   Tab,
+  Fab,
+  Badge,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
+import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { pub, buyer, isGatedRegistry, type RegistryAccessRequestStatus } from '../api';
+import { pub, buyer, isGatedRegistry, formatPriceCents, publicPayments, exchangeRates, convertCents, type RegistryAccessRequestStatus, type PaymentMethod } from '../api';
 import { useSetActiveThemeColor } from '../activeTheme';
+import { useViewerCurrency } from '../viewerCurrency';
 import ItemCard from '../components/ItemCard';
-import RetailerReminderDialog from '../components/public/RetailerReminderDialog';
+import CartDrawer, { type CartLine } from '../components/public/CartDrawer';
 import BuyerVerifyGate from '../components/public/BuyerVerifyGate';
 import RegistryAccessGate from '../components/public/RegistryAccessGate';
 
@@ -48,6 +51,8 @@ function purchaseHref(item: ClickableItem | undefined | null): string | undefine
   return item.affiliateUrl || item.productUrl || undefined;
 }
 
+// detectViewerCurrency picks a sensible default display currency from the
+// browser locale, limited to the currencies we support. Falls back to USD.
 function trackPurchaseClick(item: ClickableItem | undefined | null) {
   if (!item || !item.id) return;
   try {
@@ -88,6 +93,44 @@ export default function PublicRegistry() {
 
   useSetActiveThemeColor(regQ.data?.themeColor);
 
+  const paymentMethodsQ = useQuery({
+    queryKey: ['public-payment-methods', slug],
+    queryFn: () => publicPayments.methods(slug),
+    enabled: verified && !!regQ.data && !isGatedRegistry(regQ.data),
+  });
+
+  const ratesQ = useQuery({
+    queryKey: ['exchange-rates'],
+    queryFn: () => exchangeRates.get(),
+    staleTime: 60 * 60 * 1000,
+    retry: false,
+  });
+
+  const { currency: viewerCurrency } = useViewerCurrency();
+
+  // displayPrice renders a price (stored in `cents` of `currency`) in the
+  // viewer's chosen currency. When the original already matches, or no rate is
+  // available, it returns the original formatting. The `approx` flag tells the
+  // caller whether the figure is a converted estimate (prefixed with "≈").
+  const displayPrice = (
+    cents?: number,
+    currency?: string,
+  ): { text: string; approx: boolean } | null => {
+    if (cents == null || Number.isNaN(cents)) return null;
+    const from = (currency || 'USD').toUpperCase();
+    if (from === viewerCurrency) {
+      const text = formatPriceCents(cents, from);
+      return text ? { text, approx: false } : null;
+    }
+    const converted = convertCents(cents, from, viewerCurrency, ratesQ.data);
+    if (converted == null) {
+      const text = formatPriceCents(cents, from);
+      return text ? { text, approx: false } : null;
+    }
+    const text = formatPriceCents(converted, viewerCurrency);
+    return text ? { text, approx: true } : null;
+  };
+
   const [target, setTarget] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
@@ -96,11 +139,9 @@ export default function PublicRegistry() {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('__all__');
   const [reservedId, setReservedId] = useState<string | null>(null);
-  const [retailerReminderOpen, setRetailerReminderOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [snack, setSnack] = useState<string | null>(null);
-  const [accessNote, setAccessNote] = useState('');
-  const [accessRequested, setAccessRequested] = useState(false);
+  const [snack, setSnack] = useState<{ msg: string; cart?: boolean } | null>(null);
   // Snapshot of the last opened target so the public Dialog stays
   // populated through its exit animation. Declared at the top to satisfy
   // React's rules of hooks (early returns happen further below).
@@ -111,8 +152,7 @@ export default function PublicRegistry() {
     remaining: number;
   } | null>(null);
   const modalPaperSx = {
-    height: '80vh',
-    maxHeight: '80vh',
+    maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
   } as const;
@@ -150,30 +190,18 @@ export default function PublicRegistry() {
         : reserveQtyMode === 'all'
         ? Math.max(1, (rootItem?.quantity || 1) - (rootItem?.reserved || 0))
         : 1;
-      return pub.reserve(effectiveId, { reserverName: name, isAnonymous: false, message, quantity: qty });
+      const reserverName = (name.trim() || meQ.data?.name?.trim() || meQ.data?.email || 'Guest');
+      return pub.reserve(effectiveId, { reserverName, isAnonymous: false, message, quantity: qty });
     },
-    onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: ['public', slug] });
-      if (res?.id) {
-        setReservedId(res.id);
-      }
-      setError(null);
-    },
-    onError: (err) => setError((err as Error).message),
-  });
-
-  const requestAddressM = useMutation({
-    mutationFn: () =>
-      pub.requestAddress({
-        slug,
-        itemId: target ?? undefined,
-        name: name.trim() || undefined,
-        note: accessNote.trim() || undefined,
-      }),
     onSuccess: () => {
-      setAccessRequested(true);
-      setAccessNote('');
-      setSnack("Request sent \u2014 we'll email you the address once the parents approve.");
+      qc.invalidateQueries({ queryKey: ['public', slug] });
+      setError(null);
+      setTarget(null);
+      setSelectedOptionId(null);
+      setMessage('');
+      setReserveQtyMode('one');
+      setReserveQty('1');
+      setSnack({ msg: 'Added to your cart — held for you for 24 hours.', cart: true });
     },
     onError: (err) => setError((err as Error).message),
   });
@@ -187,26 +215,16 @@ export default function PublicRegistry() {
     setError(null);
     setReserveQtyMode('one');
     setReserveQty('1');
-    setRetailerReminderOpen(false);
   };
 
-  const confirmRsvM = useMutation({
-    mutationFn: (id: string) => pub.confirmReservation(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['public', slug] });
-      setSnack('Thanks! Marked as purchased.');
-      resetReserveDialog();
-    },
-    onError: (err) => setSnack((err as Error).message),
-  });
   const cancelRsvM = useMutation({
     mutationFn: (id: string) => pub.cancelReservation(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['public', slug] });
-      setSnack("Reservation released \u2014 the gift is available again.");
+      setSnack({ msg: 'Removed from your cart \u2014 the gift is available again.' });
       resetReserveDialog();
     },
-    onError: (err) => setSnack((err as Error).message),
+    onError: (err) => setSnack({ msg: (err as Error).message }),
   });
 
   if (meQ.isLoading) {
@@ -255,6 +273,23 @@ export default function PublicRegistry() {
     const root = rootItemById[rsv.itemId];
     if (root) myReservationByRootId[root.id] = rsv;
   }
+  // Cart lines are the buyer's active reservations, joined with live item
+  // details so we can show images, prices, and retailer links in the cart.
+  const cartLines: CartLine[] = (reg.myReservations ?? []).map((rsv) => {
+    const it = itemById[rsv.itemId];
+    return {
+      reservationId: rsv.id,
+      itemId: rsv.itemId,
+      title: it?.title ?? rsv.itemTitle ?? 'Gift',
+      imageUrl: it?.imageUrl,
+      imageBgColor: it?.imageBgColor,
+      priceCents: it?.priceCents,
+      currency: it?.currency,
+      quantity: rsv.quantity || 1,
+      productUrl: it ? it.affiliateUrl || it.productUrl : undefined,
+      retailer: it?.retailer,
+    };
+  });
   const isClaimed = (rootId: string) => {
     const r = itemById[rootId];
     if (!r) return false;
@@ -267,8 +302,12 @@ export default function PublicRegistry() {
     return Math.max(0, (root.quantity || 1) - (root.reserved || 0)) === 0;
   };
   const sortedTopLevelItems = [...topLevelItems].sort((a, b) => {
-    const aClaimed = isItemClaimed(a);
-    const bClaimed = isItemClaimed(b);
+    // Items in the buyer's own cart should stay in place, not get pushed to the
+    // end like items claimed by others.
+    const aInCart = !!myReservationByRootId[(rootItemById[a.id] ?? a).id];
+    const bInCart = !!myReservationByRootId[(rootItemById[b.id] ?? b).id];
+    const aClaimed = isItemClaimed(a) && !aInCart;
+    const bClaimed = isItemClaimed(b) && !bInCart;
     if (aClaimed !== bClaimed) return aClaimed ? 1 : -1;
     return (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' });
   });
@@ -293,6 +332,19 @@ export default function PublicRegistry() {
     const myRsv = myReservationByRootId[root.id];
     const optionCount = options.length;
     const lowStock = !root.quantityUnlimited && remaining > 0 && remaining < (root.quantity || 1);
+    const optionPrices = options
+      .map((o) => o.priceCents)
+      .filter((p): p is number => p != null && p > 0);
+    const minPrice = optionPrices.length ? Math.min(...optionPrices) : null;
+    const maxPrice = optionPrices.length ? Math.max(...optionPrices) : null;
+    const priceCurrency = root.currency || options.find((o) => o.priceCents)?.currency;
+    const minPriceDisplay = minPrice != null ? displayPrice(minPrice, priceCurrency) : null;
+    const priceLabel =
+      minPriceDisplay != null
+        ? minPrice === maxPrice
+          ? minPriceDisplay.text
+          : `from ${minPriceDisplay.text}`
+        : null;
     const swatchImages = options
       .filter((o) => !!o.imageUrl)
       .slice(0, 4)
@@ -351,7 +403,8 @@ export default function PublicRegistry() {
           boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
         }}
       >
-        ❤ Held by you
+        <ShoppingCartOutlinedIcon sx={{ fontSize: '0.95rem', color: '#fff' }} />
+        In your cart
       </Box>
     ) : claimed ? (
       <Box
@@ -408,6 +461,21 @@ export default function PublicRegistry() {
           imageFilter={claimed && !myRsv ? 'grayscale(0.4)' : undefined}
           topLeftOverlay={topLeftOverlay}
           topRightOverlay={topRightOverlay}
+          belowTitle={
+            priceLabel ? (
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '1.05rem',
+                  color: claimed && !myRsv ? 'text.secondary' : 'text.primary',
+                  letterSpacing: '0.01em',
+                  mb: 0.5,
+                }}
+              >
+                {priceLabel}
+              </Typography>
+            ) : undefined
+          }
           footer={
             <>
               {it.source ? (
@@ -419,11 +487,11 @@ export default function PublicRegistry() {
               )}
               {myRsv ? (
                 <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600 }}>
-                  Manage →
+                  In cart · manage →
                 </Typography>
               ) : !claimed ? (
                 <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600 }}>
-                  Gift this →
+                  Add to cart →
                 </Typography>
               ) : null}
             </>
@@ -455,9 +523,6 @@ export default function PublicRegistry() {
   const targetRootItem = liveTargetRoot ?? targetSnapshotRef.current?.root ?? null;
   const targetOptions = (liveTargetRoot ? liveTargetOptions : targetSnapshotRef.current?.options) ?? [];
   const targetRemaining = liveTargetRoot ? liveTargetRemaining : targetSnapshotRef.current?.remaining ?? 0;
-  const hasShippingAddress = Boolean(
-    reg.shippingRecipientName || reg.shippingLine1 || reg.shippingCity || reg.shippingRegion || reg.shippingPostalCode || reg.shippingCountry,
-  );
 
   return (
     <Box
@@ -519,71 +584,42 @@ export default function PublicRegistry() {
       </Box>
 
       <Container maxWidth="lg" sx={{ pt: { xs: 1, md: 2 }, pb: { xs: 4, md: 6 } }}>
-        {(reg.myReservations ?? []).length > 0 && (
-          <Stack spacing={1.5} sx={{ mb: 3 }}>
-            {(reg.myReservations ?? []).map((rsv) => (
-              <Alert
-                key={rsv.id}
-                severity="info"
-                icon={false}
-                sx={{
-                  borderRadius: 3,
-                  bgcolor: 'primary.main',
-                  color: '#fff',
-                  '& .MuiAlert-message': { width: '100%' },
-                }}
+        {cartLines.length > 0 && (
+          <Stack sx={{ mb: 3 }}>
+            <Alert
+              severity="info"
+              icon={false}
+              sx={{
+                borderRadius: 3,
+                bgcolor: 'primary.main',
+                color: '#fff',
+                '& .MuiAlert-message': { width: '100%' },
+              }}
+            >
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1.5}
+                alignItems={{ xs: 'flex-start', sm: 'center' }}
+                justifyContent="space-between"
               >
-                <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
-                  spacing={1.5}
-                  alignItems={{ xs: 'flex-start', sm: 'center' }}
-                  justifyContent="space-between"
+                <Box sx={{ color: '#fff' }}>
+                  <Typography sx={{ fontWeight: 600, color: '#fff' }}>
+                    {cartLines.length} {cartLines.length === 1 ? 'gift is' : 'gifts are'} waiting in your cart
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)' }}>
+                    Held just for you — review and check out when you're ready.
+                  </Typography>
+                </Box>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => setCartOpen(true)}
+                  sx={{ bgcolor: '#fff', color: 'primary.main', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
                 >
-                  <Box sx={{ color: '#fff' }}>
-                    <Typography
-                      sx={{
-                        fontWeight: 600,
-                        color: '#fff',
-                        cursor: 'pointer',
-                        textDecoration: 'underline',
-                        textDecorationColor: 'rgba(255,255,255,0.4)',
-                      }}
-                      onClick={() => {
-                        if (rsv.itemId) {
-                          setTarget(rsv.itemId);
-                          setReservedId(rsv.id);
-                        }
-                      }}
-                    >
-                      Did you complete your purchase of {rsv.itemTitle || 'this gift'}?
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)' }}>
-                      Reserved {new Date(rsv.createdAt).toLocaleString()} · held until {new Date(rsv.expiresAt).toLocaleString()}
-                    </Typography>
-                  </Box>
-                  <Stack direction="row" spacing={1}>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      onClick={() => confirmRsvM.mutate(rsv.id)}
-                      disabled={confirmRsvM.isPending || cancelRsvM.isPending}
-                      sx={{ bgcolor: '#fff', color: 'primary.main', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
-                    >
-                      Yes, I bought it
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => cancelRsvM.mutate(rsv.id)}
-                      disabled={confirmRsvM.isPending || cancelRsvM.isPending}
-                      sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.7)', '&:hover': { borderColor: '#fff', bgcolor: 'rgba(255,255,255,0.08)' } }}
-                    >
-                      No, release it
-                    </Button>
-                  </Stack>
-                </Stack>
-              </Alert>
-            ))}
+                  Review cart
+                </Button>
+              </Stack>
+            </Alert>
           </Stack>
         )}
         {categories.length > 0 && (
@@ -709,19 +745,17 @@ export default function PublicRegistry() {
 
         <Dialog
           open={!!target || !!reservedId}
-          onClose={() => { if (!reservedId) setTarget(null); }}
+          onClose={() => { setReservedId(null); setTarget(null); }}
           scroll="paper"
           fullWidth
-          maxWidth="md"
+          maxWidth="sm"
           fullScreen={isMobile}
           TransitionProps={{
             onExited: () => {
               targetSnapshotRef.current = null;
-              setAccessRequested(false);
-              setAccessNote('');
             },
           }}
-          PaperProps={{ sx: { ...modalPaperSx, width: { xs: '100%', sm: 'min(960px, calc(100vw - 32px))' }, maxWidth: '100vw' } }}
+          PaperProps={{ sx: { ...modalPaperSx, width: { xs: '100%', sm: 480 }, maxWidth: '100vw' } }}
         >
           <DialogTitle sx={{ pb: 1, px: { xs: 2, sm: 3 }, pt: { xs: 1.5, sm: 2 } }}>
             {reservedId && (
@@ -759,6 +793,14 @@ export default function PublicRegistry() {
                   <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                     {targetOptions[0].title}
                   </Typography>
+                  {targetOptions[0].priceCents != null && (() => {
+                    const dp = displayPrice(targetOptions[0].priceCents, targetOptions[0].currency);
+                    return dp ? (
+                      <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                        {dp.approx ? `≈ ${dp.text}` : dp.text}
+                      </Typography>
+                    ) : null;
+                  })()}
                   {targetOptions[0].description && (
                     <Typography
                       variant="body2"
@@ -779,9 +821,21 @@ export default function PublicRegistry() {
                 </Stack>
               </Stack>
             ) : (
-              <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-                {targetRootItem?.title ?? 'Item details'}
-              </Typography>
+              <Stack spacing={0.5}>
+                <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                  {targetRootItem?.title ?? 'Item details'}
+                </Typography>
+                {(() => {
+                  const opt = itemById[selectedOptionId ?? target ?? ''] ?? targetOptions[0];
+                  if (opt?.priceCents == null) return null;
+                  const dp = displayPrice(opt.priceCents, opt.currency);
+                  return dp ? (
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                      {dp.approx ? `≈ ${dp.text}` : dp.text}
+                    </Typography>
+                  ) : null;
+                })()}
+              </Stack>
             )}
           </DialogTitle>
           <DialogContent
@@ -803,30 +857,13 @@ export default function PublicRegistry() {
                     sx={{ borderRadius: 2, bgcolor: 'primary.main', color: '#fff' }}
                   >
                     <Typography sx={{ fontWeight: 600, color: '#fff', mb: 0.5 }}>
-                      We're holding this for you for 24 hours.
+                      This gift is in your cart.
                     </Typography>
                     <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
-                      Finish checkout in the retailer tab we opened, then come back here and confirm.
-                      If you change your mind, release it so someone else can grab it.
+                      We're holding it for you for 24 hours. Head to your cart to review everything and
+                      check out, or remove it to make it available again.
                     </Typography>
                   </Alert>
-                  {hasShippingAddress ? (
-                    <Box sx={{ p: 2, borderRadius: 1, bgcolor: 'action.hover' }}>
-                      <Typography variant="overline" color="text.secondary">Ship it to</Typography>
-                      {reg.shippingRecipientName && <Typography>{reg.shippingRecipientName}</Typography>}
-                      {reg.shippingLine1 && <Typography>{reg.shippingLine1}</Typography>}
-                      {reg.shippingLine2 && <Typography>{reg.shippingLine2}</Typography>}
-                      {(reg.shippingCity || reg.shippingRegion || reg.shippingPostalCode) && (
-                        <Typography>{[reg.shippingCity, reg.shippingRegion, reg.shippingPostalCode].filter(Boolean).join(' ')}</Typography>
-                      )}
-                      {reg.shippingCountry && <Typography>{reg.shippingCountry}</Typography>}
-                      {reg.shippingDeliveryNotes && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>
-                          Note: {reg.shippingDeliveryNotes}
-                        </Typography>
-                      )}
-                    </Box>
-                  ) : null}
                   {(() => {
                     const effectiveOpt = itemById[selectedOptionId ?? target ?? ''] ?? targetOptions[0];
                     const href = purchaseHref(effectiveOpt);
@@ -837,7 +874,7 @@ export default function PublicRegistry() {
                         onClick={() => { window.open(href, '_blank', 'noopener,noreferrer'); trackPurchaseClick(effectiveOpt); }}
                         sx={{ alignSelf: 'flex-start' }}
                       >
-                        Reopen retailer
+                        View item at retailer
                       </Button>
                     );
                   })()}
@@ -965,76 +1002,10 @@ export default function PublicRegistry() {
                   />
                 ) : targetRemaining > 1 ? (
                   <Select value={reserveQtyMode} onChange={(e) => setReserveQtyMode(e.target.value as 'one' | 'all')}>
-                    <MenuItem value="one">Buy 1</MenuItem>
-                    <MenuItem value="all">Buy all remaining ({targetRemaining})</MenuItem>
+                    <MenuItem value="one">Add 1</MenuItem>
+                    <MenuItem value="all">Add all remaining ({targetRemaining})</MenuItem>
                   </Select>
                 ) : null}
-
-                {hasShippingAddress ? (
-                  <Box sx={{ p: 2, borderRadius: 1, bgcolor: 'action.hover' }}>
-                    <Typography variant="overline" color="text.secondary">Delivery address</Typography>
-                    {reg.shippingRecipientName && <Typography>{reg.shippingRecipientName}</Typography>}
-                    {reg.shippingLine1 && <Typography>{reg.shippingLine1}</Typography>}
-                    {reg.shippingLine2 && <Typography>{reg.shippingLine2}</Typography>}
-                    {(reg.shippingCity || reg.shippingRegion || reg.shippingPostalCode) && (
-                      <Typography>{[reg.shippingCity, reg.shippingRegion, reg.shippingPostalCode].filter(Boolean).join(' ')}</Typography>
-                    )}
-                    {reg.shippingCountry && <Typography>{reg.shippingCountry}</Typography>}
-                    {reg.shippingDeliveryNotes && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>
-                        Note: {reg.shippingDeliveryNotes}
-                      </Typography>
-                    )}
-                  </Box>
-                ) : (
-                  <Alert severity="warning" sx={{ '& .MuiAlert-message': { width: '100%' } }}>
-                    <Stack spacing={1.5}>
-                      <Box>
-                        Delivery address is protected and not shown on the public registry page.
-                        You can ask the parents to send it to you privately.
-                      </Box>
-                      {accessRequested ? (
-                        <Box sx={{ fontSize: 14, color: 'text.secondary' }}>
-                          Request sent. We'll email <strong>{meQ.data?.email}</strong> a private link
-                          as soon as the parents approve.
-                        </Box>
-                      ) : (
-                        <>
-                          <TextField
-                            size="small"
-                            label="Add a short note (optional)"
-                            placeholder="Example: For the Pottery Barn glider I'm shipping next week."
-                            value={accessNote}
-                            onChange={(e) => setAccessNote(e.target.value)}
-                            multiline
-                            minRows={2}
-                            fullWidth
-                          />
-                          <Box>
-                            <Button
-                              variant="contained"
-                              size="small"
-                              onClick={() => requestAddressM.mutate()}
-                              disabled={requestAddressM.isPending}
-                            >
-                              {requestAddressM.isPending ? 'Sending\u2026' : 'Request shipping address'}
-                            </Button>
-                          </Box>
-                        </>
-                      )}
-                    </Stack>
-                  </Alert>
-                )}
-
-                <TextField label="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
-                <TextField
-                  label="Message to the parents (optional)"
-                  placeholder="Example: Ordered from Amazon, arrives next Tuesday."
-                  multiline
-                  minRows={3}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                />
               </Stack>
               <Typography variant="caption" color="text.secondary">
                 Verified as <strong>{meQ.data?.email}</strong>. The parents will see this email so they can follow up.
@@ -1050,17 +1021,17 @@ export default function PublicRegistry() {
                 <Button
                   color="inherit"
                   onClick={() => cancelRsvM.mutate(reservedId)}
-                  disabled={confirmRsvM.isPending || cancelRsvM.isPending}
+                  disabled={cancelRsvM.isPending}
                 >
-                  Release reservation
+                  Remove from cart
                 </Button>
                 <Button
                   variant="contained"
-                  onClick={() => confirmRsvM.mutate(reservedId)}
-                  disabled={confirmRsvM.isPending || cancelRsvM.isPending}
+                  onClick={() => { resetReserveDialog(); setCartOpen(true); }}
+                  disabled={cancelRsvM.isPending}
                   sx={{ color: '#fff' }}
                 >
-                  I've bought this
+                  View cart
                 </Button>
               </>
             ) : (
@@ -1068,41 +1039,88 @@ export default function PublicRegistry() {
                 <Button onClick={() => setTarget(null)}>Cancel</Button>
                 <Button
                   variant="contained"
-                  onClick={() => {
-                    const effectiveOpt = itemById[selectedOptionId ?? target ?? ''] ?? targetOptions[0];
-                    const href = purchaseHref(effectiveOpt);
-                    if (href) {
-                      setRetailerReminderOpen(true);
-                    } else {
-                      reserveM.mutate();
-                    }
-                  }}
-                  disabled={!name.trim() || (!targetRootItem?.quantityUnlimited && targetRemaining <= 0) || reserveM.isPending}
+                  onClick={() => reserveM.mutate()}
+                  disabled={(!targetRootItem?.quantityUnlimited && targetRemaining <= 0) || reserveM.isPending}
                   sx={{ color: '#fff' }}
+                  startIcon={<ShoppingCartOutlinedIcon />}
                 >
-                  {purchaseHref(targetRootItem ?? undefined) ? 'Reserve & continue to retailer' : 'Reserve this gift'}
+                  {reserveM.isPending ? 'Adding\u2026' : 'Add to cart'}
                 </Button>
               </>
             )}
           </DialogActions>
         </Dialog>
 
-        <Snackbar open={!!snack} autoHideDuration={4000} onClose={() => setSnack(null)} message={snack ?? ''} />
-
-        <RetailerReminderDialog
-          open={retailerReminderOpen}
-          onClose={() => setRetailerReminderOpen(false)}
-          onConfirm={() => {
-            const effectiveOpt = itemById[selectedOptionId ?? target ?? ''] ?? targetOptions[0];
-            const href = purchaseHref(effectiveOpt);
-            if (href) {
-              window.open(href, '_blank', 'noopener,noreferrer');
-              if (effectiveOpt) trackPurchaseClick(effectiveOpt);
-            }
-            setRetailerReminderOpen(false);
-            reserveM.mutate();
-          }}
+        <Snackbar
+          open={!!snack}
+          autoHideDuration={4000}
+          onClose={() => setSnack(null)}
+          message={snack?.msg ?? ''}
+          action={
+            snack?.cart ? (
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setSnack(null);
+                  setCartOpen(true);
+                }}
+              >
+                View cart
+              </Button>
+            ) : undefined
+          }
         />
+
+        <CartDrawer
+          open={cartOpen}
+          onClose={() => setCartOpen(false)}
+          lines={cartLines}
+          buyerEmail={meQ.data?.email ?? ''}
+          onRemove={(id) => cancelRsvM.mutate(id)}
+          removingId={cancelRsvM.isPending ? (cancelRsvM.variables as string) : null}
+          onContinueShopping={() => setCartOpen(false)}
+          paymentMethods={(paymentMethodsQ.data as PaymentMethod[] | undefined) ?? []}
+          onCreatePaymentIntent={async (methodId) => {
+            const created = await publicPayments.createIntent(slug, methodId);
+            qc.invalidateQueries({ queryKey: ['public', slug] });
+            return created;
+          }}
+          onClaimPayment={async (paymentId, msg) => {
+            await publicPayments.claim(paymentId, slug, msg);
+            qc.invalidateQueries({ queryKey: ['public', slug] });
+          }}
+          onCancelPaymentIntent={async (paymentId) => {
+            await publicPayments.cancel(paymentId, slug);
+            qc.invalidateQueries({ queryKey: ['public', slug] });
+          }}
+          onViewProduct={(line) => {
+            if (!line.productUrl) return;
+            window.open(line.productUrl, '_blank', 'noopener,noreferrer');
+            trackPurchaseClick({ id: line.itemId, productUrl: line.productUrl, retailer: line.retailer });
+          }}
+          viewerCurrency={viewerCurrency}
+          rates={ratesQ.data}
+        />
+
+        {cartLines.length > 0 && (
+          <Fab
+            color="primary"
+            aria-label="Open cart"
+            onClick={() => setCartOpen(true)}
+            sx={{
+              position: 'fixed',
+              bottom: { xs: 20, md: 32 },
+              right: { xs: 20, md: 32 },
+              color: '#fff',
+              zIndex: (t) => t.zIndex.drawer - 1,
+            }}
+          >
+            <Badge badgeContent={cartLines.length} color="error" overlap="circular">
+              <ShoppingCartOutlinedIcon />
+            </Badge>
+          </Fab>
+        )}
       </Container>
     </Box>
   );

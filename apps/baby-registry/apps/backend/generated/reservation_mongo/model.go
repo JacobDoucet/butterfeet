@@ -1,6 +1,7 @@
 package reservation_mongo
 
 import (
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/cart"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_item"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/reservation"
@@ -8,6 +9,7 @@ import (
 
 type Model struct {
 	reservation.MongoRecord `bson:",inline"`
+	Cart                    *cart.MongoRecord          `bson:"Cart,omitempty"`
 	Item                    *registry_item.MongoRecord `bson:"Item,omitempty"`
 	Registry                *registry.MongoRecord      `bson:"Registry,omitempty"`
 }

@@ -13,6 +13,7 @@ enums:
     type: string
     values:
       - Reserved
+      - AwaitingConfirmation
       - Purchased
       - Received
       - Cancelled
@@ -46,3 +47,21 @@ enums:
       - AutoApproved
       - Rejected
       - Blocked
+
+  - name: PaymentMethodType
+    type: string
+    values:
+      - PayPal
+      - Revolut
+      - Wise
+      - InteracETransfer
+      - BankTransfer
+      - Other
+
+  - name: CartStatus
+    type: string
+    values:
+      - Pending
+      - AwaitingConfirmation
+      - Completed
+      - Rejected

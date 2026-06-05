@@ -8,6 +8,7 @@ import { ActorCanAccessFunc } from './actor';
 type canAccessReservation<T = Reservation> = ActorCanAccessFunc<T> & {
     field: {
         id: ActorCanAccessFunc<Reservation>;
+        cartId: ActorCanAccessFunc<Reservation>;
         contactEmail: ActorCanAccessFunc<Reservation>; 
         created: ReturnType<typeof NewCanReadActorTrace<Reservation>>,
         expiresAt: ActorCanAccessFunc<Reservation>;
@@ -60,6 +61,7 @@ export function NewCanReadReservation<T = Reservation>(canAccessObj: ActorCanAcc
         {
             field: {
                 id: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
+                cartId: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 contactEmail: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 created:  NewCanReadActorTrace( (_actorRoles: ActorRole[], _obj?: Reservation) =>  true),
                 expiresAt: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
@@ -86,6 +88,7 @@ export function NewCanWriteReservation<T = Reservation>(canAccessObj: ActorCanAc
         {
             field: {
                 id: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
+                cartId: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 contactEmail: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
                 created:  NewCanWriteActorTrace( (_actorRoles: ActorRole[], _obj?: Reservation) =>  true),
                 expiresAt: (_actorRoles: ActorRole[], _obj?: Reservation) =>  true,
