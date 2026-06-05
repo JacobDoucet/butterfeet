@@ -1,6 +1,6 @@
-// Refetches prices for the Amazon items in a single registry and saves
-// them back to each RegistryItem (priceCents + currency). Intended to be
-// run from inside the backend container on the prod droplet, where
+// Refetches prices for the supported items in a single registry and saves
+// them back to each RegistryItem (priceCents + currency + source). Intended to
+// be run from inside the backend container on the prod droplet, where
 // MONGO_URI is already set, so there's no build/deploy step:
 //
 //	go run ./cmd/refetch-prices -slug <registry-slug>            # dry run
@@ -31,6 +31,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/api"
+	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/enum_item_source"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/permissions"
 	"github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry"
 	registryapi "github.com/butterfeetlabs/baby-registry/apps/backend/generated/registry_api"
@@ -133,13 +134,18 @@ func main() {
 		if newCurrency == "" {
 			newCurrency = item.Currency
 		}
+		newSource := strings.TrimSpace(res.Source)
+		if newSource == "" || newSource == "Other" {
+			newSource = string(item.Source)
+		}
 
-		fmt.Printf("[%s] %s\n  old=%d %s -> new=%d %s\n",
-			item.Id, productURL, item.PriceCents, item.Currency, newCents, newCurrency)
+		fmt.Printf("[%s] %s\n  old=%d %s (%s) -> new=%d %s (%s)\n",
+			item.Id, productURL, item.PriceCents, item.Currency, item.Source, newCents, newCurrency, newSource)
 
 		if *apply {
 			item.PriceCents = newCents
 			item.Currency = newCurrency
+			item.Source = enum_item_source.Value(newSource)
 			if _, _, err := apiClient.RegistryItem().Update(bgCtx, super, item, registry_item.NewProjection(true)); err != nil {
 				failed++
 				log.Error().Err(err).Str("itemId", item.Id).Msg("update failed")
