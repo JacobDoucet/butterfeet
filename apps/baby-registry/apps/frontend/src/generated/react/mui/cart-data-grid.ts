@@ -2386,16 +2386,8 @@ export const CartMethodTypeDataGridColumnKey = 'methodType' as const;
 export function useCartMethodTypeDataGridColumn(options: CartMethodTypeDataGridColumnOptions) { 
     const values = useMemo(() => [
             {
-                value: 'PayPal',
-                label: options.getOptionLabel('PayPal'),
-            },
-            {
-                value: 'Revolut',
-                label: options.getOptionLabel('Revolut'),
-            },
-            {
-                value: 'Wise',
-                label: options.getOptionLabel('Wise'),
+                value: 'PaymentLink',
+                label: options.getOptionLabel('PaymentLink'),
             },
             {
                 value: 'InteracETransfer',
@@ -2404,10 +2396,6 @@ export function useCartMethodTypeDataGridColumn(options: CartMethodTypeDataGridC
             {
                 value: 'BankTransfer',
                 label: options.getOptionLabel('BankTransfer'),
-            },
-            {
-                value: 'Other',
-                label: options.getOptionLabel('Other'),
             },
     ], [options.getOptionLabel]);
 

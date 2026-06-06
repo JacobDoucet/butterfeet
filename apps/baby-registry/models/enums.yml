@@ -51,12 +51,9 @@ enums:
   - name: PaymentMethodType
     type: string
     values:
-      - PayPal
-      - Revolut
-      - Wise
+      - PaymentLink
       - InteracETransfer
       - BankTransfer
-      - Other
 
   - name: CartStatus
     type: string

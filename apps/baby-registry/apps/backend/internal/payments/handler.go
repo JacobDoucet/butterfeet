@@ -453,18 +453,12 @@ func (h *Handler) requireRegistry(ctx context.Context, actor permissions.Actor, 
 
 func parseMethodType(raw string) (enum_payment_method_type.Value, bool) {
 	switch enum_payment_method_type.Value(strings.TrimSpace(raw)) {
-	case enum_payment_method_type.PayPal:
-		return enum_payment_method_type.PayPal, true
-	case enum_payment_method_type.Revolut:
-		return enum_payment_method_type.Revolut, true
-	case enum_payment_method_type.Wise:
-		return enum_payment_method_type.Wise, true
+	case enum_payment_method_type.PaymentLink:
+		return enum_payment_method_type.PaymentLink, true
 	case enum_payment_method_type.InteracETransfer:
 		return enum_payment_method_type.InteracETransfer, true
 	case enum_payment_method_type.BankTransfer:
 		return enum_payment_method_type.BankTransfer, true
-	case enum_payment_method_type.Other:
-		return enum_payment_method_type.Other, true
 	default:
 		return "", false
 	}

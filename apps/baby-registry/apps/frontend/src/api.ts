@@ -401,20 +401,14 @@ export const shippingShare = {
 // ---------------------------------------------------------------------------
 
 export type PaymentMethodType =
-  | 'PayPal'
-  | 'Revolut'
-  | 'Wise'
+  | 'PaymentLink'
   | 'InteracETransfer'
-  | 'BankTransfer'
-  | 'Other';
+  | 'BankTransfer';
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethodType, string> = {
-  PayPal: 'PayPal',
-  Revolut: 'Revolut',
-  Wise: 'Wise',
+  PaymentLink: 'Payment link',
   InteracETransfer: 'Interac e-Transfer',
   BankTransfer: 'Bank transfer',
-  Other: 'Other',
 };
 
 export interface PaymentMethod {

@@ -33,23 +33,70 @@ import {
 } from '../../api';
 
 const METHOD_TYPES: PaymentMethodType[] = [
-  'PayPal',
-  'Revolut',
-  'Wise',
+  'PaymentLink',
   'InteracETransfer',
   'BankTransfer',
-  'Other',
 ];
+
+// Which detail fields are relevant for each payment method. Fields not listed
+// here are hidden in the editor and cleared when switching to that method, so
+// guests only ever see the inputs that make sense (e.g. email/phone only for
+// Interac e-Transfer, bank details only for a bank transfer).
+type MethodFields = {
+  url?: boolean;
+  email?: boolean;
+  phone?: boolean;
+  bank?: boolean;
+};
+
+const METHOD_FIELDS: Record<PaymentMethodType, MethodFields> = {
+  PaymentLink: { url: true },
+  InteracETransfer: { email: true, phone: true },
+  BankTransfer: { bank: true },
+};
+
+function showsPaymentUrl(type: PaymentMethodType): boolean {
+  return !!METHOD_FIELDS[type].url;
+}
+
+// The payment link is the only way to pay for a payment-link method, so it's
+// required there.
+function requiresPaymentUrl(type: PaymentMethodType): boolean {
+  return type === 'PaymentLink';
+}
+
+function showsContactFields(type: PaymentMethodType): boolean {
+  return !!METHOD_FIELDS[type].email || !!METHOD_FIELDS[type].phone;
+}
 
 // Banking detail fields are only meaningful for bank-style transfers.
 function showsBankFields(type: PaymentMethodType): boolean {
-  return type === 'BankTransfer' || type === 'InteracETransfer' || type === 'Other';
+  return !!METHOD_FIELDS[type].bank;
+}
+
+// clearedForType blanks out any draft fields that aren't relevant for the given
+// method type, so switching methods doesn't leave stale values behind.
+function clearedForType(draft: MethodDraft, type: PaymentMethodType): MethodDraft {
+  const fields = METHOD_FIELDS[type];
+  return {
+    ...draft,
+    type,
+    paymentUrl: fields.url ? draft.paymentUrl : '',
+    recipientEmail: fields.email ? draft.recipientEmail : '',
+    recipientPhone: fields.phone ? draft.recipientPhone : '',
+    bankName: fields.bank ? draft.bankName : '',
+    bankAccountName: fields.bank ? draft.bankAccountName : '',
+    bankAccountNumber: fields.bank ? draft.bankAccountNumber : '',
+    bankRoutingNumber: fields.bank ? draft.bankRoutingNumber : '',
+    bankIban: fields.bank ? draft.bankIban : '',
+    bankSwift: fields.bank ? draft.bankSwift : '',
+  };
 }
 
 type MethodDraft = Partial<PaymentMethod> & { type: PaymentMethodType };
 
 function emptyDraft(): MethodDraft {
-  return { type: 'PayPal', enabled: true };
+  return { type: 'PaymentLink', enabled: true };
 }
 
 export default function PaymentsPanel({ reg }: { reg: Registry }) {
@@ -225,7 +272,7 @@ function MethodDialog({
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Select
             value={draft.type}
-            onChange={(e) => set({ type: e.target.value as PaymentMethodType })}
+            onChange={(e) => setDraft(clearedForType(draft, e.target.value as PaymentMethodType))}
             fullWidth
           >
             {METHOD_TYPES.map((t) => (
@@ -247,22 +294,33 @@ function MethodDialog({
             minRows={2}
             helperText="e.g. Send as Friends & Family and add the reference code in the note."
           />
-          <TextField
-            label="Payment link (optional)"
-            value={draft.paymentUrl ?? ''}
-            onChange={(e) => set({ paymentUrl: e.target.value })}
-            placeholder="https://paypal.me/…"
-          />
-          <TextField
-            label="Recipient email (optional)"
-            value={draft.recipientEmail ?? ''}
-            onChange={(e) => set({ recipientEmail: e.target.value })}
-          />
-          <TextField
-            label="Recipient phone (optional)"
-            value={draft.recipientPhone ?? ''}
-            onChange={(e) => set({ recipientPhone: e.target.value })}
-          />
+          {showsPaymentUrl(draft.type) && (
+            <TextField
+              label={requiresPaymentUrl(draft.type) ? 'Payment link' : 'Payment link (optional)'}
+              required={requiresPaymentUrl(draft.type)}
+              value={draft.paymentUrl ?? ''}
+              onChange={(e) => set({ paymentUrl: e.target.value })}
+              placeholder="https://paypal.me/… or wise.com/pay/me/…"
+            />
+          )}
+          {showsContactFields(draft.type) && (
+            <>
+              {METHOD_FIELDS[draft.type].email && (
+                <TextField
+                  label="Recipient email"
+                  value={draft.recipientEmail ?? ''}
+                  onChange={(e) => set({ recipientEmail: e.target.value })}
+                />
+              )}
+              {METHOD_FIELDS[draft.type].phone && (
+                <TextField
+                  label="Recipient phone"
+                  value={draft.recipientPhone ?? ''}
+                  onChange={(e) => set({ recipientPhone: e.target.value })}
+                />
+              )}
+            </>
+          )}
           {showsBankFields(draft.type) && (
             <>
               <Divider>Bank details</Divider>
@@ -283,7 +341,12 @@ function MethodDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={onSave} disabled={saving} sx={{ color: '#fff' }}>
+        <Button
+          variant="contained"
+          onClick={onSave}
+          disabled={saving || (requiresPaymentUrl(draft.type) && !draft.paymentUrl?.trim())}
+          sx={{ color: '#fff' }}
+        >
           {editing ? 'Save' : 'Add method'}
         </Button>
       </DialogActions>

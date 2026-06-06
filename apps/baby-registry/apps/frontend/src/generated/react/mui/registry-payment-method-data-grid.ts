@@ -2890,16 +2890,8 @@ export const RegistryPaymentMethodTypeDataGridColumnKey = 'type' as const;
 export function useRegistryPaymentMethodTypeDataGridColumn(options: RegistryPaymentMethodTypeDataGridColumnOptions) { 
     const values = useMemo(() => [
             {
-                value: 'PayPal',
-                label: options.getOptionLabel('PayPal'),
-            },
-            {
-                value: 'Revolut',
-                label: options.getOptionLabel('Revolut'),
-            },
-            {
-                value: 'Wise',
-                label: options.getOptionLabel('Wise'),
+                value: 'PaymentLink',
+                label: options.getOptionLabel('PaymentLink'),
             },
             {
                 value: 'InteracETransfer',
@@ -2908,10 +2900,6 @@ export function useRegistryPaymentMethodTypeDataGridColumn(options: RegistryPaym
             {
                 value: 'BankTransfer',
                 label: options.getOptionLabel('BankTransfer'),
-            },
-            {
-                value: 'Other',
-                label: options.getOptionLabel('Other'),
             },
     ], [options.getOptionLabel]);
 
