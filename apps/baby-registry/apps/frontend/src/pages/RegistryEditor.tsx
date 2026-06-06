@@ -74,7 +74,7 @@ function priceToCents(raw: string): number {
 export default function RegistryEditor() {
   const { slug = '' } = useParams();
   const qc = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'items' | 'to-review' | 'completed' | 'details' | 'payments' | 'access'>('items');
+  const [activeTab, setActiveTab] = useState<'items' | 'held' | 'to-review' | 'completed' | 'details' | 'payments' | 'access'>('items');
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [csvImportSnack, setCsvImportSnack] = useState<string | null>(null);
   const [itemSearch, setItemSearch] = useState('');
@@ -528,6 +528,7 @@ export default function RegistryEditor() {
           scrollButtons="auto"
         >
           <Tab value="items" label="Items" />
+          <Tab value="held" label="Held" />
           <Tab value="to-review" label="To review" />
           <Tab value="completed" label="Completed" />
           <Tab value="payments" label="Payments" />
@@ -545,6 +546,7 @@ export default function RegistryEditor() {
       {activeTab === 'details' && <BasicInfoPanel reg={reg} />}
       {activeTab === 'payments' && <PaymentsPanel reg={reg} />}
       {activeTab === 'access' && <PrivacyPanel reg={reg} section="access" />}
+      {activeTab === 'held' && <CartsPanel reg={reg} mode="held" />}
       {activeTab === 'to-review' && <CartsPanel reg={reg} mode="to-review" />}
       {activeTab === 'completed' && <CartsPanel reg={reg} mode="completed" />}
 

@@ -12,17 +12,24 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { payments, formatPriceCents, type Registry, type Cart } from '../../api';
 
-type Mode = 'to-review' | 'completed';
+type Mode = 'held' | 'to-review' | 'completed';
 
-// CartsPanel renders the owner's cart-review surface. In "to-review" mode it
-// lists carts a guest has marked as paid (AwaitingConfirmation) with
-// approve/reject actions. In "completed" mode it lists carts the owner has
-// already confirmed.
+const HEADINGS: Record<Mode, string> = {
+  held: 'Held carts',
+  'to-review': 'To review',
+  completed: 'Completed',
+};
+
+// CartsPanel renders the owner's cart surfaces. In "held" mode it lists carts a
+// guest has started but not yet marked as paid (Pending), with a delete action
+// to free up abandoned/stuck holds. In "to-review" mode it lists carts a guest
+// has marked as paid (AwaitingConfirmation) with approve/reject actions. In
+// "completed" mode it lists carts the owner has already confirmed.
 export default function CartsPanel({ reg, mode }: { reg: Registry; mode: Mode }) {
   const qc = useQueryClient();
-  // "To review" surfaces carts a guest has locked in (Pending = mid-flow, money
-  // not yet marked sent; AwaitingConfirmation = guest says they've paid).
-  const status = mode === 'to-review' ? 'Pending,AwaitingConfirmation' : 'Completed';
+  // Each surface maps to a cart status: Pending = guest mid-flow (held);
+  // AwaitingConfirmation = guest says they've paid; Completed = owner confirmed.
+  const status = mode === 'held' ? 'Pending' : mode === 'to-review' ? 'AwaitingConfirmation' : 'Completed';
 
   const cartsQ = useQuery({
     queryKey: ['carts', reg.id, status],
@@ -43,15 +50,31 @@ export default function CartsPanel({ reg, mode }: { reg: Registry; mode: Mode })
     mutationFn: (id: string) => payments.reject(id),
     onSuccess: invalidate,
   });
+  const deleteM = useMutation({
+    mutationFn: (id: string) => payments.deleteCart(id),
+    onSuccess: invalidate,
+  });
 
   const carts = cartsQ.data ?? [];
-  const busy = approveM.isPending || rejectM.isPending;
+  const busy = approveM.isPending || rejectM.isPending || deleteM.isPending;
+
+  const emptyText =
+    mode === 'held'
+      ? 'No carts are currently being held.'
+      : mode === 'to-review'
+        ? 'No payments are waiting for your review.'
+        : 'No confirmed payments yet.';
 
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h6">{mode === 'to-review' ? 'To review' : 'Completed'}</Typography>
-        {mode === 'to-review' ? (
+        <Typography variant="h6">{HEADINGS[mode]}</Typography>
+        {mode === 'held' ? (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Gifts guests are holding while they pay, but haven't yet marked as sent. Deleting a cart
+            frees its gifts so other guests can claim them.
+          </Typography>
+        ) : mode === 'to-review' ? (
           <Alert severity="warning" sx={{ mt: 1 }}>
             Only approve a payment after you have confirmed the money has arrived. Rejecting frees
             the gifts so other guests can claim them.
@@ -69,9 +92,7 @@ export default function CartsPanel({ reg, mode }: { reg: Registry; mode: Mode })
         </Box>
       ) : carts.length === 0 ? (
         <Typography variant="body2" color="text.secondary">
-          {mode === 'to-review'
-            ? 'No payments are waiting for your review.'
-            : 'No confirmed payments yet.'}
+          {emptyText}
         </Typography>
       ) : (
         <Stack spacing={1.5}>
@@ -83,6 +104,7 @@ export default function CartsPanel({ reg, mode }: { reg: Registry; mode: Mode })
               busy={busy}
               onApprove={() => approveM.mutate(c.id)}
               onReject={() => rejectM.mutate(c.id)}
+              onDelete={() => deleteM.mutate(c.id)}
             />
           ))}
         </Stack>
@@ -97,12 +119,14 @@ function CartCard({
   busy,
   onApprove,
   onReject,
+  onDelete,
 }: {
   cart: Cart;
   mode: Mode;
   busy: boolean;
   onApprove: () => void;
   onReject: () => void;
+  onDelete: () => void;
 }) {
   return (
     <Card variant="outlined">
@@ -120,6 +144,9 @@ function CartCard({
           </Box>
           <Stack spacing={0.5} alignItems="flex-end">
             <Chip size="small" label={cart.referenceCode} />
+            {mode === 'held' && (
+              <Chip size="small" variant="outlined" label="Awaiting payment" />
+            )}
             {mode === 'to-review' &&
               (cart.status === 'AwaitingConfirmation' ? (
                 <Chip size="small" color="warning" label="Says they've paid" />
@@ -130,14 +157,17 @@ function CartCard({
         </Stack>
 
         {cart.items.length > 0 && (
-          <Stack spacing={0.25} sx={{ mt: 1.5 }}>
+          <Box
+            component="ul"
+            sx={{ mt: 1.5, mb: 0, pl: 3, display: 'flex', flexDirection: 'column', gap: 0.25 }}
+          >
             {cart.items.map((it) => (
-              <Typography key={it.reservationId} variant="body2">
+              <Typography key={it.reservationId} component="li" variant="body2">
                 {it.quantity}× {it.title}
                 {it.priceCents ? ` — ${formatPriceCents(it.priceCents, it.currency)}` : ''}
               </Typography>
             ))}
-          </Stack>
+          </Box>
         )}
 
         {cart.message && (
@@ -170,6 +200,14 @@ function CartCard({
             </Button>
             <Button variant="outlined" color="error" disabled={busy} onClick={onReject}>
               Reject
+            </Button>
+          </Stack>
+        )}
+
+        {mode === 'held' && (
+          <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+            <Button variant="outlined" color="error" disabled={busy} onClick={onDelete}>
+              Delete cart
             </Button>
           </Stack>
         )}

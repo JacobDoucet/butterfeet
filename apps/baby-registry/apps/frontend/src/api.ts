@@ -470,6 +470,7 @@ export const payments = {
   approve: (id: string) => api.post<Cart>(`/api/payments/carts/${id}/approve`, {}),
   reject: (id: string, reason?: string) =>
     api.post<Cart>(`/api/payments/carts/${id}/reject`, { reason }),
+  deleteCart: (id: string) => api.post<{ ok: boolean }>(`/api/payments/carts/${id}/delete`, {}),
 };
 
 // Public (contributor-facing) payment helpers.

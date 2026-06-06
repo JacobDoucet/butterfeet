@@ -135,6 +135,7 @@ func (h *Handler) handleMethodById(w http.ResponseWriter, r *http.Request) {
 //
 //	POST /carts/{id}/approve
 //	POST /carts/{id}/reject
+//	POST /carts/{id}/delete
 func (h *Handler) handleCartById(w http.ResponseWriter, r *http.Request) {
 	rest := strings.TrimPrefix(r.URL.Path, "/carts/")
 	parts := strings.Split(strings.Trim(rest, "/"), "/")
@@ -161,6 +162,18 @@ func (h *Handler) handleCartById(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		writeJSONError(w, http.StatusNotFound, "cart not found")
+		return
+	}
+
+	// Deleting a held/in-progress cart frees its gifts and removes the cart
+	// entirely, so an abandoned or stuck cart no longer ties up items.
+	if action == "delete" {
+		h.setCartReservations(r.Context(), actor, current.Model.Id, enum_reservation_status.Cancelled)
+		if err := h.client.Cart().Delete(r.Context(), actor, cartId); err != nil {
+			writeJSONError(w, http.StatusForbidden, "could not delete")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 		return
 	}
 
