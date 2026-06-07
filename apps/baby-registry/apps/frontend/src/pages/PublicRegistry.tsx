@@ -607,14 +607,9 @@ export default function PublicRegistry() {
             >
               {reg.title}
             </Typography>
-            {reg.parentNames && (
+            {(reg.welcomeMessage?.trim() || reg.parentNames) && (
               <Typography variant="subtitle1" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.75rem' }}>
-                with love, for {reg.parentNames}
-              </Typography>
-            )}
-            {reg.welcomeMessage && (
-              <Typography sx={{ mt: 2, maxWidth: 640, color: 'text.secondary', lineHeight: 1.6 }}>
-                {reg.welcomeMessage}
+                {reg.welcomeMessage?.trim() || `with love, for ${reg.parentNames}`}
               </Typography>
             )}
           </Stack>

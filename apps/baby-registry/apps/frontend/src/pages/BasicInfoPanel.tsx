@@ -65,9 +65,8 @@ export default function BasicInfoPanel({ reg }: { reg: Registry }) {
             label="Welcome message"
             value={welcomeMessage}
             onChange={(e) => setWelcomeMessage(e.target.value)}
-            multiline
-            minRows={3}
-            helperText="Shown at the top of your public registry page."
+            placeholder={parentNames.trim() ? `with love, for ${parentNames.trim()}` : 'with love, for ...'}
+            helperText="Shown at the top of your public registry page. Leave blank to use the default shown."
           />
         </Stack>
       </Box>
