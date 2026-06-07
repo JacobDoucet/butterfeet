@@ -350,6 +350,18 @@ func (h *Handler) handlePaymentRoute(w http.ResponseWriter, r *http.Request) {
 	switch action {
 	case "claim":
 		if current.Model.Status == enum_cart_status.Pending {
+			// Lock in the amount from the gifts the cart still holds, in case
+			// some were released after the cart was created (which would leave
+			// the stored amount stale). The owner reviews this total.
+			itemsByID := h.loadItemsByRegistry(r, super, current.Model.RegistryId)
+			lines := h.cartLineItems(r.Context(), super, current.Model.Id, itemsByID)
+			sum := 0
+			for _, l := range lines {
+				sum += l.PriceCents * l.Quantity
+			}
+			if sum > 0 {
+				current.Model.AmountCents = sum
+			}
 			current.Model.Status = enum_cart_status.AwaitingConfirmation
 			current.Model.ClaimedAt = time.Now().UTC()
 			if msg := strings.TrimSpace(body.Message); msg != "" {

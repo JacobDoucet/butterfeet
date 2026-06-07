@@ -21,6 +21,7 @@ import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   formatPriceCents,
   convertCents,
@@ -28,6 +29,7 @@ import {
   type PaymentMethod,
   type PaymentIntent,
   type ExchangeRates,
+  type MyCart,
 } from '../../api';
 
 export interface CartLine {
@@ -58,6 +60,9 @@ interface CartDrawerProps {
   onCancelPaymentIntent?: (paymentId: string) => Promise<void>;
   viewerCurrency?: string;
   rates?: ExchangeRates;
+  heldCart?: MyCart;
+  heldCartMethod?: PaymentMethod;
+  heldCartLines?: CartLine[];
 }
 
 type Step = 'cart' | 'checkout' | 'pay' | 'done';
@@ -77,6 +82,9 @@ export default function CartDrawer({
   onCancelPaymentIntent,
   viewerCurrency,
   rates,
+  heldCart,
+  heldCartMethod,
+  heldCartLines,
 }: CartDrawerProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -86,6 +94,16 @@ export default function CartDrawer({
   const [payError, setPayError] = useState<string | null>(null);
   const [creatingIntent, setCreatingIntent] = useState(false);
   const [claiming, setClaiming] = useState(false);
+  // Snapshot of the cart lines taken when payment starts. During the pay step
+  // the gifts are locked into the cart so `lines` is empty, but we still want
+  // to show the guest the same cart list they were paying for.
+  const [payLines, setPayLines] = useState<CartLine[]>([]);
+  // When resuming a previously-held cart, the payment method may no longer be
+  // in the enabled list, so we keep a direct reference. `resuming` also tells
+  // the back action to leave the cart held rather than cancelling it.
+  const [resumeMethod, setResumeMethod] = useState<PaymentMethod | null>(null);
+  const [resuming, setResuming] = useState(false);
+  const [cancellingHeld, setCancellingHeld] = useState(false);
 
   const enabledMethods = useMemo(
     () => paymentMethods.filter((m) => m.enabled !== false),
@@ -102,6 +120,8 @@ export default function CartDrawer({
       setStep('cart');
       setIntent(null);
       setPayError(null);
+      setResuming(false);
+      setResumeMethod(null);
     }
   }, [open]);
 
@@ -129,6 +149,7 @@ export default function CartDrawer({
     setCreatingIntent(true);
     try {
       const created = await onCreatePaymentIntent(selectedMethod.id);
+      setPayLines(lines);
       setIntent(created);
       setStep('pay');
     } catch (err) {
@@ -153,8 +174,16 @@ export default function CartDrawer({
   };
 
   // Backing out of the pay step releases the locked gifts so they return to
-  // the open cart.
+  // the open cart. When resuming a held cart, backing out instead leaves the
+  // cart held (the buyer cancels explicitly) and returns to the cart view.
   const handlePayBack = async () => {
+    if (resuming) {
+      setIntent(null);
+      setResuming(false);
+      setResumeMethod(null);
+      setStep('cart');
+      return;
+    }
     if (intent && onCancelPaymentIntent) {
       try {
         await onCancelPaymentIntent(intent.id);
@@ -164,6 +193,41 @@ export default function CartDrawer({
     }
     setIntent(null);
     setStep('checkout');
+  };
+
+  // Resume a held cart: rebuild a synthetic intent from the stored cart so the
+  // existing pay step can show the payment instructions and "I've sent it".
+  const resumeHeldCart = () => {
+    if (!heldCart) return;
+    setPayError(null);
+    setPayLines(heldCartLines ?? []);
+    setResumeMethod(heldCartMethod ?? null);
+    if (heldCartMethod) setSelectedMethodId(heldCartMethod.id);
+    setIntent({
+      ok: true,
+      id: heldCart.id,
+      referenceCode: heldCart.referenceCode,
+      amountCents: heldCart.amountCents,
+      currency: heldCart.currency,
+      status: heldCart.status,
+      items: heldCart.items,
+    });
+    setResuming(true);
+    setStep('pay');
+  };
+
+  // Cancel a held cart entirely, releasing its gifts back to the registry.
+  const cancelHeldCart = async () => {
+    if (!heldCart || !onCancelPaymentIntent) return;
+    setCancellingHeld(true);
+    setPayError(null);
+    try {
+      await onCancelPaymentIntent(heldCart.id);
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : 'Could not cancel the held cart.');
+    } finally {
+      setCancellingHeld(false);
+    }
   };
 
   const { subtotalCents, hasAnyPrice, currency } = useMemo(() => {
@@ -317,6 +381,50 @@ export default function CartDrawer({
     </Stack>
   );
 
+  // Banner surfacing a held cart (a payment the buyer started but never
+  // confirmed). Shown on the cart / empty views so the buyer can resume and
+  // confirm, or cancel to release the gifts.
+  const heldCartBanner =
+    heldCart && step !== 'pay' && step !== 'done' ? (
+      <Box
+        sx={{
+          m: 2.5,
+          mb: 0,
+          p: 2,
+          borderRadius: 2,
+          border: 1,
+          borderColor: 'warning.light',
+          bgcolor: 'warning.50',
+        }}
+      >
+        <Typography sx={{ fontWeight: 700, mb: 0.5 }}>Payment in progress</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          You started sending {fmt(displayPrice(heldCart.amountCents, heldCart.currency)) ?? formatPriceCents(heldCart.amountCents, heldCart.currency)} for{' '}
+          {heldCart.items.length} {heldCart.items.length === 1 ? 'gift' : 'gifts'} but haven't
+          confirmed yet. Your gifts stay reserved until you confirm or cancel.
+        </Typography>
+        {payError && (
+          <Alert severity="error" sx={{ mb: 1.5 }}>
+            {payError}
+          </Alert>
+        )}
+        <Stack direction="row" spacing={1}>
+          <Button variant="contained" size="small" onClick={resumeHeldCart} sx={{ color: '#fff' }}>
+            Confirm payment
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            color="inherit"
+            onClick={cancelHeldCart}
+            disabled={cancellingHeld}
+          >
+            {cancellingHeld ? 'Cancelling…' : 'Cancel'}
+          </Button>
+        </Stack>
+      </Box>
+    ) : null;
+
   let body: React.ReactNode;
 
   if (step === 'done') {
@@ -330,11 +438,6 @@ export default function CartDrawer({
           We've let the parents know you've sent your payment. They'll confirm once the money
           arrives, and your gifts stay reserved in the meantime.
         </Typography>
-        {intent && (
-          <Typography variant="body2" color="text.secondary">
-            Reference code: <strong>{intent.referenceCode}</strong>
-          </Typography>
-        )}
         <Button variant="contained" onClick={onClose} sx={{ color: '#fff', mt: 1 }}>
           Back to the registry
         </Button>
@@ -343,24 +446,32 @@ export default function CartDrawer({
   } else if (lines.length === 0 && step !== 'pay') {
     body = (
       <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-        <Stack spacing={2} sx={{ px: 3, py: 8, textAlign: 'center', alignItems: 'center', flex: 1, justifyContent: 'center' }}>
-          <ShoppingBagOutlinedIcon sx={{ fontSize: 56, color: 'text.disabled' }} />
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Your cart is empty
-          </Typography>
-          <Typography color="text.secondary" sx={{ maxWidth: 300 }}>
-            Add a gift from the registry and it will be held just for you.
-          </Typography>
-          <Button variant="contained" onClick={onContinueShopping} sx={{ color: '#fff', mt: 1 }}>
-            Browse the registry
-          </Button>
-        </Stack>
+        {heldCartBanner}
+        {heldCart && heldCartLines && heldCartLines.length > 0 ? (
+          <Box sx={{ px: 2.5 }}>
+            <Stack divider={<Divider />}>{heldCartLines.map(renderLine)}</Stack>
+          </Box>
+        ) : (
+          <Stack spacing={2} sx={{ px: 3, py: 8, textAlign: 'center', alignItems: 'center', flex: 1, justifyContent: 'center' }}>
+            <ShoppingBagOutlinedIcon sx={{ fontSize: 56, color: 'text.disabled' }} />
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              {heldCart ? 'No new gifts in your cart' : 'Your cart is empty'}
+            </Typography>
+            <Typography color="text.secondary" sx={{ maxWidth: 300 }}>
+              Add a gift from the registry and it will be held just for you.
+            </Typography>
+            <Button variant="contained" onClick={onContinueShopping} sx={{ color: '#fff', mt: 1 }}>
+              Browse the registry
+            </Button>
+          </Stack>
+        )}
       </Box>
     );
   } else if (step === 'cart') {
     body = (
       <>
         <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+          {heldCartBanner}
           <Box sx={{ px: 2.5 }}>
             <Stack divider={<Divider />}>{lines.map(renderLine)}</Stack>
           </Box>
@@ -388,35 +499,6 @@ export default function CartDrawer({
       <>
         <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 2.5, py: 2 }}>
           <Stack spacing={2.5}>
-            <Box>
-              <Typography variant="overline" color="text.secondary">
-                Order summary
-              </Typography>
-              <Stack spacing={1} sx={{ mt: 1 }}>
-                {lines.map((line) => {
-                  const lineTotal =
-                    line.priceCents != null
-                      ? fmt(displayPrice(line.priceCents * line.quantity, line.currency))
-                      : null;
-                  return (
-                    <Stack key={line.reservationId} direction="row" justifyContent="space-between" spacing={2}>
-                      <Typography variant="body2" sx={{ minWidth: 0 }}>
-                        {line.quantity}× {line.title}
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
-                        {lineTotal ?? '—'}
-                      </Typography>
-                    </Stack>
-                  );
-                })}
-              </Stack>
-              <Divider sx={{ my: 1.5 }} />
-              <Stack direction="row" justifyContent="space-between">
-                <Typography sx={{ fontWeight: 700 }}>Subtotal</Typography>
-                <Typography sx={{ fontWeight: 700 }}>{subtotalLabel ?? '—'}</Typography>
-              </Stack>
-            </Box>
-
             <Box>
               <Typography variant="overline" color="text.secondary">
                 Payment method
@@ -477,73 +559,76 @@ export default function CartDrawer({
     );
   } else {
     // pay
-    const refCode = intent?.referenceCode ?? '';
-    const methodLabel = selectedMethod?.displayName?.trim()
-      || (selectedMethod ? PAYMENT_METHOD_LABELS[selectedMethod.type] : 'the chosen method');
+    const payMethod = selectedMethod ?? resumeMethod;
+    const methodLabel = payMethod?.displayName?.trim()
+      || (payMethod ? PAYMENT_METHOD_LABELS[payMethod.type] : 'the chosen method');
     body = (
       <>
         <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 2.5, py: 2 }}>
           <Stack spacing={2.5}>
-            <Stack direction="row" justifyContent="space-between" alignItems="baseline">
-              <Typography sx={{ fontWeight: 700 }}>Amount to send</Typography>
-              <Box sx={{ textAlign: 'right' }}>
-                <Typography sx={{ fontWeight: 700 }}>
-                  {intent ? formatPriceCents(intent.amountCents, intent.currency) : subtotalLabel ?? '—'}
-                </Typography>
-                {intent && (() => {
-                  const t = (viewerCurrency || '').toUpperCase();
-                  const from = (intent.currency || 'USD').toUpperCase();
-                  if (!t || t === from) return null;
-                  const converted = convertCents(intent.amountCents, from, t, rates);
-                  if (converted == null) return null;
-                  const est = formatPriceCents(converted, t);
-                  return est ? (
-                    <Typography variant="caption" color="text.secondary">
-                      ≈ {est} for you
+            {(() => {
+              const t = (viewerCurrency || '').toUpperCase();
+              const from = (intent?.currency || 'USD').toUpperCase();
+              const nativeText = intent
+                ? formatPriceCents(intent.amountCents, intent.currency)
+                : subtotalLabel ?? '—';
+              let viewerText: string | null = null;
+              if (intent && t && t !== from) {
+                const converted = convertCents(intent.amountCents, from, t, rates);
+                if (converted != null) viewerText = formatPriceCents(converted, t);
+              }
+              return (
+                <Stack direction="row" justifyContent="space-between" alignItems="baseline" spacing={1}>
+                  <Typography sx={{ fontWeight: 700, fontSize: { xs: '1.1rem', sm: '1rem' } }}>
+                    Amount to send
+                  </Typography>
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography
+                      sx={{ fontWeight: 800, fontSize: { xs: '1.6rem', sm: '1.35rem' }, lineHeight: 1.2 }}
+                    >
+                      {viewerText ? `≈ ${viewerText}` : nativeText}
                     </Typography>
-                  ) : null;
-                })()}
-              </Box>
-            </Stack>
-            {intent && (viewerCurrency || '').toUpperCase() !== (intent.currency || 'USD').toUpperCase() && (
-              <Typography variant="caption" color="text.secondary">
-                Please send the amount in {(intent.currency || 'USD').toUpperCase()} shown above — that's what the parents will receive. The {(viewerCurrency || '').toUpperCase()} figure is an approximate estimate.
-              </Typography>
-            )}
+                    {viewerText && (
+                      <Typography sx={{ fontSize: { xs: '0.95rem', sm: '0.85rem' }, color: 'text.secondary' }}>
+                        {nativeText} sent to the parents
+                      </Typography>
+                    )}
+                  </Box>
+                </Stack>
+              );
+            })()}
 
             <Box>
-              <Typography variant="overline" color="text.secondary">
+              <Typography variant="overline" sx={{ color: 'text.secondary', fontSize: { xs: '0.8rem', sm: '0.75rem' } }}>
                 Pay with {methodLabel}
               </Typography>
               <Stack spacing={0.75} sx={{ mt: 1, p: 2, borderRadius: 2, bgcolor: 'action.hover' }}>
                 {selectedMethod?.instructions && (
-                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                  <Typography sx={{ whiteSpace: 'pre-wrap', fontSize: { xs: '1rem', sm: '0.9rem' } }}>
                     {selectedMethod.instructions}
                   </Typography>
                 )}
                 {selectedMethod?.recipientEmail && (
-                  <Typography variant="body2"><strong>Email:</strong> {selectedMethod.recipientEmail}</Typography>
+                  <CopyableDetail label="Email" value={selectedMethod.recipientEmail} />
                 )}
                 {selectedMethod?.recipientPhone && (
-                  <Typography variant="body2"><strong>Phone:</strong> {selectedMethod.recipientPhone}</Typography>
+                  <CopyableDetail label="Phone" value={selectedMethod.recipientPhone} />
                 )}
-                {selectedMethod?.bankName && (
-                  <Typography variant="body2"><strong>Bank:</strong> {selectedMethod.bankName}</Typography>
-                )}
+                {selectedMethod?.bankName && <PayDetail label="Bank" value={selectedMethod.bankName} />}
                 {selectedMethod?.bankAccountName && (
-                  <Typography variant="body2"><strong>Account name:</strong> {selectedMethod.bankAccountName}</Typography>
+                  <PayDetail label="Account name" value={selectedMethod.bankAccountName} />
                 )}
                 {selectedMethod?.bankAccountNumber && (
-                  <Typography variant="body2"><strong>Account number:</strong> {selectedMethod.bankAccountNumber}</Typography>
+                  <CopyableDetail label="Account number" value={selectedMethod.bankAccountNumber} />
                 )}
                 {selectedMethod?.bankRoutingNumber && (
-                  <Typography variant="body2"><strong>Routing / sort code:</strong> {selectedMethod.bankRoutingNumber}</Typography>
+                  <CopyableDetail label="Routing / sort code" value={selectedMethod.bankRoutingNumber} />
                 )}
                 {selectedMethod?.bankIban && (
-                  <Typography variant="body2"><strong>IBAN:</strong> {selectedMethod.bankIban}</Typography>
+                  <CopyableDetail label="IBAN" value={selectedMethod.bankIban} />
                 )}
                 {selectedMethod?.bankSwift && (
-                  <Typography variant="body2"><strong>SWIFT / BIC:</strong> {selectedMethod.bankSwift}</Typography>
+                  <CopyableDetail label="SWIFT / BIC" value={selectedMethod.bankSwift} />
                 )}
                 {selectedMethod?.paymentUrl && (
                   <Button
@@ -562,35 +647,21 @@ export default function CartDrawer({
               </Stack>
             </Box>
 
-            <Box>
-              <Typography variant="overline" color="text.secondary">
-                Reference code
-              </Typography>
-              <Box
-                sx={{
-                  mt: 1,
-                  p: 2,
-                  borderRadius: 2,
-                  border: '2px dashed',
-                  borderColor: 'primary.main',
-                  textAlign: 'center',
-                }}
-              >
-                <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: 1 }}>
-                  {refCode}
-                </Typography>
-              </Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                Please include this code in your payment note so the parents can match it to you.
-              </Typography>
-            </Box>
-
             <Alert severity="info" icon={false}>
               You are sending this payment directly to the parents. Stork Nest does not process,
               hold, or verify the payment. The parents will confirm once they receive it.
             </Alert>
 
             {payError && <Alert severity="error">{payError}</Alert>}
+
+            {payLines.length > 0 && (
+              <Box>
+                <Typography variant="overline" sx={{ color: 'text.secondary', fontSize: { xs: '0.8rem', sm: '0.75rem' } }}>
+                  Your cart
+                </Typography>
+                <Stack divider={<Divider />}>{payLines.map(renderLine)}</Stack>
+              </Box>
+            )}
           </Stack>
         </Box>
         <Box sx={{ px: 2.5, py: 2, borderTop: 1, borderColor: 'divider' }}>
@@ -632,5 +703,84 @@ export default function CartDrawer({
         : header(`Your cart${itemCount ? ` · ${itemCount}` : ''}`, undefined)}
       {body}
     </Drawer>
+  );
+}
+
+// PayDetail renders a labelled payment value at a comfortable mobile size.
+function PayDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <Typography sx={{ fontSize: { xs: '1rem', sm: '0.9rem' }, wordBreak: 'break-word' }}>
+      <strong>{label}:</strong> {value}
+    </Typography>
+  );
+}
+
+// CopyableDetail renders a payment value the guest can tap to copy (e.g. the
+// recipient email for an e-transfer), with brief inline "Copied" feedback.
+function CopyableDetail({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard may be unavailable (e.g. insecure context); ignore.
+    }
+  };
+  return (
+    <Box
+      role="button"
+      tabIndex={0}
+      onClick={handleCopy}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCopy();
+        }
+      }}
+      aria-label={`Copy ${label}`}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        cursor: 'pointer',
+        borderRadius: 1,
+        px: 1,
+        py: 0.75,
+        mx: -1,
+        '&:hover': { bgcolor: 'action.selected' },
+      }}
+    >
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography
+          component="span"
+          sx={{
+            display: { xs: 'block', sm: 'inline' },
+            fontWeight: 700,
+            fontSize: { xs: '0.85rem', sm: '0.9rem' },
+            color: { xs: 'text.secondary', sm: 'text.primary' },
+          }}
+        >
+          {label}:
+        </Typography>{' '}
+        <Typography
+          component="span"
+          sx={{ fontSize: { xs: '1rem', sm: '0.9rem' }, wordBreak: 'break-all' }}
+        >
+          {value}
+        </Typography>
+      </Box>
+      {copied ? (
+        <Typography
+          variant="caption"
+          sx={{ color: 'success.main', fontWeight: 600, whiteSpace: 'nowrap' }}
+        >
+          Copied
+        </Typography>
+      ) : (
+        <ContentCopyIcon sx={{ fontSize: 18, color: 'text.secondary', flexShrink: 0 }} />
+      )}
+    </Box>
   );
 }

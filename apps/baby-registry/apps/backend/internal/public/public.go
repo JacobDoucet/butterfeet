@@ -206,6 +206,7 @@ type myCart struct {
 	Status            string             `json:"status"`
 	AmountCents       int                `json:"amountCents"`
 	Currency          string             `json:"currency"`
+	PaymentMethodId   string             `json:"paymentMethodId"`
 	MethodDisplayName string             `json:"methodDisplayName"`
 	CreatedAt         string             `json:"createdAt"`
 	Items             []cartItemSnapshot `json:"items"`
@@ -449,15 +450,33 @@ func (h *Handler) handleRegistryBySlug(w http.ResponseWriter, r *http.Request) {
 				if c.Status == enum_cart_status.Rejected {
 					continue
 				}
+				its := cartItems[c.Id]
+				amount := c.AmountCents
+				if c.Status == enum_cart_status.Pending {
+					// A Pending cart is still mutable: gifts can be released
+					// elsewhere after it was created, leaving its stored amount
+					// stale. Recompute from the gifts still held so the buyer is
+					// only ever asked to pay for what remains. Drop carts that
+					// no longer hold anything.
+					if len(its) == 0 {
+						continue
+					}
+					sum := 0
+					for _, it := range its {
+						sum += it.PriceCents * it.Quantity
+					}
+					amount = sum
+				}
 				resp.MyCarts = append(resp.MyCarts, myCart{
 					Id:                c.Id,
 					ReferenceCode:     c.ReferenceCode,
 					Status:            string(c.Status),
-					AmountCents:       c.AmountCents,
+					AmountCents:       amount,
 					Currency:          c.Currency,
+					PaymentMethodId:   c.PaymentMethodId,
 					MethodDisplayName: c.MethodDisplayName,
 					CreatedAt:         c.Created.At.UTC().Format(time.RFC3339),
-					Items:             cartItems[c.Id],
+					Items:             its,
 				})
 			}
 		}

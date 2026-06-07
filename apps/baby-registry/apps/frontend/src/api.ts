@@ -110,6 +110,7 @@ export interface MyCart {
   status: CartStatus;
   amountCents: number;
   currency: string;
+  paymentMethodId: string;
   methodDisplayName: string;
   createdAt: string;
   items: CartItem[];

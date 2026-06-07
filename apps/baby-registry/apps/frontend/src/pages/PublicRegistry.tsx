@@ -142,6 +142,20 @@ export default function PublicRegistry() {
   const [cartOpen, setCartOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [snack, setSnack] = useState<{ msg: string; cart?: boolean } | null>(null);
+  // Auto-open the cart once when the buyer lands with a held (Pending) cart —
+  // a payment they started but never confirmed — so they're nudged to finish
+  // or cancel it. The ref guards against re-opening after they close it.
+  const autoOpenedHeldRef = useRef(false);
+  useEffect(() => {
+    if (autoOpenedHeldRef.current) return;
+    const data = regQ.data;
+    if (!data || isGatedRegistry(data)) return;
+    const hasHeld = (data.myCarts ?? []).some((c) => c.status === 'Pending');
+    if (hasHeld) {
+      autoOpenedHeldRef.current = true;
+      setCartOpen(true);
+    }
+  }, [regQ.data]);
   // Snapshot of the last opened target so the public Dialog stays
   // populated through its exit animation. Declared at the top to satisfy
   // React's rules of hooks (early returns happen further below).
@@ -286,6 +300,30 @@ export default function PublicRegistry() {
       priceCents: it?.priceCents,
       currency: it?.currency,
       quantity: rsv.quantity || 1,
+      productUrl: it ? it.affiliateUrl || it.productUrl : undefined,
+      retailer: it?.retailer,
+    };
+  });
+  // A held cart is one the buyer started paying for (status Pending) but never
+  // confirmed. Its reservations are locked (AwaitingConfirmation) so they don't
+  // appear in the open cart above — surface it so the buyer can resume and
+  // confirm, or cancel to release the gifts.
+  const heldCart = (reg.myCarts ?? []).find((c) => c.status === 'Pending');
+  const heldCartMethod =
+    heldCart && paymentMethodsQ.data
+      ? (paymentMethodsQ.data as PaymentMethod[]).find((m) => m.id === heldCart.paymentMethodId)
+      : undefined;
+  const heldCartLines: CartLine[] = (heldCart?.items ?? []).map((ci) => {
+    const it = itemById[ci.itemId];
+    return {
+      reservationId: ci.reservationId,
+      itemId: ci.itemId,
+      title: it?.title ?? ci.title ?? 'Gift',
+      imageUrl: it?.imageUrl,
+      imageBgColor: it?.imageBgColor,
+      priceCents: it?.priceCents ?? ci.priceCents,
+      currency: it?.currency ?? ci.currency,
+      quantity: ci.quantity || 1,
       productUrl: it ? it.affiliateUrl || it.productUrl : undefined,
       retailer: it?.retailer,
     };
@@ -1078,9 +1116,12 @@ export default function PublicRegistry() {
           }}
           viewerCurrency={viewerCurrency}
           rates={ratesQ.data}
+          heldCart={heldCart}
+          heldCartMethod={heldCartMethod}
+          heldCartLines={heldCartLines}
         />
 
-        {cartLines.length > 0 && (
+        {(cartLines.length > 0 || !!heldCart) && (
           <Fab
             color="primary"
             aria-label="Open cart"
@@ -1093,7 +1134,7 @@ export default function PublicRegistry() {
               zIndex: (t) => t.zIndex.drawer - 1,
             }}
           >
-            <Badge badgeContent={cartLines.length} color="error" overlap="circular">
+            <Badge badgeContent={cartLines.length + (heldCart ? heldCartLines.length : 0)} color="error" overlap="circular">
               <ShoppingCartOutlinedIcon />
             </Badge>
           </Fab>

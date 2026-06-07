@@ -8,9 +8,10 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Link,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { payments, formatPriceCents, type Registry, type Cart } from '../../api';
+import { payments, items, formatPriceCents, type Registry, type Cart } from '../../api';
 
 type Mode = 'held' | 'to-review' | 'completed';
 
@@ -35,6 +36,19 @@ export default function CartsPanel({ reg, mode }: { reg: Registry; mode: Mode })
     queryKey: ['carts', reg.id, status],
     queryFn: () => payments.listCarts(reg.id, status),
   });
+
+  // Cart item snapshots only carry the title, not a product URL. Join against
+  // the registry's items by itemId so each bullet can link out to the product
+  // (preferring the affiliate URL when present).
+  const itemsQ = useQuery({
+    queryKey: ['items', reg.id],
+    queryFn: () => items.listForRegistry(reg.id),
+  });
+  const urlByItemId: Record<string, string> = {};
+  for (const it of itemsQ.data?.data ?? []) {
+    const url = it.affiliateUrl || it.productUrl;
+    if (url) urlByItemId[it.id] = url;
+  }
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['carts', reg.id] });
@@ -102,6 +116,7 @@ export default function CartsPanel({ reg, mode }: { reg: Registry; mode: Mode })
               cart={c}
               mode={mode}
               busy={busy}
+              urlByItemId={urlByItemId}
               onApprove={() => approveM.mutate(c.id)}
               onReject={() => rejectM.mutate(c.id)}
               onDelete={() => deleteM.mutate(c.id)}
@@ -117,6 +132,7 @@ function CartCard({
   cart,
   mode,
   busy,
+  urlByItemId,
   onApprove,
   onReject,
   onDelete,
@@ -124,6 +140,7 @@ function CartCard({
   cart: Cart;
   mode: Mode;
   busy: boolean;
+  urlByItemId: Record<string, string>;
   onApprove: () => void;
   onReject: () => void;
   onDelete: () => void;
@@ -161,12 +178,25 @@ function CartCard({
             component="ul"
             sx={{ mt: 1.5, mb: 0, pl: 3, display: 'flex', flexDirection: 'column', gap: 0.25 }}
           >
-            {cart.items.map((it) => (
-              <Typography key={it.reservationId} component="li" variant="body2">
-                {it.quantity}× {it.title}
-                {it.priceCents ? ` — ${formatPriceCents(it.priceCents, it.currency)}` : ''}
-              </Typography>
-            ))}
+            {cart.items.map((it) => {
+              const url = urlByItemId[it.itemId];
+              const priceSuffix = it.priceCents
+                ? ` — ${formatPriceCents(it.priceCents, it.currency)}`
+                : '';
+              return (
+                <Typography key={it.reservationId} component="li" variant="body2">
+                  {it.quantity}×{' '}
+                  {url ? (
+                    <Link href={url} target="_blank" rel="noopener noreferrer" underline="hover">
+                      {it.title}
+                    </Link>
+                  ) : (
+                    it.title
+                  )}
+                  {priceSuffix}
+                </Typography>
+              );
+            })}
           </Box>
         )}
 
