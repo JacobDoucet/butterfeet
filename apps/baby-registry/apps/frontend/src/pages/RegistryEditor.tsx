@@ -43,6 +43,7 @@ import ItemCard from '../components/ItemCard';
 import PaymentsPanel from '../components/editor/PaymentsPanel';
 import CartsPanel from '../components/editor/CartsPanel';
 import ReservationRow from '../components/editor/ReservationRow';
+import BuildOrderDialog from '../components/editor/BuildOrderDialog';
 import CategoryRenameDialog from '../components/editor/CategoryRenameDialog';
 import SourceRenameDialog from '../components/editor/SourceRenameDialog';
 import DeleteConfirmDialog, { type DeleteTarget } from '../components/editor/DeleteConfirmDialog';
@@ -76,6 +77,7 @@ export default function RegistryEditor() {
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<'items' | 'held' | 'to-review' | 'completed' | 'details' | 'payments' | 'access'>('items');
   const [csvImportOpen, setCsvImportOpen] = useState(false);
+  const [buildOrderOpen, setBuildOrderOpen] = useState(false);
   const [csvImportSnack, setCsvImportSnack] = useState<string | null>(null);
   const [itemSearch, setItemSearch] = useState('');
   const [itemCategoryFilter, setItemCategoryFilter] = useState<string>('__all__');
@@ -515,6 +517,7 @@ export default function RegistryEditor() {
               Rename source
             </Button>
             <Button variant="outlined" onClick={() => setCsvImportOpen(true)}>Import CSV</Button>
+            <Button variant="contained" onClick={() => setBuildOrderOpen(true)}>Build an order</Button>
             <Button variant="contained" onClick={() => { reset(); setOpen(true); }}>Add item</Button>
           </Stack>
         )}
@@ -1144,6 +1147,15 @@ export default function RegistryEditor() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
       />
+      {reg && (
+        <BuildOrderDialog
+          open={buildOrderOpen}
+          onClose={() => setBuildOrderOpen(false)}
+          items={list}
+          reservationsByItem={reservationsByItem}
+          registryId={reg.id}
+        />
+      )}
       {reg && (
         <CsvImportDialog
           open={csvImportOpen}
