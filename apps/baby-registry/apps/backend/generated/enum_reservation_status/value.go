@@ -9,6 +9,7 @@ type Value string
 const (
 	Reserved             Value = "Reserved"
 	AwaitingConfirmation Value = "AwaitingConfirmation"
+	PaymentReceived      Value = "PaymentReceived"
 	Purchased            Value = "Purchased"
 	Received             Value = "Received"
 	Cancelled            Value = "Cancelled"
@@ -19,6 +20,8 @@ func (v Value) ToString() (string, error) {
 	case Reserved:
 		return string(v), nil
 	case AwaitingConfirmation:
+		return string(v), nil
+	case PaymentReceived:
 		return string(v), nil
 	case Purchased:
 		return string(v), nil
@@ -36,6 +39,8 @@ func Validate(v Value) error {
 	case Reserved:
 		return nil
 	case AwaitingConfirmation:
+		return nil
+	case PaymentReceived:
 		return nil
 	case Purchased:
 		return nil

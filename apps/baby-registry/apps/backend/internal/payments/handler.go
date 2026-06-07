@@ -182,8 +182,10 @@ func (h *Handler) handleCartById(w http.ResponseWriter, r *http.Request) {
 		current.Model.Status = enum_cart_status.Completed
 		current.Model.DecidedAt = time.Now().UTC()
 		current.Model.DecisionReason = strings.TrimSpace(body.Reason)
-		// Approval is the source of truth: mark the locked gifts purchased.
-		h.setCartReservations(r.Context(), actor, current.Model.Id, enum_reservation_status.Purchased)
+		// Approval confirms the money arrived. The gifts move to PaymentReceived;
+		// the owner still has to place the online order (Purchased) and mark it
+		// Received when it arrives.
+		h.setCartReservations(r.Context(), actor, current.Model.Id, enum_reservation_status.PaymentReceived)
 	case "reject":
 		current.Model.Status = enum_cart_status.Rejected
 		current.Model.DecidedAt = time.Now().UTC()

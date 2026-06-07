@@ -1052,6 +1052,7 @@ export default function RegistryEditor() {
                     <MenuItem value="AwaitingConfirmation" disabled>
                       Awaiting payment
                     </MenuItem>
+                    <MenuItem value="PaymentReceived">Payment received</MenuItem>
                     <MenuItem value="Purchased">Purchased</MenuItem>
                     <MenuItem value="Received">Received</MenuItem>
                     <MenuItem value="Cancelled">Cancelled</MenuItem>

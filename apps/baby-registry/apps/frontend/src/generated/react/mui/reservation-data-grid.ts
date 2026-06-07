@@ -1870,6 +1870,10 @@ export function useReservationStatusDataGridColumn(options: ReservationStatusDat
                 label: options.getOptionLabel('AwaitingConfirmation'),
             },
             {
+                value: 'PaymentReceived',
+                label: options.getOptionLabel('PaymentReceived'),
+            },
+            {
                 value: 'Purchased',
                 label: options.getOptionLabel('Purchased'),
             },

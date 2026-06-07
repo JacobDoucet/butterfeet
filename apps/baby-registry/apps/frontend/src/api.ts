@@ -206,7 +206,7 @@ export const items = {
     }),
 };
 
-export type ReservationStatus = 'Reserved' | 'AwaitingConfirmation' | 'Purchased' | 'Received' | 'Cancelled';
+export type ReservationStatus = 'Reserved' | 'AwaitingConfirmation' | 'PaymentReceived' | 'Purchased' | 'Received' | 'Cancelled';
 
 export interface Reservation {
   id: string;
